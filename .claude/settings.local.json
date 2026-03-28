@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"H: 2>/dev/null || ls -la /h/\")"
+    ]
+  }
+}
