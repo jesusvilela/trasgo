@@ -295,6 +295,59 @@ Query: What's the worst case for G?
   </div>
 </div>
 
+<!-- STRUCTURED OUTPUT ENFORCEMENT -->
+<div class="section">
+  <div class="section-title">Structured Output Enforcement &mdash; Option B</div>
+
+  <div style="color:#8b949e;font-size:0.9em;margin-bottom:20px;padding:15px;background:#161b22;border-radius:8px;border:1px solid #30363d">
+    <b style="color:#58a6ff">Strategy:</b> Boot free-form (verify semantic comprehension) &rarr; switch to enforced JSON schema (eliminate RLHF leakage).<br>
+    <b style="color:#58a6ff">Result:</b> Model produces <b>both</b> natural language answer AND valid §1 codec packet in every response.
+  </div>
+
+  <div class="test-card pass">
+    <div class="test-header">
+      <span class="test-name">Structured: Calibration</span>
+      <span class="badge pass">PASS + SCHEMA</span>
+    </div>
+    <div class="response">
+      <span class="model-tag">GPT-4o (enforced schema) &rarr;</span><br>
+      <b>answer:</b> "Tesla position reduced in weight from 12% to 8% in March 2026. Macro overlay hedge via gold ETC, triggers when VIX>28."<br>
+      <b>codec_json:</b> <span class="json">{"§":1,"E":{"K":["TSLA","equity"],"L":["macro-overlay","strategy"]},...}</span><br>
+      <b>scope:</b> portfolio &nbsp; <b>urg:</b> 0.4 &nbsp; <b>cert:</b> 0.7
+    </div>
+  </div>
+
+  <div class="test-card pass">
+    <div class="test-header">
+      <span class="test-name">Structured: Cross-domain (GDPR)</span>
+      <span class="badge pass">PASS + SCHEMA</span>
+    </div>
+    <div class="response">
+      <span class="model-tag">GPT-4o (enforced schema) &rarr;</span><br>
+      <b>answer:</b> "Worst case: fine of 4% of revenue = ~84 million."<br>
+      <b>codec_json:</b> <span class="json">{"§":1,"E":{"F":["GDPR-case-2891","legal-proc"],"G":["DataCorp","org"],...}}</span><br>
+      <b>scope:</b> regulatory &nbsp; <b>urg:</b> 0.6 &nbsp; <b>cert:</b> 0.65
+    </div>
+  </div>
+
+  <div class="test-card pass">
+    <div class="test-header">
+      <span class="test-name">Structured: Delta Integration</span>
+      <span class="badge pass">PASS + SCHEMA</span>
+    </div>
+    <div class="response">
+      <span class="model-tag">GPT-4o (enforced schema) &rarr;</span><br>
+      <b>answer:</b> "Project X now at risk. Team reduced 8&rarr;5. Deadline April 15 at risk."<br>
+      <b>codec_json:</b> <span class="json">{"§":1,"E":{"P":["project-X","project"],...},"Δ":["T.size:8->5@2026-03-20",...]}</span><br>
+      <b>scope:</b> project &nbsp; <b>urg:</b> 0.7 &nbsp; <b>cert:</b> 0.85
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:20px;color:#3fb950;font-size:1.1em;font-weight:bold">
+    RLHF leakage: 0/3 free-form &middot; 0/3 structured &middot; Valid codec in 3/3 structured responses
+  </div>
+</div>
+
 <!-- SUMMARY -->
 <div class="summary">
   <h2>Cross-Model Calibration Result</h2>
@@ -303,7 +356,7 @@ Query: What's the worst case for G?
     <b>Model:</b> GPT-4o &nbsp;|&nbsp;
     <b>Boot:</b> 3 examples &nbsp;|&nbsp;
     <b>Training:</b> none &nbsp;|&nbsp;
-    <b>Tests passed:</b> 4/4
+    <b>Tests passed:</b> 7/7 (free-form + structured)
   </div>
   <div style="margin-top:20px;color:#8b949e;font-size:0.9em">
     The same boot seed works on Claude, GPT-4o, and any frontier model.<br>
