@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if JS middleware is added later)
+node_modules/
+dist/
+*.tgz
+
+# Python (if Python tooling is added later)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Archives
+*.zip
+
+# Environment
+.env
+.env.local
