@@ -1,0 +1,222 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="50%" stop-color="#0d1117"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="glow1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="glow2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="glow3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <linearGradient id="arrow_grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#8b5cf6" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.8"/>
+    </linearGradient>
+    <filter id="blur1">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+    <filter id="blur2">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="blur_sm">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="glow_text">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.04" stroke="#6366f1" stroke-width="0.5">
+    <line x1="0" y1="0" x2="0" y2="630"/><line x1="40" y1="0" x2="40" y2="630"/>
+    <line x1="80" y1="0" x2="80" y2="630"/><line x1="120" y1="0" x2="120" y2="630"/>
+    <line x1="160" y1="0" x2="160" y2="630"/><line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="240" y1="0" x2="240" y2="630"/><line x1="280" y1="0" x2="280" y2="630"/>
+    <line x1="320" y1="0" x2="320" y2="630"/><line x1="360" y1="0" x2="360" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/><line x1="440" y1="0" x2="440" y2="630"/>
+    <line x1="480" y1="0" x2="480" y2="630"/><line x1="520" y1="0" x2="520" y2="630"/>
+    <line x1="560" y1="0" x2="560" y2="630"/><line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="640" y1="0" x2="640" y2="630"/><line x1="680" y1="0" x2="680" y2="630"/>
+    <line x1="720" y1="0" x2="720" y2="630"/><line x1="760" y1="0" x2="760" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/><line x1="840" y1="0" x2="840" y2="630"/>
+    <line x1="880" y1="0" x2="880" y2="630"/><line x1="920" y1="0" x2="920" y2="630"/>
+    <line x1="960" y1="0" x2="960" y2="630"/><line x1="1000" y1="0" x2="1000" y2="630"/>
+    <line x1="1040" y1="0" x2="1040" y2="630"/><line x1="1080" y1="0" x2="1080" y2="630"/>
+    <line x1="1120" y1="0" x2="1120" y2="630"/><line x1="1160" y1="0" x2="1160" y2="630"/>
+    <line x1="0" y1="40" x2="1200" y2="40"/><line x1="0" y1="80" x2="1200" y2="80"/>
+    <line x1="0" y1="120" x2="1200" y2="120"/><line x1="0" y1="160" x2="1200" y2="160"/>
+    <line x1="0" y1="200" x2="1200" y2="200"/><line x1="0" y1="240" x2="1200" y2="240"/>
+    <line x1="0" y1="280" x2="1200" y2="280"/><line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="360" x2="1200" y2="360"/><line x1="0" y1="400" x2="1200" y2="400"/>
+    <line x1="0" y1="440" x2="1200" y2="440"/><line x1="0" y1="480" x2="1200" y2="480"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/><line x1="0" y1="560" x2="1200" y2="560"/>
+    <line x1="0" y1="600" x2="1200" y2="600"/>
+  </g>
+
+  <!-- Ambient glow orbs -->
+  <circle cx="200" cy="300" r="180" fill="#6366f1" opacity="0.06" filter="url(#blur1)"/>
+  <circle cx="1000" cy="300" r="180" fill="#06b6d4" opacity="0.06" filter="url(#blur1)"/>
+  <circle cx="600" cy="200" r="120" fill="#8b5cf6" opacity="0.04" filter="url(#blur1)"/>
+
+  <!-- LEFT SIDE: Verbose natural language block -->
+  <g transform="translate(60, 175)">
+    <!-- Card background -->
+    <rect x="0" y="0" width="340" height="280" rx="12" fill="#111827" stroke="#1e293b" stroke-width="1" opacity="0.9"/>
+    <rect x="0" y="0" width="340" height="40" rx="12" fill="#1a1a2e" opacity="0.8"/>
+    <rect x="0" y="28" width="340" height="12" fill="#1a1a2e" opacity="0.8"/>
+    
+    <!-- Window dots -->
+    <circle cx="20" cy="20" r="5" fill="#ef4444" opacity="0.8"/>
+    <circle cx="38" cy="20" r="5" fill="#f59e0b" opacity="0.8"/>
+    <circle cx="56" cy="20" r="5" fill="#22c55e" opacity="0.8"/>
+    
+    <!-- Title -->
+    <text x="170" y="24" font-family="SF Mono, Monaco, Consolas, monospace" font-size="11" fill="#64748b" text-anchor="middle">natural_language.txt</text>
+
+    <!-- NL text lines (simulated verbose context) -->
+    <g font-family="SF Mono, Monaco, Consolas, monospace" font-size="10.5" opacity="0.7">
+      <text x="16" y="65" fill="#94a3b8">Jesús is a Senior Engineering</text>
+      <text x="16" y="82" fill="#94a3b8">Manager based in Madrid. He was</text>
+      <text x="16" y="99" fill="#94a3b8">dismissed from Volvo Car España</text>
+      <text x="16" y="116" fill="#94a3b8">in late February 2026. His lead</text>
+      <text x="16" y="133" fill="#94a3b8">lawyer Carlos Santolaya filed</text>
+      <text x="16" y="150" fill="#94a3b8">a SMAC papeleta requesting</text>
+      <text x="16" y="167" fill="#94a3b8">nullity with subsidiary unfair</text>
+      <text x="16" y="184" fill="#94a3b8">dismissal claim. The current</text>
+      <text x="16" y="201" fill="#94a3b8">compensation target range is</text>
+      <text x="16" y="218" fill="#94a3b8">85-120k€ depending on location</text>
+      <text x="16" y="235" fill="#94a3b8">and remote model, with a walk-</text>
+      <text x="16" y="252" fill="#94a3b8">away floor of 70-75k€ for...</text>
+    </g>
+
+    <!-- Token count badge -->
+    <rect x="220" y="260" width="108" height="22" rx="11" fill="#ef4444" opacity="0.15"/>
+    <text x="274" y="275" font-family="SF Mono, Monaco, Consolas, monospace" font-size="10" fill="#ef4444" text-anchor="middle" font-weight="600">~520 tokens</text>
+  </g>
+
+  <!-- CENTER: Transformation arrow with §1 symbol -->
+  <g transform="translate(440, 265)">
+    <!-- Arrow line -->
+    <line x1="0" y1="50" x2="280" y2="50" stroke="url(#arrow_grad)" stroke-width="2" stroke-dasharray="8,4" opacity="0.6"/>
+    
+    <!-- Arrow head -->
+    <polygon points="285,50 270,42 270,58" fill="#06b6d4" opacity="0.8"/>
+    
+    <!-- Center symbol -->
+    <rect x="95" y="20" width="90" height="60" rx="8" fill="#0d1117" stroke="#6366f1" stroke-width="1.5" opacity="0.95"/>
+    <text x="140" y="44" font-family="SF Mono, Monaco, Consolas, monospace" font-size="11" fill="#6366f1" text-anchor="middle" font-weight="700">TRASGO</text>
+    <text x="140" y="62" font-family="SF Mono, Monaco, Consolas, monospace" font-size="16" fill="#8b5cf6" text-anchor="middle" font-weight="700">§1</text>
+    
+    <!-- Glow behind symbol -->
+    <rect x="105" y="30" width="70" height="40" rx="4" fill="#6366f1" opacity="0.08" filter="url(#blur_sm)"/>
+
+    <!-- Labels above/below -->
+    <text x="140" y="8" font-family="SF Mono, Monaco, Consolas, monospace" font-size="9" fill="#475569" text-anchor="middle" letter-spacing="2">SELF-INITIALIZING CODEC</text>
+    <text x="140" y="100" font-family="SF Mono, Monaco, Consolas, monospace" font-size="9" fill="#475569" text-anchor="middle" letter-spacing="1">no training · no weights · no middleware</text>
+  </g>
+
+  <!-- RIGHT SIDE: Codec packet -->
+  <g transform="translate(770, 175)">
+    <!-- Card background -->
+    <rect x="0" y="0" width="360" height="280" rx="12" fill="#111827" stroke="#1e293b" stroke-width="1" opacity="0.9"/>
+    <rect x="0" y="0" width="360" height="40" rx="12" fill="#0d2818" opacity="0.6"/>
+    <rect x="0" y="28" width="360" height="12" fill="#0d2818" opacity="0.6"/>
+    
+    <!-- Window dots -->
+    <circle cx="20" cy="20" r="5" fill="#ef4444" opacity="0.8"/>
+    <circle cx="38" cy="20" r="5" fill="#f59e0b" opacity="0.8"/>
+    <circle cx="56" cy="20" r="5" fill="#22c55e" opacity="0.8"/>
+    
+    <!-- Title -->
+    <text x="180" y="24" font-family="SF Mono, Monaco, Consolas, monospace" font-size="11" fill="#64748b" text-anchor="middle">§1_codec_packet.json</text>
+
+    <!-- Codec JSON -->
+    <g font-family="SF Mono, Monaco, Consolas, monospace" font-size="10.5">
+      <text x="16" y="65" fill="#c084fc">{"§"</text><text x="50" y="65" fill="#64748b">:</text><text x="57" y="65" fill="#f59e0b">1</text><text x="65" y="65" fill="#64748b">,</text>
+      <text x="16" y="82" fill="#c084fc"> "E"</text><text x="52" y="82" fill="#64748b">:{</text><text x="66" y="82" fill="#22d3ee">"J"</text><text x="82" y="82" fill="#64748b">:[</text><text x="90" y="82" fill="#86efac">"SrEngMgr"</text><text x="170" y="82" fill="#64748b">,</text><text x="178" y="82" fill="#86efac">"person"</text><text x="234" y="82" fill="#64748b">]},</text>
+      <text x="16" y="99" fill="#c084fc"> "S"</text><text x="52" y="99" fill="#64748b">:{</text><text x="66" y="99" fill="#22d3ee">"J.loc"</text><text x="114" y="99" fill="#64748b">:</text><text x="120" y="99" fill="#86efac">"MAD"</text><text x="152" y="99" fill="#64748b">,</text>
+      <text x="66" y="116" fill="#22d3ee">"J.comp"</text><text x="122" y="116" fill="#64748b">:</text><text x="128" y="116" fill="#86efac">"85-120k€"</text><text x="208" y="116" fill="#64748b">},</text>
+      <text x="16" y="133" fill="#c084fc"> "R"</text><text x="52" y="133" fill="#64748b">:[</text><text x="60" y="133" fill="#fbbf24">"V→J:dismissed"</text><text x="186" y="133" fill="#64748b">],</text>
+      <text x="16" y="150" fill="#c084fc"> "Δ"</text><text x="52" y="150" fill="#64748b">:[</text><text x="60" y="150" fill="#fb923c">"V.status:</text>
+      <text x="66" y="167" fill="#fb923c">employed→dismissed@2026-02"</text><text x="300" y="167" fill="#64748b">],</text>
+      <text x="16" y="184" fill="#c084fc"> "μ"</text><text x="52" y="184" fill="#64748b">:{</text><text x="66" y="184" fill="#22d3ee">"scope"</text><text x="110" y="184" fill="#64748b">:</text><text x="116" y="184" fill="#86efac">"legal"</text><text x="160" y="184" fill="#64748b">,</text>
+      <text x="66" y="201" fill="#22d3ee">"urg"</text><text x="98" y="201" fill="#64748b">:</text><text x="104" y="201" fill="#f59e0b">0.8</text><text x="127" y="201" fill="#64748b">,</text>
+      <text x="66" y="218" fill="#22d3ee">"cert"</text><text x="106" y="218" fill="#64748b">:</text><text x="112" y="218" fill="#f59e0b">0.9</text><text x="135" y="218" fill="#64748b">}}</text>
+    </g>
+
+    <!-- Token count badge -->
+    <rect x="228" y="260" width="120" height="22" rx="11" fill="#22c55e" opacity="0.15"/>
+    <text x="288" y="275" font-family="SF Mono, Monaco, Consolas, monospace" font-size="10" fill="#22c55e" text-anchor="middle" font-weight="600">~85 tokens (6×)</text>
+  </g>
+
+  <!-- Bottom: Dimension axis indicators -->
+  <g transform="translate(0, 500)">
+    <g font-family="SF Mono, Monaco, Consolas, monospace" font-size="11" text-anchor="middle">
+      <!-- E -->
+      <rect x="150" y="10" width="70" height="30" rx="6" fill="#6366f1" opacity="0.12"/>
+      <text x="185" y="30" fill="#818cf8" font-weight="600">E</text>
+      <text x="185" y="56" fill="#475569" font-size="9">entities</text>
+      
+      <!-- S -->
+      <rect x="270" y="10" width="70" height="30" rx="6" fill="#06b6d4" opacity="0.12"/>
+      <text x="305" y="30" fill="#22d3ee" font-weight="600">S</text>
+      <text x="305" y="56" fill="#475569" font-size="9">state</text>
+      
+      <!-- R -->
+      <rect x="390" y="10" width="70" height="30" rx="6" fill="#8b5cf6" opacity="0.12"/>
+      <text x="425" y="30" fill="#a78bfa" font-weight="600">R</text>
+      <text x="425" y="56" fill="#475569" font-size="9">relations</text>
+      
+      <!-- Δ -->
+      <rect x="510" y="10" width="70" height="30" rx="6" fill="#f59e0b" opacity="0.12"/>
+      <text x="545" y="30" fill="#fbbf24" font-weight="600">Δ</text>
+      <text x="545" y="56" fill="#475569" font-size="9">deltas</text>
+      
+      <!-- μ -->
+      <rect x="630" y="10" width="70" height="30" rx="6" fill="#ec4899" opacity="0.12"/>
+      <text x="665" y="30" fill="#f472b6" font-weight="600">μ</text>
+      <text x="665" y="56" fill="#475569" font-size="9">meta</text>
+      
+      <!-- §P -->
+      <rect x="780" y="10" width="70" height="30" rx="6" fill="#14b8a6" opacity="0.12"/>
+      <text x="815" y="30" fill="#2dd4bf" font-weight="600">§P</text>
+      <text x="815" y="56" fill="#475569" font-size="9">protocols</text>
+      
+      <!-- §M -->
+      <rect x="920" y="10" width="70" height="30" rx="6" fill="#f97316" opacity="0.12"/>
+      <text x="955" y="30" fill="#fb923c" font-weight="600">§M</text>
+      <text x="955" y="56" fill="#475569" font-size="9">machines</text>
+    </g>
+  </g>
+
+  <!-- Top title -->
+  <text x="600" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="48" fill="#f8fafc" text-anchor="middle" font-weight="700" letter-spacing="-1">trasgo</text>
+  <text x="600" y="115" font-family="SF Mono, Monaco, Consolas, monospace" font-size="14" fill="#64748b" text-anchor="middle" letter-spacing="2">SELF-INITIALIZING CONTEXT COMPRESSION CODEC FOR LLMs</text>
+
+  <!-- Decorative connection lines from axes to cards -->
+  <g stroke="#6366f1" stroke-width="0.5" opacity="0.1">
+    <line x1="185" y1="510" x2="185" y2="455"/>
+    <line x1="305" y1="510" x2="305" y2="455"/>
+    <line x1="425" y1="510" x2="425" y2="455"/>
+    <line x1="545" y1="510" x2="545" y2="455"/>
+    <line x1="665" y1="510" x2="665" y2="455"/>
+    <line x1="815" y1="510" x2="815" y2="455"/>
+    <line x1="955" y1="510" x2="955" y2="455"/>
+  </g>
+
+  <!-- Subtle border -->
+  <rect x="0" y="0" width="1200" height="630" rx="0" fill="none" stroke="#1e293b" stroke-width="1" opacity="0.5"/>
+</svg>

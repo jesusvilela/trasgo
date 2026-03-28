@@ -1,2 +1,282 @@
-# trasgo
-In Iberian folklore, trasgo / trasno / trasgu is a small mischievous domestic goblin-like creature associated with Galician tradition as well as nearby northern Iberian folklore, so it has a clever, stealthy, “moves things around in the house” vibe that fits a context-compilation system surprisingly well.
+<p align="center">
+  <img src="assets/hero.svg" alt="Trasgo — Self-initializing context compression codec for LLMs" width="100%"/>
+</p>
+
+<p align="center">
+  <strong>Teach any LLM a compact context language — in 3 examples, 0 training.</strong>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#how-it-works">How It Works</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#examples">Examples</a> ·
+  <a href="#results">Results</a> ·
+  <a href="docs/theory.md">Theory</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"/>
+  <img src="https://img.shields.io/badge/status-experimental-orange.svg" alt="Status: experimental"/>
+  <img src="https://img.shields.io/badge/training-none_required-brightgreen.svg" alt="No training required"/>
+  <img src="https://img.shields.io/badge/dependencies-zero-brightgreen.svg" alt="Zero dependencies"/>
+</p>
+
+---
+
+## What is Trasgo?
+
+Trasgo is a **self-initializing context compression codec** for large language models. It factors verbose natural language context into a compact, multidimensional JSON representation that frontier LLMs can read, reason over, and generate natively — after seeing just **3 examples**.
+
+No fine-tuning. No LoRA. No embeddings. No dependencies. No middleware.  
+The context window **is** the compiler.
+
+```
+520 tokens of natural language  →  §1 codec  →  85 tokens (6× compression)
+                                      ↑
+                        3 examples in the prompt
+                        model induces the grammar
+                        zero training required
+```
+
+> **Trasgo** — In Spanish folklore, a mischievous household spirit that rearranges  
+> things while you're not looking. This one rearranges your context.
+
+---
+
+## Quick Start
+
+**Step 1.** Paste [`src/boot.md`](src/boot.md) into any frontier model's context window.
+
+**Step 2.** The model reads 3 codec↔natural language pairs and induces the grammar.
+
+**Step 3.** Run the calibration query:
+
+```
+Q_codec:   What changed for K and why?
+Q_natural: What happened to the Tesla position and what's the hedging strategy?
+```
+
+**Step 4.** If both answers match semantically → codec is live. Start sending context as §1 packets:
+
+```json
+{"§":1,
+ "E":{"J":["SrEngMgr","person","Madrid"]},
+ "S":{"J.comp":"85-120k€","J.domains":["azure","snowflake","AI-ML"]},
+ "R":["V→J:dismissed"],
+ "Δ":["V.status:employed→dismissed@2026-02"],
+ "μ":{"scope":"legal","urg":0.8,"cert":0.9}}
+```
+
+The model reads this at native speed. No decompression step. It **thinks** in codec.
+
+---
+
+## How It Works
+
+### The core insight
+
+Natural language context is a high-dimensional structure smeared into a serial token stream. Most tokens are structural redundancy — articles, hedging, restatement, connective tissue.
+
+Trasgo factors the stream into its **intrinsic dimensions**:
+
+| Axis | Symbol | Encodes |
+|:-----|:------:|:--------|
+| Entities | `E` | Who/what nodes with type and location |
+| State | `S` | Current attribute values per entity |
+| Relations | `R` | Directed edges: causal, temporal, hierarchical |
+| Deltas | `Δ` | What changed and when |
+| Meta | `μ` | Scope, urgency, certainty, resolution, TTL |
+
+### Self-initialization via in-context learning
+
+Transformers implicitly implement gradient descent in their forward pass ([Garg et al., 2022](https://arxiv.org/abs/2206.11795)). When Trasgo feeds structured codec examples, the model constructs an internal mapping function `codec → semantics` that **generalizes to unseen packets**.
+
+Three examples are sufficient because:
+- The codec has **consistent structure** (same axes, same notation)
+- The model's inductive bias favors **compositional mappings**
+- Each example demonstrates a **different domain** (climate, ML, medical) — forcing the model to learn the structure, not the content
+
+### Mid-conversation evolution
+
+New axes can be introduced at any time with **one example**:
+
+```
+EX_EVO:
+{"§":1,"E":{...},...,"ρ":{"source":"experiment","peer-reviewed":false}}
+= "ρ axis tracks information provenance."
+```
+
+One example. The model now knows `ρ`. No schema update. No version bump. No reboot.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     §1 CODEC LAYER                       │
+│                                                          │
+│  3 examples → grammar induction → operational codec      │
+│  E · S · R · Δ · μ  +  evolvable custom axes            │
+│                                                          │
+├─────────────────────────────────────────────────────────┤
+│                   §P PROTOCOL LAYER                      │
+│                                                          │
+│  route · compress · decompress · filter                  │
+│  merge · checkpoint · fork                               │
+│  (each self-initializes from 1 example)                  │
+│                                                          │
+├─────────────────────────────────────────────────────────┤
+│                  §M MACHINE LAYER                        │
+│                                                          │
+│  pipeline · router · agent · mesh · loop                 │
+│  (composable — machines contain machines)                │
+│                                                          │
+│  The LLM is the runtime. JSON is the instruction set.    │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Protocol atoms (`§P`)
+
+Seven atomic operations, each learned from a single example:
+
+| Protocol | Function |
+|:---------|:---------|
+| `route` | Conditional context activation/suppression by field matching |
+| `compress` | Re-encode to Δ-only, strip axes, optional checkpoint |
+| `decompress` | Expand entity to natural language at specified depth |
+| `filter` | Budget-ranked top-k selection of packets |
+| `merge` | Multi-source Δ-union with conflict resolution |
+| `checkpoint` | Snapshot state for rollback |
+| `fork` | Create isolated context branches |
+
+### Hyperprotocol machines (`§M`)
+
+Five composable topologies:
+
+| Machine | Topology |
+|:--------|:---------|
+| `pipeline` | Sequential `§P` chain |
+| `router` | First-match dispatch to named pipes |
+| `agent` | Self-contained unit with boot, budget, and role |
+| `mesh` | Multi-agent topology with typed edges |
+| `loop` | Iterative refinement with certainty-based exit |
+
+---
+
+## Examples
+
+### Single-domain session
+
+Load a medical context, query about treatment options, receive a delta update:
+
+→ [`examples/single-domain.md`](examples/single-domain.md)
+
+### Multi-agent mesh
+
+Three agents (market analyst, legal analyst, synthesizer) in a fan-in topology, communicating via §1-Δ packets:
+
+→ [`examples/multi-agent.md`](examples/multi-agent.md)
+
+### Mid-conversation evolution
+
+Add provenance (`ρ`) and confidence decay (`τ`) axes to a live session:
+
+→ [`examples/evolution.md`](examples/evolution.md)
+
+---
+
+## Results
+
+### Scale threshold
+
+Self-initialization is an **emergent capability** with a sharp scale threshold:
+
+| Model | Boot | Calibrate | Protocol ops | Co-create |
+|:------|:----:|:---------:|:------------:|:---------:|
+| Qwen2.5-7B | ✗ | ✗ | ✗ | ✗ |
+| Frontier (Claude, GPT-4) | ✓ | ✓ | ✓ | ✓ |
+
+The 7B model recognized JSON format but failed semantic induction — it described the protocol instead of executing it (RLHF persona escape). Frontier models passed calibration, executed protocols, and **spontaneously extended** the codec with features not in the boot seed (modality selectors, TTL handling, failure recovery, linked packet references).
+
+Full cross-model test protocol: [`tests/scale-threshold.md`](tests/scale-threshold.md)
+
+### Observed compression
+
+| Context type | NL tokens | §1 tokens | Ratio |
+|:-------------|----------:|----------:|------:|
+| Single entity + state | ~120 | ~30 | 4× |
+| Multi-entity + relations | ~520 | ~85 | 6× |
+| Delta update (state change) | ~80 | ~25 | 3× |
+| Full domain context (medical) | ~800 | ~120 | 7× |
+
+*Ratios are approximate and domain-dependent. Systematic benchmarking is ongoing.*
+
+---
+
+## Repository structure
+
+```
+trasgo/
+├── src/
+│   ├── boot.md              §1 codec boot seed (paste this first)
+│   ├── hyperprotocol.md     §P protocols + §M machines
+│   └── mode-lock.md         RLHF escape prevention
+├── examples/
+│   ├── single-domain.md     Medical domain session
+│   ├── multi-agent.md       Mesh topology walkthrough
+│   └── evolution.md         Mid-conversation axis extension
+├── docs/
+│   ├── theory.md            Information-theoretic foundations
+│   ├── codec-grammar.md     Full grammar reference (human-only — never paste to model)
+│   └── field-map.md         Where Trasgo fits in the compression landscape
+├── tests/
+│   ├── calibration-suite.md 5-test validation battery
+│   └── scale-threshold.md   Cross-model comparison protocol
+├── assets/
+│   └── hero.svg             Repository hero image
+├── LICENSE                  MIT
+└── README.md
+```
+
+---
+
+## What Trasgo is NOT
+
+| Not this | But this |
+|:---------|:---------|
+| Prompt pruning (LLMLingua) | Representational re-encoding |
+| Soft prompt compression | Zero-training in-context induction |
+| KV-cache optimization | Prompt-level, model-agnostic |
+| Summarization | Lossless dimensional factoring |
+| A library to install | A protocol to paste |
+
+See [`docs/field-map.md`](docs/field-map.md) for detailed positioning against the 2024–2026 compression landscape.
+
+---
+
+## Open questions
+
+- **Compression-fidelity frontier.** Exact curve of compression ratio vs. semantic accuracy across domains and model scales.
+- **Scale threshold mapping.** Where between 7B and frontier does self-initialization emerge? (14B? 32B? 70B?)
+- **Mode-lock robustness.** Can RLHF persona escape be fully suppressed across providers?
+- **Cross-provider portability.** Same boot seed, different models — does the induced codec transfer?
+- **Multi-turn persistence.** How does codec comprehension degrade over very long sessions?
+- **Codec-native reasoning.** Does the model reason *better* from compressed representations (noise filtering effect)?
+
+---
+
+## Theory
+
+The deep connection: context is a **fiber bundle**. The base space is the entity-relation graph (low-dimensional, invariant). The fiber at each point is the elaboration — natural language, qualifiers, pragmatic framing. A §1 packet is a **section** in base coordinates. The LLM performs the **lift**.
+
+The model doesn't need geometry in its weights. It needs geometry in its **input structure**, and it reconstructs the rest.
+
+→ [`docs/theory.md`](docs/theory.md)
+
+---
+
+## License
+
+MIT — Jesús Vilela Jato, 2026
