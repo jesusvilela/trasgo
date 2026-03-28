@@ -66,7 +66,7 @@ Dot notation: `entity_key.attribute_name`. Values can be strings, numbers, array
 
 - `→` directed edge
 - `↔` bidirectional edge
-- Relation types are free-form: `constrains`, `leads`, `hedges`, `treats`, `affects`, `dismissed`, etc.
+- Relation types are free-form: `constrains`, `leads`, `hedges`, `treats`, `affects`, `funds`, etc.
 
 ### `Δ` — Deltas
 

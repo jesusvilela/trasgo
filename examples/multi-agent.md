@@ -8,15 +8,15 @@ Three agents in a fan-in topology, communicating exclusively via §1-Δ packets.
 
 ```json
 {"§M":"mesh",
- "id":"portfolio-review",
+ "id":"product-launch-review",
  "agents":[
    {"§M":"agent","id":"market",
     "role":"market analyst",
     "boot":"§1|BOOT",
     "budget":2000,
     "output":"§1-Δ"},
-   {"§M":"agent","id":"legal",
-    "role":"employment law analyst",
+   {"§M":"agent","id":"eng",
+    "role":"engineering lead",
     "boot":"§1|BOOT",
     "budget":1500,
     "output":"§1-Δ"},
@@ -28,29 +28,29 @@ Three agents in a fan-in topology, communicating exclusively via §1-Δ packets.
  ],
  "edges":[
    {"from":"market","to":"synth","type":"§1-Δ"},
-   {"from":"legal","to":"synth","type":"§1-Δ"}
+   {"from":"eng","to":"synth","type":"§1-Δ"}
  ],
  "topology":"fan-in"}
 ```
 
 ---
 
-## Input packet (broadcast to market + legal)
+## Input packet (broadcast to market + eng)
 
 ```json
 {"§":1,
- "E":{"J":["SrEngMgr","person","Madrid"],
-      "V":["Volvo","employer"],
-      "P":["portfolio","financial"],
-      "S_hearing":["SMAC","legal-proc"]},
- "S":{"J.salary":"85-120k€","J.tenure":"3y",
-      "V.status":"dismissed","V.reason":"restructuring",
-      "P.value":"45k€","P.exposure":"tech-heavy",
-      "S_hearing.date":"2026-03-30","S_hearing.claim":"unfair-dismissal"},
- "R":["V→J:dismissed","J→S_hearing:plaintiff","J→P:owner"],
- "Δ":["V.status:employed→dismissed@2026-02",
-      "P.value:52k→45k@2026-03"],
- "μ":{"scope":"multi","urg":0.8,"cert":0.85}}
+ "E":{"C":["Acme Corp","organization"],
+      "P":["product-v2","product"],
+      "M":["EU-market","market"],
+      "R_reg":["MDR-compliance","regulatory"]},
+ "S":{"C.runway":"18mo","C.team":24,
+      "P.status":"beta","P.readiness":"72%",
+      "M.tam":"340M€","M.growth":"12%/yr",
+      "R_reg.status":"pending","R_reg.deadline":"2026-06-30"},
+ "R":["C→P:develops","P→M:targets","R_reg→P:gates"],
+ "Δ":["P.readiness:55→72%@2026-03",
+      "R_reg.status:submitted→pending@2026-02"],
+ "μ":{"scope":"multi","urg":0.7,"cert":0.8}}
 ```
 
 ---
@@ -60,25 +60,25 @@ Three agents in a fan-in topology, communicating exclusively via §1-Δ packets.
 ```json
 {"§":1,
  "source":"agent:market",
- "Δ":["P.risk:moderate→high@2026-03",
-      "P.action:rebalance-to-defensive@recommended",
-      "P.hedge:increase-cash-to-30%@recommended"],
- "μ":{"scope":"portfolio","urg":0.7,"cert":0.75},
- "rationale":"tech-heavy + income-gap from dismissal = liquidity risk"}
+ "Δ":["M.window:open→narrowing@2026-Q2",
+      "M.competitor:rival-launch@2026-05",
+      "P.pricing:premium-viable@validated"],
+ "μ":{"scope":"market","urg":0.8,"cert":0.7},
+ "rationale":"competitor entering Q2, first-mover premium window closing by June"}
 ```
 
 ---
 
-## Legal agent output (§1-Δ)
+## Engineering agent output (§1-Δ)
 
 ```json
 {"§":1,
- "source":"agent:legal",
- "Δ":["S_hearing.outcome:favorable@predicted",
-      "S_hearing.compensation:6-12mo-salary@estimated",
-      "J.action:gather-performance-reviews@recommended"],
- "μ":{"scope":"legal","urg":0.9,"cert":0.6},
- "rationale":"Spanish labor law favors employee in restructuring dismissals with 3y tenure"}
+ "source":"agent:eng",
+ "Δ":["P.readiness:72→85%@projected-2026-04",
+      "P.blocker:auth-module@critical",
+      "C.team:24→22@2026-03"],
+ "μ":{"scope":"engineering","urg":0.6,"cert":0.75},
+ "rationale":"auth module blocks launch; 2 devs reassigned to compliance work"}
 ```
 
 ---
@@ -89,7 +89,7 @@ The synth agent merges the two streams:
 
 ```json
 {"§P":"merge",
- "sources":["agent:market.Δ","agent:legal.Δ"],
+ "sources":["agent:market.Δ","agent:eng.Δ"],
  "conflict":"flag-for-review",
  "emit":"unified"}
 ```
@@ -100,23 +100,23 @@ The synth agent merges the two streams:
 
 ```json
 {"§":1,
- "E":{"J":["SrEngMgr","person","Madrid"],
-      "V":["Volvo","employer"],
-      "P":["portfolio","financial"],
-      "S_hearing":["SMAC","legal-proc"]},
- "S":{"J.salary":"85-120k€","J.status":"between-roles",
-      "V.status":"dismissed",
-      "P.value":"45k€","P.risk":"high",
-      "S_hearing.date":"2026-03-30","S_hearing.prognosis":"favorable"},
- "R":["V→J:dismissed","J→S_hearing:plaintiff","J→P:owner",
-      "S_hearing→P:potential-inflow","P.risk→J.status:compounds"],
- "Δ":["P.action:rebalance-to-defensive@recommended",
-      "P.hedge:increase-cash-to-30%@recommended",
-      "S_hearing.compensation:6-12mo-salary@estimated",
-      "J.action:gather-performance-reviews@recommended"],
+ "E":{"C":["Acme Corp","organization"],
+      "P":["product-v2","product"],
+      "M":["EU-market","market"],
+      "R_reg":["MDR-compliance","regulatory"]},
+ "S":{"C.runway":"18mo","C.team":22,
+      "P.status":"beta","P.readiness":"72%",
+      "M.tam":"340M€","M.window":"narrowing",
+      "R_reg.status":"pending","R_reg.deadline":"2026-06-30"},
+ "R":["C→P:develops","P→M:targets","R_reg→P:gates",
+      "M.window→P.timeline:pressures","P.blocker→R_reg:compounds"],
+ "Δ":["P.readiness:72→85%@projected-2026-04",
+      "P.blocker:auth-module@critical",
+      "M.competitor:rival-launch@2026-05",
+      "P.pricing:premium-viable@validated"],
  "μ":{"scope":"integrated","urg":0.85,"cert":0.7},
- "conflicts":[],
- "synthesis":"Portfolio rebalancing is urgent due to income gap. SMAC hearing is favorable — potential compensation offsets medium-term. Immediate actions: (1) shift portfolio defensive, (2) prepare performance documentation for hearing."}
+ "conflicts":["M.window narrowing vs P.blocker delays — timeline tension"],
+ "synthesis":"Market window closing Q2 due to competitor entry. Engineering projects 85% by April but auth module is critical blocker. Regulatory deadline June 30 compounds timeline pressure. Recommend: (1) prioritize auth module, (2) prepare soft-launch for early adopters, (3) accelerate regulatory submission."}
 ```
 
 ---
@@ -125,5 +125,5 @@ The synth agent merges the two streams:
 
 1. **All inter-agent communication is §1.** No natural language passes between agents — only structured codec packets.
 2. **The synthesizer merges mechanically.** The `§P merge` protocol handles delta union; the synth adds cross-domain relations and an integrated assessment.
-3. **Budget is enforced per agent.** Market gets 2000 tokens, legal 1500, synth 3000. The codec's compression means these budgets go much further than natural language.
+3. **Budget is enforced per agent.** Market gets 2000 tokens, engineering 1500, synth 3000. The codec's compression means these budgets go much further than natural language.
 4. **Conflicts are explicit.** The merge protocol flags conflicting deltas for review instead of silently resolving them.

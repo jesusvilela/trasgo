@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="assets/hero.svg" alt="Trasgo — Self-initializing context compression codec for LLMs" width="100%"/>
+  <img src="assets/trasgo.png" alt="Trasgo" width="280"/>
 </p>
+
+<h1 align="center">TRASGO §1</h1>
 
 <p align="center">
   <strong>Teach any LLM a compact context language — in 3 examples, 0 training.</strong>
@@ -61,11 +63,11 @@ Q_natural: What happened to the Tesla position and what's the hedging strategy?
 
 ```json
 {"§":1,
- "E":{"J":["SrEngMgr","person","Madrid"]},
- "S":{"J.comp":"85-120k€","J.domains":["azure","snowflake","AI-ML"]},
- "R":["V→J:dismissed"],
- "Δ":["V.status:employed→dismissed@2026-02"],
- "μ":{"scope":"legal","urg":0.8,"cert":0.9}}
+ "E":{"N":["startup-founder","person","Berlin"]},
+ "S":{"N.funding":"seed-2.1M€","N.domains":["MLOps","infra","data"]},
+ "R":["N→X:founded"],
+ "Δ":["X.stage:idea→mvp@2026-01"],
+ "μ":{"scope":"business","urg":0.6,"cert":0.85}}
 ```
 
 The model reads this at native speed. No decompression step. It **thinks** in codec.

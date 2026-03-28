@@ -20,7 +20,7 @@ EX:
 {"§P":"route",
  "match":{"μ.scope":"legal"},
  "action":"activate",
- "layers":["employment_law","spanish_labor","SMAC_procedure"],
+ "layers":["contract_law","eu_regulatory","compliance"],
  "suppress":["medical","research"]}
 = "Activate legal context layers, suppress irrelevant domains. Match on μ.scope field."
 ```
