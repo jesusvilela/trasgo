@@ -39,6 +39,11 @@ import {
   unmountMcp,
 } from './runtime.mjs';
 import { serveStdio } from './service.mjs';
+import {
+  getDemoWorkflow,
+  listDemoWorkflows,
+  runDemoWorkflow,
+} from './demo-workflows.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
@@ -324,6 +329,22 @@ function listSkills() {
   ], rows, line => console.log(line));
 }
 
+function listDemos() {
+  const rows = listDemoWorkflows().map(entry => ({
+    id: entry.id,
+    lane: entry.lane,
+    title: entry.title,
+    desc: entry.summary,
+  }));
+
+  printTable('Demo Workflows', [
+    { key: 'id', label: 'ID', width: 20 },
+    { key: 'lane', label: 'Lane', width: 20 },
+    { key: 'title', label: 'Title', width: 20 },
+    { key: 'desc', label: 'Description', width: 52 },
+  ], rows, line => console.log(line));
+}
+
 function printJson(value) {
   console.log(JSON.stringify(value, null, 2));
   console.log();
@@ -335,6 +356,154 @@ function outputValue(context, value, printer) {
     return;
   }
   printer();
+}
+
+function parseDemoOptions(rest) {
+  const options = {
+    outPath: null,
+  };
+  const positional = [];
+
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (arg === '--out' && rest[i + 1]) {
+      options.outPath = rest[i + 1];
+      i += 1;
+      continue;
+    }
+    positional.push(arg);
+  }
+
+  return { options, positional };
+}
+
+function printDemoResult(result) {
+  console.log(accent(result.title) + dim(` · ${result.lane}`));
+  console.log();
+  console.log(result.summary);
+  console.log();
+  console.log(`  ${mint('decision')}   ${gold(result.output.decision)}`);
+  console.log(`  ${mint('rationale')}  ${dim(result.output.rationale)}`);
+  console.log(`  ${mint('impact')}     ${gold(result.economic_case.headline)}`);
+  console.log(`  ${mint('packet')}     ${dim(`§1 packet with ${result.packet['Δ'].length} deltas`)}`);
+  console.log();
+  console.log(accent('CTX_CONTEXT'));
+  console.log(`  ${mint('natural')}    ${gold(`~${result.ctx_context.natural_context_tokens} tok`)}`);
+  console.log(`  ${mint('codec')}      ${gold(`~${result.ctx_context.codec_context_tokens} tok`)}`);
+  console.log(`  ${mint('compress')}   ${gold(`~${result.ctx_context.compression_ratio}x`)}`);
+  console.log(`  ${mint('4k-share')}   ${dim(`${Math.round(result.ctx_context.window_4k_share * 1000) / 10}%`)}`);
+  console.log(`  ${mint('method')}     ${dim(result.ctx_context.estimation_method)}`);
+  console.log();
+  console.log(accent('Functional Gain'));
+  for (const [label, value] of Object.entries(result.functional_gain)) {
+    console.log(`  ${mint(label.padEnd(28))} ${String(value)}`);
+  }
+  console.log();
+  console.log(accent('Scientific View'));
+  console.log(`  ${dim(result.scientific_view.confirmation)}`);
+  console.log();
+  console.log(accent('Action Plan'));
+  result.recommendations.forEach((item, index) => {
+    console.log(`  ${index + 1}. ${item}`);
+  });
+  console.log();
+  console.log(`  ${mint('artifact')}   ${dim(result.artifact_path)}`);
+  console.log();
+}
+
+const EXACT_COMMANDS = new Set([
+  'help', '--help', '-h', 'status', 'init', 'pack', 'boot', 'doctor', 'serve',
+  'session', 'balance', 'skills', 'skill', 'mcp', 'send', 'packet',
+  'providers', 'runtimes', 'tools', 'machines', 'orchestrations', 'orchestrate',
+  'show', 'dashboard', 'live', 'watch', 'monitor', 'bench', 'calibrate',
+  'research', 'validate', 'run', 'demo',
+]);
+
+const NATURAL_STOPWORDS = new Set([
+  'a', 'an', 'for', 'me', 'my', 'please', 'the', 'this', 'to', 'with',
+]);
+
+function shouldInterpretNaturally(argv) {
+  if (argv.length === 0) return false;
+  const lowered = argv.map(arg => arg.toLowerCase());
+  if (!EXACT_COMMANDS.has(lowered[0])) {
+    return true;
+  }
+  if (lowered.length > 1 && NATURAL_STOPWORDS.has(lowered[1])) {
+    return true;
+  }
+  return lowered.some(token => NATURAL_STOPWORDS.has(token)) && lowered.length > 2;
+}
+
+function inferSessionTitle(phrase, fallback) {
+  const match = phrase.match(/\b(?:for|called|named)\s+(.+)$/i);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+  return fallback;
+}
+
+function interpretNaturalCommand(argv, context) {
+  if (!shouldInterpretNaturally(argv)) {
+    return null;
+  }
+
+  const phrase = argv.join(' ').trim();
+  const lower = phrase.toLowerCase();
+
+  if (/(what can you do|show help|help me|usage)/u.test(lower)) {
+    return ['help'];
+  }
+
+  if (/(show|list|display).*(runtimes|providers|models)/u.test(lower)) {
+    return ['runtimes'];
+  }
+
+  if (/(show|list|display).*(tools)/u.test(lower)) {
+    return ['tools'];
+  }
+
+  if (/(show|list|display).*(machines|workflows|orchestrations)/u.test(lower)) {
+    return ['machines'];
+  }
+
+  if (/(show|list|display).*(skills)/u.test(lower)) {
+    return ['skills'];
+  }
+
+  if (/(show|list|display).*(mcp|mounts|resources)/u.test(lower)) {
+    return ['mcp'];
+  }
+
+  if (/(show|list|display).*(demo|demos)/u.test(lower)) {
+    return ['demo', 'list'];
+  }
+
+  if (/(show|list|display).*(sessions)/u.test(lower)) {
+    return ['session', 'list'];
+  }
+
+  if (/(create|start|open).*(new )?session/u.test(lower)) {
+    return ['session', 'new', inferSessionTitle(phrase, 'trasgo-session')];
+  }
+
+  if (/(run|launch|open|show).*(factory|downtime|maintenance|operations|ops)/u.test(lower)) {
+    return ['demo', 'run', 'factory-copilot'];
+  }
+
+  if (/(run|launch|open|show).*(revenue|margin|deal|pricing|quote)/u.test(lower)) {
+    return ['demo', 'run', 'revenue-guard'];
+  }
+
+  if (/(show|check).*(balance|routing|route)/u.test(lower)) {
+    return ['balance', 'show'];
+  }
+
+  if (context.activeSessionId) {
+    return ['send', phrase];
+  }
+
+  return null;
 }
 
 function showEntry(collectionName, id) {
@@ -748,6 +917,46 @@ async function handleMcp(rest, context) {
   return 1;
 }
 
+async function handleDemo(rest, context) {
+  const [action = 'list', ...args] = rest;
+
+  if (action === 'list') {
+    listDemos();
+    return 0;
+  }
+
+  if (action === 'show' && args[0]) {
+    const demo = getDemoWorkflow(args[0]);
+    if (!demo) {
+      console.error(coral(`unknown demo workflow: ${args[0]}`));
+      return 1;
+    }
+    outputValue(context, demo, () => {
+      console.log(accent(demo.title));
+      console.log();
+      console.log(demo.summary);
+      console.log();
+      console.log(`  ${mint('lane')}      ${demo.lane}`);
+      console.log(`  ${mint('goal')}      ${demo.scenario.operator_goal}`);
+      console.log(`  ${mint('trigger')}   ${demo.scenario.trigger}`);
+      console.log();
+    });
+    return 0;
+  }
+
+  if (action === 'run' && args[0]) {
+    const { options } = parseDemoOptions(args.slice(1));
+    const result = runDemoWorkflow(args[0], options);
+    outputValue(context, result, () => {
+      printDemoResult(result);
+    });
+    return 0;
+  }
+
+  console.error(coral('usage: trasgo demo <list|show|run> [workflow-id]'));
+  return 1;
+}
+
 async function handleSend(rest, context) {
   const input = rest.join(' ').trim();
   if (!input) {
@@ -764,6 +973,11 @@ async function handleSend(rest, context) {
 
 function printHelp() {
   printBanner();
+  console.log(accent('Natural Language'));
+  console.log(`  ${mint('trasgo "show me the runtimes"')}        ${dim('intent-routes to the runtime inventory')}`);
+  console.log(`  ${mint('trasgo "run the factory copilot demo"')} ${dim('downtime-prevention workflow with savings estimate')}`);
+  console.log(`  ${mint('trasgo "run the revenue guard demo"')}  ${dim('deal-desk margin workflow with recovered profit estimate')}`);
+  console.log();
   console.log(accent('Workflow'));
   console.log(`  ${mint('trasgo')}                            ${dim('interactive runtime shell')}`);
   console.log(`  ${mint('trasgo init [title]')}               ${dim('seed a session contract + default runtime context')}`);
@@ -779,6 +993,11 @@ function printHelp() {
   console.log(`  ${mint('trasgo balance show')}               ${dim('show negotiated runtime contract')}`);
   console.log(`  ${mint('trasgo balance set <field> <value>')} ${dim('mutate balance contract')}`);
   console.log(`  ${mint('trasgo serve --stdio')}              ${dim('experimental foreground runtime host')}`);
+  console.log();
+  console.log(accent('Demo Workflows'));
+  console.log(`  ${mint('trasgo demo list')}                  ${dim('list built-in operator/economic demos')}`);
+  console.log(`  ${mint('trasgo demo run factory-copilot')}   ${dim('predictive maintenance + downtime avoidance')}`);
+  console.log(`  ${mint('trasgo demo run revenue-guard')}     ${dim('quote-margin guardrail + cash drag control')}`);
   console.log();
   console.log(accent('Context Engines'));
   console.log(`  ${mint('trasgo skills attach <id>')}         ${dim('attach skill to active session')}`);
@@ -801,6 +1020,15 @@ function printHelp() {
 
 async function executeCommand(argv, context) {
   const [command, ...rest] = argv;
+
+  const interpreted = interpretNaturalCommand(argv, context);
+  if (interpreted && interpreted.join('\0') !== argv.join('\0')) {
+    if (!context.outputJson) {
+      console.log(dim(`interpreted: trasgo ${interpreted.join(' ')}`));
+      console.log();
+    }
+    return executeCommand(interpreted, context);
+  }
 
   if (!command || command === 'shell') {
     return startShell();
@@ -837,6 +1065,7 @@ async function executeCommand(argv, context) {
   if (command === 'balance') return handleBalance(rest, context);
   if (command === 'skills' || command === 'skill') return handleSkills(rest, context);
   if (command === 'mcp') return handleMcp(rest, context);
+  if (command === 'demo') return handleDemo(rest, context);
   if (command === 'send' || command === 'packet') return handleSend(rest, context);
 
   if (command === 'providers' || command === 'runtimes') {

@@ -111,6 +111,15 @@ Repo-local launchers are included:
 
 Installed or linked via npm, the command is simply `trasgo`.
 
+Natural-language shell surface:
+- `trasgo "show me the runtimes"`
+- `trasgo "run the factory copilot demo"`
+- `trasgo "run the revenue guard demo"`
+
+Built-in demo workflows:
+- `factory-copilot`: predictive maintenance triage with `ctx_context`, compression confirmation, and avoided downtime economics.
+- `revenue-guard`: deal-desk margin protection with `ctx_context`, compression confirmation, and recovered gross profit economics.
+
 Banner modes:
 - `trasgo --logo auto ...` uses inline graphics when the terminal supports them, otherwise falls back to ASCII.
 - `trasgo --logo image ...` forces the image path with ASCII fallback.

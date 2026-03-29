@@ -8,6 +8,10 @@ const repoRoot = path.resolve(__dirname, '..');
 const nodeCli = path.join(repoRoot, 'src', 'trasgo', 'cli.mjs');
 const binName = process.platform === 'win32' ? 'trasgo.exe' : 'trasgo';
 const cargoName = process.platform === 'win32' ? 'cargo.exe' : 'cargo';
+const nativeCommands = new Set([
+  'hello', 'ask', 'load', 'explain', 'route', 'prove', 'passthrough',
+  '--version', '-V',
+]);
 
 function resolveCargoBinary() {
   if (process.env.TRASGO_CARGO) {
@@ -157,6 +161,29 @@ function printNativeStatus() {
   }, null, 2));
 }
 
+function commandAfterGlobals(argv) {
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === '--session' || arg === '--logo' || arg === '--backend' || arg === '--repo-root') {
+      i += 1;
+      continue;
+    }
+    if (arg === '--json') {
+      continue;
+    }
+    return arg;
+  }
+  return null;
+}
+
+function shouldUseNative(argv) {
+  const command = commandAfterGlobals(argv);
+  if (!command) {
+    return false;
+  }
+  return nativeCommands.has(command);
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const buildRequested = argv.includes('--build-native');
@@ -182,7 +209,7 @@ function main() {
   }
 
   const nativeBinary = resolveNativeBinary();
-  if (nativeBinary) {
+  if (nativeBinary && shouldUseNative(forwarded)) {
     const nativeRun = launch(nativeBinary, forwarded);
     if (nativeRun.ok) {
       return nativeRun.status;

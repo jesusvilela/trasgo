@@ -64,6 +64,9 @@ function main() {
   const plainHello = runLauncher(['hello']);
   assert.match(plainHello.stdout, /Hello, Operator! Welcome to Trasgo\./u);
 
+  const naturalRuntimes = runLauncher(['show', 'me', 'the', 'runtimes']);
+  assert.match(naturalRuntimes.stdout, /Runtimes/u);
+
   const hello = parseJsonCommand(['hello', '--json']);
   const sessionId = hello.session?.id;
   assert.ok(sessionId, 'hello should create a session id');
@@ -108,6 +111,22 @@ function main() {
   assert.equal(explain.summary, 'Trasgo pack bundle');
   assert.equal(explain.skills, 3);
   assert.equal(explain.mcp, 2);
+
+  const demos = runLauncher(['demo', 'list']);
+  assert.match(demos.stdout, /factory-copilot/u);
+  assert.match(demos.stdout, /revenue-guard/u);
+
+  const scientificDemo = runLauncher(['run', 'the', 'factory', 'copilot', 'demo']);
+  assert.match(scientificDemo.stdout, /CTX_CONTEXT/u);
+  assert.match(scientificDemo.stdout, /Functional Gain/u);
+
+  const factory = parseJsonCommand(['demo', 'run', 'factory-copilot', '--json']);
+  assert.equal(factory.id, 'factory-copilot');
+  assert.ok(factory.metrics.avoided_loss_usd > factory.metrics.intervention_cost_usd);
+
+  const revenue = parseJsonCommand(['demo', 'run', 'revenue-guard', '--json']);
+  assert.equal(revenue.id, 'revenue-guard');
+  assert.ok(revenue.metrics.recovered_gross_profit_usd > 0);
 
   process.stdout.write(`smoke ok on ${os.platform()}\n`);
 }

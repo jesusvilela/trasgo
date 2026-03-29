@@ -1,0 +1,109 @@
+{
+  "id": "factory-copilot",
+  "title": "Factory Copilot",
+  "lane": "operative usefulness",
+  "summary": "Predictive maintenance triage for a packaging line before a bearing failure becomes a full-line outage.",
+  "intent_examples": [
+    "run the factory copilot demo",
+    "show me the downtime workflow",
+    "launch the operations copilot"
+  ],
+  "scenario": {
+    "line": "Line 3 / packaging",
+    "trigger": "Bearing vibration, thermal drift, and yield loss climbing in the same hour.",
+    "operator_goal": "Schedule the smallest safe intervention before second shift absorbs the outage."
+  },
+  "ctx_context": {
+    "natural_context_tokens": 472,
+    "codec_context_tokens": 157,
+    "compression_ratio": 3.01,
+    "window_4k_share": 0.0383,
+    "window_32k_share": 0.0048,
+    "estimation_method": "Narrative envelope estimate vs. codec JSON length / 4 heuristic."
+  },
+  "scientific_view": {
+    "claim": "The same operational state collapses into a smaller executable context without losing the action signal.",
+    "confirmation": "Factory Copilot compresses roughly 472 narrative tokens into roughly 157 codec tokens while preserving the same intervention decision."
+  },
+  "functional_gain": {
+    "decision_latency_minutes_before": 18,
+    "decision_latency_minutes_after": 4,
+    "operator_surface_before": "spreadsheet + maint. chat + QA dashboard",
+    "operator_surface_after": "single codec brief + ranked action plan",
+    "avoided_downtime_hours": 6.5,
+    "net_savings_usd": 76900
+  },
+  "metrics": {
+    "risk_score": 0.83,
+    "planned_stop_minutes": 90,
+    "predicted_outage_hours": 6.5,
+    "avoided_loss_usd": 84500,
+    "intervention_cost_usd": 7600,
+    "net_savings_usd": 76900,
+    "roi_multiple": 10.12
+  },
+  "packet": {
+    "§": 1,
+    "E": {
+      "L3": [
+        "packing-line-3",
+        "asset"
+      ],
+      "BRG": [
+        "drive-end-bearing",
+        "component"
+      ],
+      "INV": [
+        "bearing-kit",
+        "inventory"
+      ],
+      "OPS": [
+        "shift-supervisor",
+        "person"
+      ],
+      "QA": [
+        "yield-monitor",
+        "service"
+      ]
+    },
+    "S": {
+      "L3.vibration_mm_s": 6.7,
+      "L3.changeover_backlog_min": 57,
+      "BRG.temp_c": 88,
+      "INV.on_hand": 1,
+      "QA.fp_yield_pct": 96.9
+    },
+    "R": [
+      "BRG->L3:limits",
+      "OPS->L3:operates",
+      "QA->L3:measures",
+      "INV->BRG:replaces"
+    ],
+    "Δ": [
+      "L3.vibration_mm_s:5.1->6.7@2026-03-29T14:10Z",
+      "BRG.temp_c:74->88@2026-03-29T14:12Z",
+      "QA.fp_yield_pct:98.4->96.9@2026-03-29T14:14Z",
+      "L3.changeover_backlog_min:42->57@2026-03-29T14:16Z"
+    ],
+    "μ": {
+      "scope": "operations",
+      "urg": 0.86,
+      "cert": 0.91
+    }
+  },
+  "recommendations": [
+    "Take a controlled 90-minute micro-stop before shift change and swap the drive-end bearing.",
+    "Pull the only spare bearing now and reorder two kits before the night shift starts.",
+    "Route QA to line-side verification for the first 20 pallets after restart to recover yield quickly."
+  ],
+  "economic_case": {
+    "headline": "$76,900 net same-day savings by preventing a 6.5-hour outage.",
+    "avoided_loss": "$84,500",
+    "intervention_cost": "$7,600",
+    "roi": "10.1x"
+  },
+  "output": {
+    "decision": "Controlled stop now",
+    "rationale": "The combined drift in vibration, temperature, backlog, and yield makes the failure mode operationally near-term and economically asymmetric."
+  }
+}

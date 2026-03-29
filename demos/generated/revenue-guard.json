@@ -1,0 +1,109 @@
+{
+  "id": "revenue-guard",
+  "title": "Revenue Guard",
+  "lane": "economic usefulness",
+  "summary": "Quote-approval guardrail that catches discount creep, unpaid services, and cash drag before signature.",
+  "intent_examples": [
+    "run the revenue guard demo",
+    "launch the margin workflow",
+    "show me the deal desk demo"
+  ],
+  "scenario": {
+    "account": "Northwind Biotech renewal",
+    "trigger": "Procurement asks for deeper discounting, custom SLA coverage, and slower payment terms in the same revision.",
+    "operator_goal": "Protect gross margin while keeping the deal winnable."
+  },
+  "ctx_context": {
+    "natural_context_tokens": 508,
+    "codec_context_tokens": 171,
+    "compression_ratio": 2.97,
+    "window_4k_share": 0.0417,
+    "window_32k_share": 0.0052,
+    "estimation_method": "Narrative envelope estimate vs. codec JSON length / 4 heuristic."
+  },
+  "scientific_view": {
+    "claim": "Quote governance becomes faster when pricing, services, and cash deltas share one executable context.",
+    "confirmation": "Revenue Guard compresses roughly 508 narrative tokens into roughly 171 codec tokens while preserving the guardrail verdict and economics."
+  },
+  "functional_gain": {
+    "review_cycles_before": 3,
+    "review_cycles_after": 1,
+    "operator_surface_before": "quote doc + finance notes + Slack exceptions",
+    "operator_surface_after": "single codec brief + guardrail recommendations",
+    "recovered_gross_profit_usd": 60200,
+    "cash_gap_usd": 11095.890410958904
+  },
+  "metrics": {
+    "arr_usd": 180000,
+    "baseline_margin": 0.28,
+    "requested_discount": 0.29,
+    "current_margin": -0.28,
+    "remediated_margin": 0.147,
+    "recovered_gross_profit_usd": 60200,
+    "cash_gap_usd": 11096
+  },
+  "packet": {
+    "§": 1,
+    "E": {
+      "DEAL": [
+        "enterprise-renewal",
+        "quote"
+      ],
+      "BUY": [
+        "northwind-biotech",
+        "customer"
+      ],
+      "SLA": [
+        "custom-sla",
+        "service"
+      ],
+      "FIN": [
+        "collections-team",
+        "function"
+      ],
+      "CS": [
+        "onboarding-squad",
+        "service"
+      ]
+    },
+    "S": {
+      "DEAL.arr_usd": 180000,
+      "DEAL.discount_pct": 29,
+      "DEAL.payment_terms_days": 75,
+      "SLA.cost_usd": 12000,
+      "CS.onboarding_cost_usd": 22000
+    },
+    "R": [
+      "BUY->DEAL:requests",
+      "SLA->DEAL:loads",
+      "FIN->DEAL:collects",
+      "CS->DEAL:launches"
+    ],
+    "Δ": [
+      "DEAL.discount_pct:18->28.999999999999996@2026-03-29T09:20Z",
+      "DEAL.payment_terms_days:30->75@2026-03-29T09:22Z",
+      "SLA.cost_usd:0->12000@2026-03-29T09:24Z",
+      "CS.onboarding_cost_usd:0->22000@2026-03-29T09:25Z"
+    ],
+    "μ": {
+      "scope": "revenue-operations",
+      "urg": 0.81,
+      "cert": 0.9
+    }
+  },
+  "recommendations": [
+    "Cap the discount at 20% unless the custom SLA is billed as a separate premium line item.",
+    "Recover onboarding cost explicitly instead of burying it inside ARR.",
+    "Hold payment terms at 45 days or require annual prepay to offset working-capital drag."
+  ],
+  "economic_case": {
+    "headline": "$60,200 gross profit recovered and $11,096 less cash drag with a guarded quote revision.",
+    "current_margin": "-28%",
+    "remediated_margin": "14.7%",
+    "recovered_gross_profit": "$60,200"
+  },
+  "output": {
+    "decision": "Revise quote before approval",
+    "rationale": "The requested revision combines price leakage, unfunded service load, and cash delay into one unattractive deal shape."
+  }
+}

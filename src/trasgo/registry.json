@@ -127,6 +127,22 @@
       "description": "Launch the live observatory watcher."
     },
     {
+      "id": "factory-copilot-demo",
+      "layer": "demo",
+      "runner": "node",
+      "entry": "src/trasgo/demo-workflows.mjs",
+      "args": ["run", "factory-copilot"],
+      "description": "Run the factory downtime triage demo with an operational savings brief."
+    },
+    {
+      "id": "revenue-guard-demo",
+      "layer": "demo",
+      "runner": "node",
+      "entry": "src/trasgo/demo-workflows.mjs",
+      "args": ["run", "revenue-guard"],
+      "description": "Run the deal-desk margin protection demo with recovered profit estimates."
+    },
+    {
       "id": "bench",
       "layer": "orchestration",
       "runner": "python",
@@ -203,6 +219,22 @@
       "steps": [
         { "tool": "research" },
         { "tool": "dashboard" }
+      ]
+    },
+    {
+      "id": "factory-copilot",
+      "type": "pipeline",
+      "description": "Operational downtime-prevention demo with codec packet, action plan, and savings estimate.",
+      "steps": [
+        { "tool": "factory-copilot-demo" }
+      ]
+    },
+    {
+      "id": "revenue-guard",
+      "type": "pipeline",
+      "description": "Revenue-operations demo for guarding deal margin, services load, and cash terms.",
+      "steps": [
+        { "tool": "revenue-guard-demo" }
       ]
     }
   ],
