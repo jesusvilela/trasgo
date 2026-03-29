@@ -1,0 +1,264 @@
+{
+  "abstraction": {
+    "id": "trasgo",
+    "layer": "control-plane",
+    "description": "Upper CLI layer that routes admin, orchestration, MCP, and skill flows into local/cloud LLM runtimes."
+  },
+  "runtimes": [
+    {
+      "id": "lmstudio",
+      "kind": "local",
+      "api": "openai-compatible",
+      "base_url": "http://192.168.56.1:1234/v1",
+      "base_url_env": "TRASGO_LMSTUDIO_URL",
+      "probe_path": "/models",
+      "capabilities": ["bench", "research", "dashboard", "runtime"],
+      "footprint": {
+        "calibration": 0.7,
+        "transfer": 0.65,
+        "delta": 0.75,
+        "protocol": 0.45,
+        "structured": 0.4,
+        "efficiency": 0.85,
+        "locality": 1.0,
+        "privacy": 1.0,
+        "cost": 0.95
+      }
+    },
+    {
+      "id": "medgemma",
+      "kind": "local",
+      "api": "openai-compatible",
+      "base_url": "http://192.168.56.1:1234/v1",
+      "base_url_env": "TRASGO_LMSTUDIO_URL",
+      "probe_path": "/models",
+      "capabilities": ["bench", "dashboard", "runtime"],
+      "model": "medgemma-27b-text-it",
+      "footprint": {
+        "calibration": 0.74,
+        "transfer": 0.74,
+        "delta": 0.68,
+        "protocol": 0.55,
+        "structured": 0.89,
+        "efficiency": 0.86,
+        "locality": 1.0,
+        "privacy": 1.0,
+        "cost": 0.9
+      }
+    },
+    {
+      "id": "deepseek",
+      "kind": "cloud",
+      "api": "deepseek",
+      "base_url": "https://api.deepseek.com/v1",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "probe_path": "/models",
+      "capabilities": ["bench", "dashboard", "runtime"],
+      "model": "deepseek-chat",
+      "footprint": {
+        "calibration": 0.84,
+        "transfer": 0.84,
+        "delta": 0.84,
+        "protocol": 0.7,
+        "structured": 0.93,
+        "efficiency": 0.75,
+        "locality": 0.1,
+        "privacy": 0.35,
+        "cost": 0.5
+      }
+    },
+    {
+      "id": "glm",
+      "kind": "cloud",
+      "api": "openai-compatible",
+      "base_url": "https://api.z.ai/api/paas/v4",
+      "api_key_env": "GLM_API_KEY",
+      "probe_path": "/models",
+      "capabilities": ["bench", "dashboard", "runtime"],
+      "model": "glm-5",
+      "footprint": {
+        "calibration": 0.68,
+        "transfer": 0.6,
+        "delta": 0.68,
+        "protocol": 0.45,
+        "structured": 0.71,
+        "efficiency": 0.65,
+        "locality": 0.1,
+        "privacy": 0.35,
+        "cost": 0.6
+      }
+    },
+    {
+      "id": "openai",
+      "kind": "cloud",
+      "api": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "probe_path": "/models",
+      "capabilities": ["calibrate", "runtime"],
+      "model": "gpt-4o",
+      "footprint": {
+        "calibration": 0.95,
+        "transfer": 0.95,
+        "delta": 0.95,
+        "protocol": 0.9,
+        "structured": 0.95,
+        "efficiency": 0.55,
+        "locality": 0.1,
+        "privacy": 0.3,
+        "cost": 0.35
+      }
+    }
+  ],
+  "tools": [
+    {
+      "id": "dashboard",
+      "layer": "admin",
+      "runner": "node",
+      "entry": "dashboard.mjs",
+      "description": "Render the Trasgo observatory dashboard once."
+    },
+    {
+      "id": "live-dashboard",
+      "layer": "admin",
+      "runner": "node",
+      "entry": "dashboard.mjs",
+      "args": ["--live"],
+      "description": "Launch the live observatory watcher."
+    },
+    {
+      "id": "bench",
+      "layer": "orchestration",
+      "runner": "python",
+      "entry": "tests/bench_online.py",
+      "description": "Run the 6-test bench against a configured runtime."
+    },
+    {
+      "id": "calibrate",
+      "layer": "orchestration",
+      "runner": "python",
+      "entry": "tests/run_calibration.py",
+      "description": "Run the OpenAI calibration flow."
+    },
+    {
+      "id": "research",
+      "layer": "orchestration",
+      "runner": "python",
+      "entry": "tests/research_runner.py",
+      "description": "Run the full cross-runtime research suite."
+    },
+    {
+      "id": "serve",
+      "layer": "admin",
+      "runner": "node",
+      "entry": "src/trasgo/cli.mjs",
+      "args": ["serve", "--stdio"],
+      "description": "Run the experimental Trasgo runtime host over stdio."
+    },
+    {
+      "id": "validate",
+      "layer": "admin",
+      "runner": "python",
+      "entry": "tests/validator.py",
+      "description": "Validate existing bench outputs and surface recoverable errors."
+    }
+  ],
+  "machines": [
+    {
+      "id": "observatory",
+      "type": "pipeline",
+      "description": "Admin observatory loop for continuous dashboard monitoring.",
+      "steps": [
+        { "tool": "live-dashboard" }
+      ]
+    },
+    {
+      "id": "bench-suite",
+      "type": "router",
+      "description": "Route a runtime id into the benchmark runner.",
+      "steps": [
+        { "tool": "bench", "passthrough": true }
+      ]
+    },
+    {
+      "id": "calibration-loop",
+      "type": "pipeline",
+      "description": "Boot and calibrate a frontier runtime.",
+      "steps": [
+        { "tool": "calibrate", "passthrough": true }
+      ]
+    },
+    {
+      "id": "runtime-broker",
+      "type": "broker",
+      "description": "Session runtime with negotiated local/API balancing.",
+      "steps": [
+        { "tool": "serve" }
+      ]
+    },
+    {
+      "id": "research-mesh",
+      "type": "mesh",
+      "description": "Run research suite then inspect artifacts in the dashboard.",
+      "steps": [
+        { "tool": "research" },
+        { "tool": "dashboard" }
+      ]
+    }
+  ],
+  "mcp": [
+    {
+      "id": "bench-artifacts",
+      "transport": "filesystem",
+      "root": "tests",
+      "resources": ["bench_*.json", "bench_structured_results.json", "research_results.json"],
+      "description": "Structured benchmark outputs exposed as machine-readable context."
+    },
+    {
+      "id": "codec-docs",
+      "transport": "filesystem",
+      "root": "src",
+      "resources": ["boot.md", "hyperprotocol.md", "mode-lock.md", "validate.md"],
+      "description": "Core codec and hyperprotocol source documents surfaced as runtime context."
+    },
+    {
+      "id": "runtime-registry",
+      "transport": "memory",
+      "root": "src/trasgo/registry.json",
+      "resources": ["runtimes", "tools", "machines", "mcp", "skills"],
+      "description": "In-process registry for the Trasgo control plane."
+    }
+  ],
+  "skills": [
+    {
+      "id": "boot-loader",
+      "kind": "prompt",
+      "entry": "src/boot.md",
+      "description": "Three-example §1 boot seed for grammar induction."
+    },
+    {
+      "id": "hyperprotocol",
+      "kind": "protocol",
+      "entry": "src/hyperprotocol.md",
+      "description": "§P atoms and §M machine definitions."
+    },
+    {
+      "id": "mode-lock",
+      "kind": "guardrail",
+      "entry": "src/mode-lock.md",
+      "description": "Keep the runtime in codec mode and suppress persona escape."
+    },
+    {
+      "id": "validate",
+      "kind": "guardrail",
+      "entry": "src/validate.md",
+      "description": "Validation and correction layer over §1 responses."
+    },
+    {
+      "id": "balance-isa",
+      "kind": "protocol",
+      "entry": "src/hyperprotocol.md",
+      "description": "Runtime balancing ISA with brokered local/API dispatch."
+    }
+  ]
+}

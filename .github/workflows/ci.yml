@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  native-smoke:
+    name: Native Smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    env:
+      CARGO_BUILD_JOBS: 1
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path rust/trasgo/Cargo.toml -j 1
+
+      - name: Build native launcher target
+        run: node scripts/trasgo-launch.cjs --build-native
+
+      - name: Run launcher smoke tests
+        run: node scripts/ci-smoke.mjs
+
+      - name: Upload Windows release binary
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v6
+        with:
+          name: trasgo-windows-native
+          path: rust/trasgo/target/release/trasgo.exe
+          if-no-files-found: error
+
+      - name: Upload Linux release binary
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v6
+        with:
+          name: trasgo-linux-native
+          path: rust/trasgo/target/release/trasgo
+          if-no-files-found: error

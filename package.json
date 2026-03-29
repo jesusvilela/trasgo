@@ -1,0 +1,54 @@
+{
+  "name": "incontextcompilation",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">   <img src=\"assets/trasgo.png\" alt=\"Trasgo\" width=\"280\"/> </p>",
+  "main": "scripts/trasgo-launch.cjs",
+  "bin": {
+    "trasgo": "./bin/trasgo"
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node scripts/ci-smoke.mjs",
+    "cli": "node scripts/trasgo-launch.cjs",
+    "native:status": "node scripts/trasgo-launch.cjs --native-status",
+    "native:build": "node scripts/trasgo-launch.cjs --build-native",
+    "native:smoke": "node scripts/ci-smoke.mjs",
+    "ops:init": "node scripts/trasgo-launch.cjs init",
+    "ops:pack": "node scripts/trasgo-launch.cjs pack",
+    "ops:boot": "node scripts/trasgo-launch.cjs boot",
+    "status": "node scripts/trasgo-launch.cjs status",
+    "doctor": "node scripts/trasgo-launch.cjs doctor",
+    "serve": "node scripts/trasgo-launch.cjs serve --stdio",
+    "live": "node scripts/trasgo-launch.cjs live",
+    "dashboard": "node scripts/trasgo-launch.cjs dashboard",
+    "bench": "node scripts/trasgo-launch.cjs bench",
+    "calibrate": "node scripts/trasgo-launch.cjs calibrate",
+    "research": "node scripts/trasgo-launch.cjs research",
+    "validate": "node scripts/trasgo-launch.cjs validate"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jesusvilela/trasgo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jesusvilela/trasgo/issues"
+  },
+  "homepage": "https://github.com/jesusvilela/trasgo#readme",
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.6.2",
+    "chalk-animation": "^2.0.3",
+    "cli-table3": "^0.6.5",
+    "figlet": "^1.11.0",
+    "gradient-string": "^3.0.0",
+    "ora": "^9.3.0"
+  }
+}

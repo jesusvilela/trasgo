@@ -74,6 +74,62 @@ The model reads this at native speed. No decompression step. It **thinks** in co
 
 ---
 
+## CLI Layer
+
+Trasgo now supports a top-level CLI layer that sits above the model runtime:
+
+```text
+trasgo -> local/cloud LLM runtime
+```
+
+Use it as the orchestration surface for admin control, session runtime execution, MCP/skill mounting, dashboarding, benchmarking, and calibration:
+
+```bash
+trasgo init "portfolio runtime"
+trasgo pack --out .trasgo-runtime/packs/portfolio.json
+trasgo boot --from .trasgo-runtime/packs/portfolio.json
+trasgo send "What changed for K and why?"
+trasgo status
+trasgo doctor --probe
+trasgo runtimes
+trasgo tools
+trasgo mcp
+trasgo skills
+trasgo session new
+trasgo --session <id> send "§P|BALANCE ..."
+trasgo --session <id> send "What changed for K and why?"
+trasgo serve --stdio
+trasgo live
+trasgo bench lmstudio
+trasgo bench deepseek --json --validate
+trasgo calibrate
+```
+
+Repo-local launchers are included:
+- macOS / Linux: `./bin/trasgo`
+- Windows: `.\trasgo.cmd`
+
+Installed or linked via npm, the command is simply `trasgo`.
+
+Banner modes:
+- `trasgo --logo auto ...` uses inline graphics when the terminal supports them, otherwise falls back to ASCII.
+- `trasgo --logo image ...` forces the image path with ASCII fallback.
+- `trasgo --logo ascii ...` keeps the figlet banner.
+
+Primary workflow:
+
+```text
+trasgo init -> trasgo pack -> trasgo boot -> trasgo send
+```
+
+- `init` seeds a session-first runtime contract and attaches the default boot/protocol context.
+- `pack` builds a reusable trasgo bundle from the active session: attached skills, mounted MCP surfaces, `§1|BOOT`, and the current `§P|BALANCE` packet.
+- `boot` activates that bundle into a live session, computes the broker decision, and pins the active runtime contract before work is sent.
+
+`trasgo` is now intended to be the runtime shell. The `BALANCE` protocol negotiates a session-scoped local/API contract, seeded from benchmark footprints and refined by observed behavior during the conversation.
+
+---
+
 ## How It Works
 
 ### The core insight
@@ -125,14 +181,14 @@ One example. The model now knows `ρ`. No schema update. No version bump. No reb
 ├─────────────────────────────────────────────────────────┤
 │                   §P PROTOCOL LAYER                      │
 │                                                          │
-│  route · compress · decompress · filter                  │
-│  merge · checkpoint · fork                               │
+│  route · compress · decompress · filter · validate       │
+│  merge · checkpoint · fork · balance                     │
 │  (each self-initializes from 1 example)                  │
 │                                                          │
 ├─────────────────────────────────────────────────────────┤
 │                  §M MACHINE LAYER                        │
 │                                                          │
-│  pipeline · router · agent · mesh · loop                 │
+│  pipeline · router · agent · mesh · loop · broker        │
 │  (composable — machines contain machines)                │
 │                                                          │
 │  The LLM is the runtime. JSON is the instruction set.    │
@@ -141,7 +197,7 @@ One example. The model now knows `ρ`. No schema update. No version bump. No reb
 
 ### Protocol atoms (`§P`)
 
-Seven atomic operations, each learned from a single example:
+Nine atomic operations, each learned from a single example:
 
 | Protocol | Function |
 |:---------|:---------|
@@ -152,10 +208,12 @@ Seven atomic operations, each learned from a single example:
 | `merge` | Multi-source Δ-union with conflict resolution |
 | `checkpoint` | Snapshot state for rollback |
 | `fork` | Create isolated context branches |
+| `validate` | Detect and correct response errors against packet state |
+| `balance` | Negotiate local/API runtime contract for subsequent turns |
 
 ### Hyperprotocol machines (`§M`)
 
-Five composable topologies:
+Six composable topologies:
 
 | Machine | Topology |
 |:--------|:---------|
@@ -164,6 +222,7 @@ Five composable topologies:
 | `agent` | Self-contained unit with boot, budget, and role |
 | `mesh` | Multi-agent topology with typed edges |
 | `loop` | Iterative refinement with certainty-based exit |
+| `broker` | Runtime dispatch across negotiated local/API targets |
 
 ---
 

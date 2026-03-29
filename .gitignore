@@ -15,6 +15,11 @@ node_modules/
 dist/
 *.tgz
 
+# Native build outputs
+target/
+rust/trasgo/target/
+.trasgo-runtime/
+
 # Python (if Python tooling is added later)
 __pycache__/
 *.pyc

@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Create release if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG_NAME" >/dev/null 2>&1 || \
+          gh release create "$TAG_NAME" --verify-tag --title "$TAG_NAME" --generate-notes
+
+  publish-binaries:
+    name: Publish Native Binary (${{ matrix.os }})
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    env:
+      CARGO_BUILD_JOBS: 1
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --manifest-path rust/trasgo/Cargo.toml --release -j 1
+
+      - name: Package Unix artifact
+        if: runner.os != 'Windows'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+          OS_NAME: ${{ runner.os }}
+        run: |
+          mkdir -p dist
+          cp rust/trasgo/target/release/trasgo dist/
+          cp README.md LICENSE dist/
+          asset="trasgo-${OS_NAME,,}-${TAG_NAME}.tar.gz"
+          tar -C dist -czf "$asset" .
+          echo "ASSET_PATH=$asset" >> "$GITHUB_ENV"
+
+      - name: Package Windows artifact
+        if: runner.os == 'Windows'
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item rust\trasgo\target\release\trasgo.exe dist\
+          Copy-Item README.md dist\
+          Copy-Item LICENSE dist\
+          $asset = "trasgo-windows-$env:TAG_NAME.zip"
+          if (Test-Path $asset) {
+            Remove-Item $asset -Force
+          }
+          Compress-Archive -Path dist\* -DestinationPath $asset
+          "ASSET_PATH=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: gh release upload "$TAG_NAME" "$ASSET_PATH" --clobber
