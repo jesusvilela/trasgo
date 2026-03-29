@@ -3,6 +3,11 @@
 Four self-contained demos mapping §1 to a real instruction set architecture.
 Every demo is **reproducible**: paste the prompts into any frontier model (Claude, GPT-4o, Gemini) and verify the results yourself. Same "binary," different "CPU."
 
+Generated scientific surfaces:
+- Video walkthrough: [`trasgo-evolved-cli-demo.gif`](trasgo-evolved-cli-demo.gif)
+- Runtime demo artifacts: [`generated/factory-copilot.json`](generated/factory-copilot.json), [`generated/revenue-guard.json`](generated/revenue-guard.json)
+- Native verification commands: `trasgo "run the factory copilot demo"`, `trasgo "run the revenue guard demo"`, `trasgo tokens --codec <json> --natural <text>`
+
 | Demo | ISA Phase | What it proves |
 |:-----|:----------|:---------------|
 | [01](01-grammar-induction.md) | Microcode Bootstrap | 3 examples = firmware load → operational ISA |

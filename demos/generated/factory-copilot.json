@@ -14,16 +14,96 @@
     "operator_goal": "Schedule the smallest safe intervention before second shift absorbs the outage."
   },
   "ctx_context": {
-    "natural_context_tokens": 472,
-    "codec_context_tokens": 157,
-    "compression_ratio": 3.01,
-    "window_4k_share": 0.0383,
-    "window_32k_share": 0.0048,
-    "estimation_method": "Narrative envelope estimate vs. codec JSON length / 4 heuristic."
+    "natural_context_tokens": 677,
+    "codec_context_tokens": 250,
+    "compression_ratio": 2.71,
+    "window_4k_share": 0.06438333333333333,
+    "window_32k_share": 0.00805,
+    "window_128k_share": 0.0020166666666666666,
+    "exact_method": "Exact tokenizer battery across openai-o200k, openai-cl100k, llama3, gemma, deepseek, glm.",
+    "family_spread": {
+      "codec_tokens": {
+        "min": 245,
+        "max": 312
+      },
+      "natural_tokens": {
+        "min": 673,
+        "max": 685
+      },
+      "compression_ratio": {
+        "min": 2.2,
+        "max": 2.76
+      }
+    },
+    "best_family": "llama3",
+    "worst_family": "gemma",
+    "effective_context_note": "Nominal fit is not effective fit: context remains a sequential computational substrate, so retrieval quality and token position still matter.",
+    "battery": [
+      {
+        "id": "openai-o200k",
+        "family": "OpenAI O200k",
+        "codec_tokens": 253,
+        "natural_tokens": 673,
+        "compression_ratio": 2.66,
+        "window_4k_share": 0.0618,
+        "window_32k_share": 0.0077,
+        "window_128k_share": 0.0019
+      },
+      {
+        "id": "openai-cl100k",
+        "family": "OpenAI CL100k",
+        "codec_tokens": 246,
+        "natural_tokens": 677,
+        "compression_ratio": 2.75,
+        "window_4k_share": 0.0601,
+        "window_32k_share": 0.0075,
+        "window_128k_share": 0.0019
+      },
+      {
+        "id": "llama3",
+        "family": "Llama 3",
+        "codec_tokens": 245,
+        "natural_tokens": 677,
+        "compression_ratio": 2.76,
+        "window_4k_share": 0.0598,
+        "window_32k_share": 0.0075,
+        "window_128k_share": 0.0019
+      },
+      {
+        "id": "gemma",
+        "family": "Gemma",
+        "codec_tokens": 312,
+        "natural_tokens": 685,
+        "compression_ratio": 2.2,
+        "window_4k_share": 0.0762,
+        "window_32k_share": 0.0095,
+        "window_128k_share": 0.0024
+      },
+      {
+        "id": "deepseek",
+        "family": "DeepSeek",
+        "codec_tokens": 281,
+        "natural_tokens": 674,
+        "compression_ratio": 2.4,
+        "window_4k_share": 0.0686,
+        "window_32k_share": 0.0086,
+        "window_128k_share": 0.0021
+      },
+      {
+        "id": "glm",
+        "family": "GLM",
+        "codec_tokens": 245,
+        "natural_tokens": 677,
+        "compression_ratio": 2.76,
+        "window_4k_share": 0.0598,
+        "window_32k_share": 0.0075,
+        "window_128k_share": 0.0019
+      }
+    ]
   },
   "scientific_view": {
     "claim": "The same operational state collapses into a smaller executable context without losing the action signal.",
-    "confirmation": "Factory Copilot compresses roughly 472 narrative tokens into roughly 157 codec tokens while preserving the same intervention decision."
+    "confirmation": "Factory Copilot compresses 673-685 natural tokens into 245-312 codec tokens across the tokenizer battery, yielding 2.2x-2.76x compression while preserving the same intervention decision. Best codec family: llama3. Worst codec family: gemma. Nominal fit is not effective fit: context remains a sequential computational substrate, so retrieval quality and token position still matter."
   },
   "functional_gain": {
     "decision_latency_minutes_before": 18,

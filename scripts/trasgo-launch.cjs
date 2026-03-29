@@ -9,7 +9,7 @@ const nodeCli = path.join(repoRoot, 'src', 'trasgo', 'cli.mjs');
 const binName = process.platform === 'win32' ? 'trasgo.exe' : 'trasgo';
 const cargoName = process.platform === 'win32' ? 'cargo.exe' : 'cargo';
 const nativeCommands = new Set([
-  'hello', 'ask', 'load', 'explain', 'route', 'prove', 'passthrough',
+  'hello', 'ask', 'load', 'explain', 'route', 'prove', 'tokens', 'optimize', 'passthrough',
   '--version', '-V',
 ]);
 
@@ -208,9 +208,18 @@ function main() {
     }
   }
 
-  const nativeBinary = resolveNativeBinary();
-  if (nativeBinary && shouldUseNative(forwarded)) {
-    const nativeRun = launch(nativeBinary, forwarded);
+  const needsNative = shouldUseNative(forwarded);
+  let nativeBinary = resolveNativeBinary();
+  if (needsNative && !nativeBinary) {
+    const manifest = candidateManifests().find(file => fs.existsSync(file));
+    if (manifest) {
+      buildNative(manifest);
+      nativeBinary = resolveNativeBinary();
+    }
+  }
+
+  if (nativeBinary && needsNative) {
+    const nativeRun = launch(nativeBinary, ['--repo-root', repoRoot, ...forwarded]);
     if (nativeRun.ok) {
       return nativeRun.status;
     }

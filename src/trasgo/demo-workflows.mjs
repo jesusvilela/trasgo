@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { buildScientificContext, runTokenReport } from './token-science.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(moduleDir, '..', '..');
@@ -26,20 +27,35 @@ function pct(value, digits = 1) {
   return `${round(value * 100, digits)}%`;
 }
 
-function estimateCodecTokens(packet) {
-  return Math.ceil(JSON.stringify(packet).length / 4);
+function buildCtxContext(packet, naturalNarrative) {
+  const report = runTokenReport({
+    codec: JSON.stringify(packet),
+    natural: naturalNarrative,
+  });
+  return buildScientificContext(report);
 }
 
-function buildCtxContext(packet, naturalContextTokens) {
-  const codecContextTokens = estimateCodecTokens(packet);
-  return {
-    natural_context_tokens: naturalContextTokens,
-    codec_context_tokens: codecContextTokens,
-    compression_ratio: round(naturalContextTokens / codecContextTokens, 2),
-    window_4k_share: round(codecContextTokens / 4096, 4),
-    window_32k_share: round(codecContextTokens / 32768, 4),
-    estimation_method: 'Narrative envelope estimate vs. codec JSON length / 4 heuristic.',
-  };
+function buildCompressionConfirmation(label, ctxContext, preservedSignal) {
+  const naturalRange = ctxContext.family_spread.natural_tokens;
+  const codecRange = ctxContext.family_spread.codec_tokens;
+  const ratioRange = ctxContext.family_spread.compression_ratio;
+  const naturalText = naturalRange
+    ? `${naturalRange.min}-${naturalRange.max} natural tokens`
+    : `${ctxContext.natural_context_tokens} natural tokens`;
+  const codecText = `${codecRange.min}-${codecRange.max} codec tokens`;
+  const ratioText = ratioRange
+    ? `${ratioRange.min}x-${ratioRange.max}x`
+    : `${ctxContext.compression_ratio}x`;
+
+  return `${label} compresses ${naturalText} into ${codecText} across the tokenizer battery, yielding ${ratioText} compression while preserving ${preservedSignal}. Best codec family: ${ctxContext.best_family}. Worst codec family: ${ctxContext.worst_family}. ${ctxContext.effective_context_note}`;
+}
+
+function printBatteryRows(ctxContext) {
+  for (const entry of ctxContext.battery) {
+    const natural = entry.natural_tokens ?? '-';
+    const ratio = entry.compression_ratio ?? '-';
+    console.log(`  ${entry.id.padEnd(14)} ${String(natural).padStart(4)} -> ${String(entry.codec_tokens).padStart(4)} tok  ${String(ratio).padStart(5)}x`);
+  }
 }
 
 function ensureGeneratedDir() {
@@ -86,7 +102,21 @@ function factoryCopilotDemo() {
     },
   };
 
-  const ctxContext = buildCtxContext(packet, 472);
+  const naturalNarrative = [
+    'Line 3 on the packaging floor is showing a coupled failure pattern before second shift and the operating team is trying to decide whether to intervene now or keep the line running through the backlog.',
+    'The drive-end bearing has been warming steadily for the last hour. What started as a routine thermal drift at 74C is now sitting at 88C, which places the component close to the upper edge of the line-specific operating envelope.',
+    'At the same time, vibration on the line has moved from 5.1 to 6.7 millimeters per second. Maintenance history on this asset says that when temperature and vibration rise together, the probability of an uncontrolled stop goes up sharply, especially if the next changeover is already under pressure.',
+    'Operations is also watching a backlog problem. Changeover delay has moved from 42 minutes to 57 minutes, which means the line is more exposed to a disruption because there is less slack to absorb a failure during the current production window.',
+    'QA has independently reported that first-pass yield is down from 98.4 percent to 96.9 percent. That is not catastrophic on its own, but in combination with the thermal and vibration signature it suggests the line is already degrading in a way the operators can feel on finished output.',
+    'Inventory is constrained. There is only one bearing kit available on site for this exact component, so if the team decides to act they can do it immediately, but if they defer and the spare is consumed later during an unplanned stop, recovery options get worse rather than better.',
+    'The shift supervisor needs a concrete recommendation, not a narrative postmortem. The real decision is whether to accept a short controlled micro-stop before shift change, replace the drive-end bearing while labor and QA attention are still available, and restart under supervision, or push forward and risk a multi-hour outage later when the operational asymmetry is much worse.',
+    'From an economic perspective the line is carrying roughly thirteen thousand dollars of lost output per hour during a full outage. A short planned intervention would cost labor, parts, and schedule friction, but it would almost certainly be cheaper than absorbing a six-and-a-half-hour failure if the bearing lets go under load.',
+    'A full natural-language handoff would also restate who is involved and what each team is seeing: maintenance sees the bearing drift, operations sees the backlog, QA sees the yield slip, and inventory sees the spare-parts limit. Human operators usually need that coordination context spelled out explicitly because it lives in different dashboards and different conversations.',
+    'The memo would further explain that the current state is still recoverable in a planned way. Restart validation can be contained to the first twenty pallets after intervention, and the crew can still choose a moment that minimizes customer impact. That window is operationally valuable and should be treated as part of the state, not as an afterthought.',
+    'If the line is allowed to drift into an unplanned stop, the team loses that choice architecture. The outage becomes reactive, the same spare kit is still consumed, yield recovery starts later, and the second shift inherits a problem that could have been contained in the current shift.',
+    'That is why the natural-language baseline for this decision is large: it has to preserve sensor drift, quality drift, maintenance history, spare-part posture, restart procedure, labor timing, and economic asymmetry before the operator can safely choose the smallest effective intervention.',
+  ].join(' ');
+  const ctxContext = buildCtxContext(packet, naturalNarrative);
   const functionalGain = {
     decision_latency_minutes_before: 18,
     decision_latency_minutes_after: 4,
@@ -114,7 +144,7 @@ function factoryCopilotDemo() {
     ctx_context: ctxContext,
     scientific_view: {
       claim: 'The same operational state collapses into a smaller executable context without losing the action signal.',
-      confirmation: `Factory Copilot compresses roughly ${ctxContext.natural_context_tokens} narrative tokens into roughly ${ctxContext.codec_context_tokens} codec tokens while preserving the same intervention decision.`,
+      confirmation: buildCompressionConfirmation('Factory Copilot', ctxContext, 'the same intervention decision'),
     },
     functional_gain: functionalGain,
     metrics: {
@@ -195,7 +225,20 @@ function revenueGuardDemo() {
     },
   };
 
-  const ctxContext = buildCtxContext(packet, 508);
+  const naturalNarrative = [
+    'Northwind Biotech is renegotiating an enterprise renewal and the commercial team is under pressure to close the deal quickly because the account matters strategically and the quarter is still open.',
+    'Procurement has bundled several asks into one revision rather than negotiating them separately. First, they want the discount raised from 18 percent to 29 percent. Second, they want payment terms stretched from 30 days to 75 days. Third, they want custom SLA coverage added even though the current quote structure does not explicitly recover that service burden.',
+    'Each of those requests would be manageable in isolation, but together they create a materially different deal shape. Price leakage, unfunded service delivery, and slower cash collection are all hitting the same commercial object at the same moment.',
+    'The base annual contract value is one hundred and eighty thousand dollars. Customer success is expecting a twenty-two-thousand-dollar onboarding burden to deliver the expanded scope properly, and the service organization is carrying another twelve-thousand-dollar custom SLA load if the exception is granted.',
+    'Finance has already flagged that longer payment terms create working-capital drag, especially if half the contracted value is effectively delayed relative to the current baseline. Deal desk is separately worried that the requested discount is masking costs that should either be billed explicitly or traded for stronger commercial terms.',
+    'The approver does not want three disconnected narratives from sales, customer success, and collections. They need one compressed decision context that answers the real operating question: if this revision is accepted as written, what happens to gross profit, margin quality, and cash timing; and if the quote is revised, which guardrail changes recover value without making the deal unwinnable.',
+    'In practical terms the choice is whether to approve a structurally unattractive quote, send back a guarded revision that caps the discount and recovers onboarding or SLA cost, or escalate the exception to a higher approval band. The point of compression here is to preserve all three economic forces in one executable packet rather than burying them in a long thread of quote notes and side-channel comments.',
+    'A full ordinary-language commercial memo would also explain the behavioral risk. If the organization signs off on a renewal that combines deeper discounting, slower payment, and extra service load in one motion, future procurement cycles are likely to anchor on that structure and treat it as precedent rather than exception.',
+    'The account team therefore needs the natural-language baseline to carry more than arithmetic. It needs to carry negotiation shape, cost recovery logic, cash-timing consequences, approval precedent, and the distinction between a winnable concession and an economically distorted contract.',
+    'The memo would also make explicit that there is still a path to close: reduce the discount closer to twenty percent, recover onboarding explicitly, and either tighten payment terms or exchange them for a stronger commitment such as annual prepay. That richer narrative is what the compressed packet is meant to preserve without losing decision quality.',
+    'In other words, the natural briefing is long because humans have to reconcile pricing, service delivery, collections posture, and precedent management at once. The compressed packet is valuable only if it can preserve that same multi-axis decision surface while shrinking the context footprint materially.',
+  ].join(' ');
+  const ctxContext = buildCtxContext(packet, naturalNarrative);
   const functionalGain = {
     review_cycles_before: 3,
     review_cycles_after: 1,
@@ -223,7 +266,7 @@ function revenueGuardDemo() {
     ctx_context: ctxContext,
     scientific_view: {
       claim: 'Quote governance becomes faster when pricing, services, and cash deltas share one executable context.',
-      confirmation: `Revenue Guard compresses roughly ${ctxContext.natural_context_tokens} narrative tokens into roughly ${ctxContext.codec_context_tokens} codec tokens while preserving the guardrail verdict and economics.`,
+      confirmation: buildCompressionConfirmation('Revenue Guard', ctxContext, 'the guardrail verdict and economics'),
     },
     functional_gain: functionalGain,
     metrics: {
@@ -294,11 +337,16 @@ function printHumanDemo(result) {
   console.log(`  packet      §1 packet with ${result.packet['Δ'].length} deltas`);
   console.log();
   console.log('CTX_CONTEXT');
-  console.log(`  natural     ~${result.ctx_context.natural_context_tokens} tok`);
-  console.log(`  codec       ~${result.ctx_context.codec_context_tokens} tok`);
-  console.log(`  compression ~${result.ctx_context.compression_ratio}x`);
+  console.log(`  natural     ${result.ctx_context.natural_context_tokens} tok median`);
+  console.log(`  codec       ${result.ctx_context.codec_context_tokens} tok median`);
+  console.log(`  compression ${result.ctx_context.compression_ratio}x median`);
   console.log(`  4k share    ${pct(result.ctx_context.window_4k_share)}`);
-  console.log(`  method      ${result.ctx_context.estimation_method}`);
+  console.log(`  spread      ${result.ctx_context.family_spread.codec_tokens.min}-${result.ctx_context.family_spread.codec_tokens.max} codec tok`);
+  console.log(`  method      ${result.ctx_context.exact_method}`);
+  console.log(`  note        ${result.ctx_context.effective_context_note}`);
+  console.log();
+  console.log('Tokenizer Battery');
+  printBatteryRows(result.ctx_context);
   console.log();
   console.log('Functional Gain');
   for (const [key, value] of Object.entries(result.functional_gain)) {

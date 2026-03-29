@@ -14,16 +14,96 @@
     "operator_goal": "Protect gross margin while keeping the deal winnable."
   },
   "ctx_context": {
-    "natural_context_tokens": 508,
-    "codec_context_tokens": 171,
-    "compression_ratio": 2.97,
-    "window_4k_share": 0.0417,
-    "window_32k_share": 0.0052,
-    "estimation_method": "Narrative envelope estimate vs. codec JSON length / 4 heuristic."
+    "natural_context_tokens": 625,
+    "codec_context_tokens": 253,
+    "compression_ratio": 2.47,
+    "window_4k_share": 0.06526666666666665,
+    "window_32k_share": 0.008166666666666668,
+    "window_128k_share": 0.0020333333333333336,
+    "exact_method": "Exact tokenizer battery across openai-o200k, openai-cl100k, llama3, gemma, deepseek, glm.",
+    "family_spread": {
+      "codec_tokens": {
+        "min": 250,
+        "max": 315
+      },
+      "natural_tokens": {
+        "min": 621,
+        "max": 626
+      },
+      "compression_ratio": {
+        "min": 1.98,
+        "max": 2.5
+      }
+    },
+    "best_family": "llama3",
+    "worst_family": "gemma",
+    "effective_context_note": "Nominal fit is not effective fit: context remains a sequential computational substrate, so retrieval quality and token position still matter.",
+    "battery": [
+      {
+        "id": "openai-o200k",
+        "family": "OpenAI O200k",
+        "codec_tokens": 255,
+        "natural_tokens": 621,
+        "compression_ratio": 2.44,
+        "window_4k_share": 0.0623,
+        "window_32k_share": 0.0078,
+        "window_128k_share": 0.0019
+      },
+      {
+        "id": "openai-cl100k",
+        "family": "OpenAI CL100k",
+        "codec_tokens": 251,
+        "natural_tokens": 626,
+        "compression_ratio": 2.49,
+        "window_4k_share": 0.0613,
+        "window_32k_share": 0.0077,
+        "window_128k_share": 0.0019
+      },
+      {
+        "id": "llama3",
+        "family": "Llama 3",
+        "codec_tokens": 250,
+        "natural_tokens": 626,
+        "compression_ratio": 2.5,
+        "window_4k_share": 0.061,
+        "window_32k_share": 0.0076,
+        "window_128k_share": 0.0019
+      },
+      {
+        "id": "gemma",
+        "family": "Gemma",
+        "codec_tokens": 315,
+        "natural_tokens": 624,
+        "compression_ratio": 1.98,
+        "window_4k_share": 0.0769,
+        "window_32k_share": 0.0096,
+        "window_128k_share": 0.0024
+      },
+      {
+        "id": "deepseek",
+        "family": "DeepSeek",
+        "codec_tokens": 282,
+        "natural_tokens": 621,
+        "compression_ratio": 2.2,
+        "window_4k_share": 0.0688,
+        "window_32k_share": 0.0086,
+        "window_128k_share": 0.0022
+      },
+      {
+        "id": "glm",
+        "family": "GLM",
+        "codec_tokens": 251,
+        "natural_tokens": 626,
+        "compression_ratio": 2.49,
+        "window_4k_share": 0.0613,
+        "window_32k_share": 0.0077,
+        "window_128k_share": 0.0019
+      }
+    ]
   },
   "scientific_view": {
     "claim": "Quote governance becomes faster when pricing, services, and cash deltas share one executable context.",
-    "confirmation": "Revenue Guard compresses roughly 508 narrative tokens into roughly 171 codec tokens while preserving the guardrail verdict and economics."
+    "confirmation": "Revenue Guard compresses 621-626 natural tokens into 250-315 codec tokens across the tokenizer battery, yielding 1.98x-2.5x compression while preserving the guardrail verdict and economics. Best codec family: llama3. Worst codec family: gemma. Nominal fit is not effective fit: context remains a sequential computational substrate, so retrieval quality and token position still matter."
   },
   "functional_gain": {
     "review_cycles_before": 3,

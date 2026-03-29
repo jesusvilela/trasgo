@@ -115,10 +115,21 @@ Natural-language shell surface:
 - `trasgo "show me the runtimes"`
 - `trasgo "run the factory copilot demo"`
 - `trasgo "run the revenue guard demo"`
+- `trasgo tokens --codec <json> --natural <text>`
+- `trasgo optimize --codec <json>`
 
 Built-in demo workflows:
 - `factory-copilot`: predictive maintenance triage with `ctx_context`, compression confirmation, and avoided downtime economics.
 - `revenue-guard`: deal-desk margin protection with `ctx_context`, compression confirmation, and recovered gross profit economics.
+
+Demo assets:
+- Video walkthrough: [`demos/trasgo-evolved-cli-demo.gif`](demos/trasgo-evolved-cli-demo.gif)
+- Scientific artifacts: [`demos/generated/factory-copilot.json`](demos/generated/factory-copilot.json), [`demos/generated/revenue-guard.json`](demos/generated/revenue-guard.json)
+
+Exact scientific surfaces:
+- `trasgo tokens` measures exact token counts across `openai-o200k`, `openai-cl100k`, `llama3`, `gemma`, `deepseek`, and `glm`.
+- `trasgo optimize` scores ASCII alias variants and reports the lowest-median token form without rewriting files.
+- The dashboard and demo workflows now use the same exact token battery instead of heuristic `ctx_context` estimates.
 
 Banner modes:
 - `trasgo --logo auto ...` uses inline graphics when the terminal supports them, otherwise falls back to ASCII.

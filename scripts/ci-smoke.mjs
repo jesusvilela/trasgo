@@ -53,6 +53,8 @@ function parseJsonCommand(args) {
 }
 
 function main() {
+  runLauncher(['--build-native'], { quiet: true });
+
   const status = parseJsonCommand(['--native-status']);
   assert.equal(status.repo_root, repoRoot);
   assert.ok(status.native_binary, 'native binary path should be present');
@@ -112,21 +114,44 @@ function main() {
   assert.equal(explain.skills, 3);
   assert.equal(explain.mcp, 2);
 
+  const tokenReport = parseJsonCommand([
+    'tokens',
+    '--codec',
+    '{"§":1,"Δ":["A->B"],"μ":{"scope":"ops"}}',
+    '--natural',
+    'Operator_state_transition_metadata_envelope',
+  ]);
+  assert.equal(tokenReport.kind, 'trasgo-token-report');
+  assert.equal(tokenReport.models.length, 6);
+  assert.equal(tokenReport.summary.best_codec_family.length > 0, true);
+
+  const optimize = parseJsonCommand([
+    'optimize',
+    '--codec',
+    '{"§":1,"R":["A→B:flows"],"Δ":["A→B@t"],"μ":{"scope":"ops"}}',
+  ]);
+  assert.equal(optimize.kind, 'trasgo-token-optimization');
+  assert.ok(optimize.recommended?.id, 'optimize should recommend a candidate');
+
   const demos = runLauncher(['demo', 'list']);
   assert.match(demos.stdout, /factory-copilot/u);
   assert.match(demos.stdout, /revenue-guard/u);
 
   const scientificDemo = runLauncher(['run', 'the', 'factory', 'copilot', 'demo']);
   assert.match(scientificDemo.stdout, /CTX_CONTEXT/u);
+  assert.match(scientificDemo.stdout, /Tokenizer Battery/u);
   assert.match(scientificDemo.stdout, /Functional Gain/u);
 
   const factory = parseJsonCommand(['demo', 'run', 'factory-copilot', '--json']);
   assert.equal(factory.id, 'factory-copilot');
   assert.ok(factory.metrics.avoided_loss_usd > factory.metrics.intervention_cost_usd);
+  assert.match(factory.ctx_context.exact_method, /Exact tokenizer battery/u);
+  assert.ok(factory.ctx_context.battery.length >= 6);
 
   const revenue = parseJsonCommand(['demo', 'run', 'revenue-guard', '--json']);
   assert.equal(revenue.id, 'revenue-guard');
   assert.ok(revenue.metrics.recovered_gross_profit_usd > 0);
+  assert.match(revenue.ctx_context.exact_method, /Exact tokenizer battery/u);
 
   process.stdout.write(`smoke ok on ${os.platform()}\n`);
 }

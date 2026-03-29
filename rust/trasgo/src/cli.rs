@@ -2,6 +2,7 @@ use crate::legacy;
 use crate::models::*;
 use crate::runtime;
 use crate::storage;
+use crate::token_science::{self, TokenScienceEngine};
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser, Subcommand};
 use serde_json::{json, Value};
@@ -37,6 +38,8 @@ enum Commands {
     Explain(ExplainArgs),
     Route(RouteArgs),
     Prove(ProveArgs),
+    Tokens(TokenArgs),
+    Optimize(OptimizeArgs),
     Passthrough(PassthroughArgs),
 }
 
@@ -102,6 +105,24 @@ struct ProveArgs {
     title: Option<String>,
 }
 
+#[derive(Args, Debug, Default)]
+struct TokenArgs {
+    #[arg(long)]
+    codec: String,
+    #[arg(long)]
+    natural: Option<String>,
+    #[arg(long, default_value = "all")]
+    models: String,
+}
+
+#[derive(Args, Debug)]
+struct OptimizeArgs {
+    #[arg(long)]
+    codec: String,
+    #[arg(long, default_value = "all")]
+    models: String,
+}
+
 #[derive(Args, Debug)]
 struct PassthroughArgs {
     #[arg(required = true)]
@@ -128,6 +149,8 @@ pub fn run() -> Result<()> {
         Commands::Explain(args) => run_explain(&base_dir, &registry, &flags, args),
         Commands::Route(args) => run_route(&base_dir, &registry, &flags, args),
         Commands::Prove(args) => run_prove(&base_dir, &registry, &flags, args),
+        Commands::Tokens(args) => run_tokens(&base_dir, &flags, args),
+        Commands::Optimize(args) => run_optimize(&base_dir, &flags, args),
         Commands::Passthrough(args) => {
             let code = legacy::passthrough(&base_dir, &args.args)?;
             std::process::exit(code);
@@ -457,6 +480,46 @@ fn run_prove(base_dir: &Path, registry: &Registry, flags: &CliFlags, args: Prove
         }))?;
     } else {
         print_plain("Trasgo proof generated");
+    }
+    Ok(())
+}
+
+fn parse_model_list(raw: &str) -> Vec<String> {
+    raw.split(',')
+        .map(|part| part.trim().to_string())
+        .filter(|part| !part.is_empty())
+        .collect()
+}
+
+fn crate_root_from_repo(base_dir: &Path) -> PathBuf {
+    base_dir.join("rust").join("trasgo")
+}
+
+fn run_tokens(base_dir: &Path, flags: &CliFlags, args: TokenArgs) -> Result<()> {
+    let engine = TokenScienceEngine::new(&crate_root_from_repo(base_dir), &parse_model_list(&args.models))?;
+    let codec = token_science::resolve_input(&args.codec, "codec")?;
+    let natural = args
+        .natural
+        .as_deref()
+        .map(|value| token_science::resolve_input(value, "natural"))
+        .transpose()?;
+    let report = engine.analyze(codec, natural)?;
+    if flags.json {
+        print_json(&serde_json::to_value(report)?)?;
+    } else {
+        print_plain(&serde_json::to_string_pretty(&report)?);
+    }
+    Ok(())
+}
+
+fn run_optimize(base_dir: &Path, flags: &CliFlags, args: OptimizeArgs) -> Result<()> {
+    let engine = TokenScienceEngine::new(&crate_root_from_repo(base_dir), &parse_model_list(&args.models))?;
+    let codec = token_science::resolve_input(&args.codec, "codec")?;
+    let report = engine.optimize(codec)?;
+    if flags.json {
+        print_json(&serde_json::to_value(report)?)?;
+    } else {
+        print_plain(&serde_json::to_string_pretty(&report)?);
     }
     Ok(())
 }

@@ -388,11 +388,20 @@ function printDemoResult(result) {
   console.log(`  ${mint('packet')}     ${dim(`§1 packet with ${result.packet['Δ'].length} deltas`)}`);
   console.log();
   console.log(accent('CTX_CONTEXT'));
-  console.log(`  ${mint('natural')}    ${gold(`~${result.ctx_context.natural_context_tokens} tok`)}`);
-  console.log(`  ${mint('codec')}      ${gold(`~${result.ctx_context.codec_context_tokens} tok`)}`);
-  console.log(`  ${mint('compress')}   ${gold(`~${result.ctx_context.compression_ratio}x`)}`);
+  console.log(`  ${mint('natural')}    ${gold(`${result.ctx_context.natural_context_tokens} tok median`)}`);
+  console.log(`  ${mint('codec')}      ${gold(`${result.ctx_context.codec_context_tokens} tok median`)}`);
+  console.log(`  ${mint('compress')}   ${gold(`${result.ctx_context.compression_ratio}x median`)}`);
   console.log(`  ${mint('4k-share')}   ${dim(`${Math.round(result.ctx_context.window_4k_share * 1000) / 10}%`)}`);
-  console.log(`  ${mint('method')}     ${dim(result.ctx_context.estimation_method)}`);
+  console.log(`  ${mint('spread')}     ${dim(`${result.ctx_context.family_spread.codec_tokens.min}-${result.ctx_context.family_spread.codec_tokens.max} codec tok`)}`);
+  console.log(`  ${mint('method')}     ${dim(result.ctx_context.exact_method)}`);
+  console.log(`  ${mint('effective')}  ${dim(result.ctx_context.effective_context_note)}`);
+  console.log();
+  console.log(accent('Tokenizer Battery'));
+  for (const entry of result.ctx_context.battery) {
+    const natural = entry.natural_tokens ?? '-';
+    const ratio = entry.compression_ratio ?? '-';
+    console.log(`  ${mint(entry.id.padEnd(14))} ${String(natural).padStart(4)} -> ${String(entry.codec_tokens).padStart(4)} tok  ${dim(`${ratio}x`)}`);
+  }
   console.log();
   console.log(accent('Functional Gain'));
   for (const [label, value] of Object.entries(result.functional_gain)) {
@@ -417,6 +426,7 @@ const EXACT_COMMANDS = new Set([
   'providers', 'runtimes', 'tools', 'machines', 'orchestrations', 'orchestrate',
   'show', 'dashboard', 'live', 'watch', 'monitor', 'bench', 'calibrate',
   'research', 'validate', 'run', 'demo',
+  'tokens', 'optimize',
 ]);
 
 const NATURAL_STOPWORDS = new Set([
@@ -1010,6 +1020,8 @@ function printHelp() {
   console.log(`  ${mint('trasgo doctor [--probe]')}          ${dim('env + optional runtime probes')}`);
   console.log(`  ${mint('trasgo runtimes | tools | machines')} ${dim('list registry surfaces')}`);
   console.log(`  ${mint('trasgo dashboard | live')}           ${dim('observatory views')}`);
+  console.log(`  ${mint('trasgo tokens --codec <json> [--natural <text>]')} ${dim('exact multi-family token counts and compression')}`);
+  console.log(`  ${mint('trasgo optimize --codec <json>')}    ${dim('ASCII alias search scored across the token battery')}`);
   console.log(`  ${mint('trasgo bench | calibrate | research | validate')} ${dim('legacy orchestration adapters')}`);
   console.log();
   console.log(accent('Global'));

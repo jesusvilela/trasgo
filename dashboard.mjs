@@ -16,10 +16,12 @@ import path from 'path';
 import process from 'node:process';
 import readline from 'node:readline';
 import { fileURLToPath } from 'url';
+import { buildScientificContext, runTokenReport } from './src/trasgo/token-science.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TESTS_DIR = path.join(__dirname, 'tests');
 const ARGS = new Set(process.argv.slice(2));
+let scientificCache = null;
 
 function getTerminalWidth() {
   const envWidth = Number.parseInt(process.env.COLUMNS || '', 10);
@@ -97,9 +99,10 @@ function renderBanner() {
 }
 
 function renderContextWindow() {
-  const bootTokens = 480;
-  const calibrationTokens = 120;
-  const protocolOverhead = 60;
+  const science = loadScientificFixtures();
+  const bootTokens = science.contextBudget.boot.medianTokens;
+  const calibrationTokens = science.contextBudget.calibration.medianTokens;
+  const protocolOverhead = science.contextBudget.protocol.medianTokens;
   const totalSeed = bootTokens + calibrationTokens + protocolOverhead;
 
   // Context window budget visualization
@@ -112,9 +115,9 @@ function renderContextWindow() {
 
   console.log(boxen(
     trasgo(' CONTEXT WINDOW BUDGET ') + '\n\n' +
-    `  ${accent('Boot seed')}       ${gold(bootTokens + ' tok')}  ${dim('(3 examples, grammar induction)')}\n` +
-    `  ${accent('Calibration')}     ${gold(calibrationTokens + ' tok')}  ${dim('(dual query + verify)')}\n` +
-    `  ${accent('§P overhead')}     ${gold(protocolOverhead + ' tok')}  ${dim('(validate + mode-lock)')}\n` +
+    `  ${accent('Boot seed')}       ${gold(bootTokens + ' tok')}  ${dim(`(${science.contextBudget.boot.spread.min}-${science.contextBudget.boot.spread.max} across families)`) }\n` +
+    `  ${accent('Calibration')}     ${gold(calibrationTokens + ' tok')}  ${dim(`(${science.contextBudget.calibration.spread.min}-${science.contextBudget.calibration.spread.max} across families)`) }\n` +
+    `  ${accent('§P overhead')}     ${gold(protocolOverhead + ' tok')}  ${dim(`(${science.contextBudget.protocol.spread.min}-${science.contextBudget.protocol.spread.max} across families)`) }\n` +
     `  ${mint('Total seed')}      ${chalk.bold.hex('#00CEC9')(totalSeed + ' tok')}  ${dim('= codec is LIVE')}\n\n` +
     windows.map(w => {
       const pct = (totalSeed / w.total * 100).toFixed(1);
@@ -137,13 +140,7 @@ function sectionHeader(title, sprite) {
 }
 
 function renderCompressionRatios() {
-  const ratios = [
-    { ctx: 'Single entity + state', nl: 120, s1: 30, ratio: 4.0 },
-    { ctx: 'Multi-entity + relations', nl: 520, s1: 85, ratio: 6.1 },
-    { ctx: 'Delta update', nl: 80, s1: 25, ratio: 3.2 },
-    { ctx: 'Full domain (energy grid)', nl: 800, s1: 120, ratio: 6.7 },
-    { ctx: 'Nuclear plant (10 entities)', nl: 950, s1: 140, ratio: 6.8 },
-  ];
+  const ratios = loadScientificFixtures().compressionCases;
 
   const table = new Table(COMPACT ? {
     head: ['Type', 'NL', '§1', '×', 'Save'].map(h => lavender(h)),
@@ -436,6 +433,91 @@ function renderFooter() {
   );
   console.log(`  ${dim('« ' + quote + ' »')}`);
   console.log();
+}
+
+function loadScientificFixtures() {
+  if (scientificCache) {
+    return scientificCache;
+  }
+
+  const bootSeed = fs.readFileSync(path.join(__dirname, 'src', 'boot.md'), 'utf8');
+  const calibrationSeed = [
+    'Dual-query calibration fixture.',
+    'Question one asks the runtime to answer in codec form.',
+    'Question two perturbs the domain and verifies that the answer stays structurally aligned.',
+    'The calibration seed is intentionally short and repeatable so context budget claims stay measurable.',
+  ].join(' ');
+  const protocolSeed = [
+    fs.readFileSync(path.join(__dirname, 'src', 'mode-lock.md'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'src', 'validate.md'), 'utf8'),
+  ].join('\n\n');
+
+  const budgetReports = {
+    boot: runTokenReport({ codec: bootSeed }),
+    calibration: runTokenReport({ codec: calibrationSeed }),
+    protocol: runTokenReport({ codec: protocolSeed }),
+  };
+
+  const compressionCases = [
+    {
+      ctx: 'Single entity + state',
+      natural: 'A single pump asset is operating in zone A during a routine production window. The operator briefing says the pump is healthy enough to continue running, but the control room still needs a machine-readable summary because downstream reasoning will compare pressure, temperature, and state across a larger set of equipment later in the shift. The discharge pressure is 4.2 bar, the outlet temperature is 67C, and there are no active relationship deltas beyond the current operating snapshot. In prose form this is a short maintenance note; in codec form it should collapse to a compact packet without carrying the extra narrative glue. A full natural-language operations memo would also restate that the unit is online, that the measurements were taken during a normal run rather than after maintenance, that no alarm threshold is currently breached, and that the point of preservation is comparability across later packets rather than immediate intervention. That extra explanatory wording is cheap for humans but expensive for context windows.',
+      codec: { '§': 1, E: { P1: ['pump-1', 'asset'] }, S: { 'P1.pressure_bar': 4.2, 'P1.outlet_temp_c': 67 }, 'Δ': [], 'μ': { scope: 'ops', urg: 0.3, cert: 0.95 } },
+    },
+    {
+      ctx: 'Multi-entity + relations',
+      natural: 'A warehouse robot, charging dock, aisle camera, and picker supervisor are all involved in a congestion event that is starting to slow the picking lane. The robot battery is dropping, the aisle camera has identified an obstruction, the nearest dock is already occupied, and the supervisor needs the state represented as one relational context rather than as separate dashboard fragments. In plain language the operator would normally describe the battery drain, the blocked aisle, the unavailable dock, and the human routing dependency in several sentences. The experiment here is whether that same relational picture can be preserved in a much tighter executable packet. A fuller narrative would additionally explain why the obstruction matters for this robot specifically, why the occupied dock removes the obvious recovery path, how the supervisor is now part of the control loop, and why the lane slowdown is operationally downstream of those same relations rather than a separate event.',
+      codec: { '§': 1, E: { R1: ['robot-1', 'asset'], D1: ['dock-1', 'station'], C1: ['aisle-cam', 'sensor'], S1: ['picker-supervisor', 'person'] }, S: { 'R1.battery_pct': 18, 'D1.occupied': true, 'C1.obstruction': true }, R: ['R1->D1:needs', 'C1->R1:observes', 'S1->R1:routes'], 'Δ': ['R1.battery_pct:24->18@2026-03-29T18:20Z'], 'μ': { scope: 'warehouse', urg: 0.82, cert: 0.91 } },
+    },
+    {
+      ctx: 'Delta update',
+      natural: 'A reactor feed valve update arrives as a narrow operational change, but the human note still describes both the prior state and the new one. The valve moved from closed to throttled and inlet flow increased from 0.8 to 1.1 cubic meters per hour. The receiving system does not need a paragraph of surrounding prose, only the delta and the scoped metadata that lets the runtime interpret the change correctly. This case measures how efficiently a small narrative change request can collapse into a delta-focused packet. In ordinary prose, the note would still restate the equipment name, the meaning of the transition, the fact that both changes occurred in the same event window, and that the new state should be interpreted as controlled throttling rather than a random fluctuation. Those explanatory tokens add up quickly even when the operational change is small.',
+      codec: { '§': 1, E: { V1: ['feed-valve', 'component'] }, S: { 'V1.state': 'throttled', 'V1.inlet_flow_m3_h': 1.1 }, 'Δ': ['V1.state:closed->throttled@2026-03-29T18:42Z', 'V1.inlet_flow_m3_h:0.8->1.1@2026-03-29T18:42Z'], 'μ': { scope: 'process', urg: 0.58, cert: 0.94 } },
+    },
+    {
+      ctx: 'Energy grid domain',
+      natural: 'An energy operator is monitoring a feeder, a substation transformer, and a load forecast service during a local overload risk ahead of the evening peak. Transformer load is climbing, forecasted demand is rising, and the switching window available to the operator is narrowing. A traditional narrative briefing would spell out the transformer state, forecast revision, and intervention window in a full paragraph with operational framing. The compression question is whether the same grid decision context can be preserved in one structured packet while remaining faithful to the dependencies between forecast, asset, and action window. A longer handoff would also explain that the forecast is materially changing the transformer risk, that the feeder is the path through which any intervention lands, and that the operator must act before the switching window closes if they want to avoid a more disruptive reconfiguration under peak conditions. It would usually add the surrounding justification too: why the evening peak matters, why the forecast delta is not noise, why this transformer rather than another one is the constrained asset, and how the remaining intervention window changes the quality of the operator decision.',
+      codec: { '§': 1, E: { F7: ['feeder-7', 'grid-edge'], T2: ['substation-transformer-2', 'asset'], LF: ['load-forecast', 'service'] }, S: { 'T2.load_pct': 87, 'LF.peak_delta_mw': 4.3, 'F7.switching_window_min': 25 }, R: ['LF->T2:projects', 'T2->F7:feeds'], 'Δ': ['T2.load_pct:79->87@2026-03-29T18:55Z', 'LF.peak_delta_mw:2.8->4.3@2026-03-29T18:56Z'], 'μ': { scope: 'grid-ops', urg: 0.78, cert: 0.9 } },
+    },
+    {
+      ctx: 'Nuclear plant domain',
+      natural: 'A nuclear operations team is correlating coolant loop pressure, pump vibration, containment ventilation state, and maintenance readiness after a sequence of instrumentation drifts. In human briefings this would normally be written as a conservative multi-sentence status note that reintroduces the loop, the pump, the support system, the maintenance crew, and the safety scope before stating the actual deltas. The scientific question is whether the packet can preserve the same causal relations, deltas, and safety-scoped metadata while collapsing the surrounding narrative overhead that human operators tend to repeat in prose. A fuller safety memo would also explain why ventilation state remains relevant even when it has not changed, why maintenance readiness must be visible before escalation, and why the pressure and vibration drifts should be treated as one monitoring picture rather than independent anomalies. It would add conservative redundancy as well: restating that the loop is still operating, that the pump relation to the loop is the reason vibration matters, that maintenance readiness determines how quickly the state can be stabilized, and that the safety scope changes how every drift should be interpreted by downstream readers.',
+      codec: { '§': 1, E: { CL: ['coolant-loop-a', 'system'], P3: ['pump-3', 'asset'], CV: ['containment-vent', 'system'], MT: ['maintenance-team', 'crew'] }, S: { 'CL.pressure_bar': 152.4, 'P3.vibration_mm_s': 5.6, 'CV.mode': 'standby', 'MT.ready': true }, R: ['P3->CL:circulates', 'CV->CL:supports', 'MT->P3:repairs'], 'Δ': ['CL.pressure_bar:148.9->152.4@2026-03-29T19:02Z', 'P3.vibration_mm_s:4.7->5.6@2026-03-29T19:03Z'], 'μ': { scope: 'safety-ops', urg: 0.74, cert: 0.93 } },
+    },
+  ].map(entry => {
+    const report = runTokenReport({
+      codec: JSON.stringify(entry.codec),
+      natural: entry.natural,
+    });
+    const scientific = buildScientificContext(report);
+    return {
+      ctx: entry.ctx,
+      nl: scientific.natural_context_tokens,
+      s1: scientific.codec_context_tokens,
+      ratio: scientific.compression_ratio,
+    };
+  });
+
+  scientificCache = {
+    contextBudget: {
+      boot: summarizeBudgetReport(budgetReports.boot),
+      calibration: summarizeBudgetReport(budgetReports.calibration),
+      protocol: summarizeBudgetReport(budgetReports.protocol),
+    },
+    compressionCases,
+  };
+
+  return scientificCache;
+}
+
+function summarizeBudgetReport(report) {
+  return {
+    medianTokens: Math.round(report.summary.codec_tokens.median),
+    spread: {
+      min: report.summary.codec_tokens.min,
+      max: report.summary.codec_tokens.max,
+    },
+  };
 }
 
 function renderLiveStatus(note = 'watching tests/*.json') {

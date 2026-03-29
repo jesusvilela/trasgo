@@ -14,7 +14,7 @@ OUTPUT = ROOT / "demos" / "trasgo-evolved-cli-demo.gif"
 WIDTH = 1280
 HEIGHT = 720
 PADDING = 44
-LINE_HEIGHT = 28
+LINE_HEIGHT = 24
 
 
 def load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -29,7 +29,7 @@ def load_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-FONT = load_font(22)
+FONT = load_font(20)
 TITLE_FONT = load_font(36)
 
 
@@ -49,15 +49,22 @@ def run_cli(args: list[str]) -> str:
   return (result.stdout or "").strip()
 
 
-def normalize_output(raw: str, max_lines: int = 14) -> list[str]:
+def normalize_output(raw: str, max_lines: int = 18) -> list[str]:
     lines: list[str] = []
+    previous_blank = False
     for original in raw.splitlines():
         line = original.rstrip()
+        if line.startswith("interpreted:"):
+            continue
         if not line:
+            if previous_blank:
+                continue
             lines.append("")
+            previous_blank = True
             continue
         wrapped = textwrap.wrap(line, width=80, break_long_words=False, break_on_hyphens=False)
         lines.extend(wrapped or [""])
+        previous_blank = False
     return lines[:max_lines]
 
 
