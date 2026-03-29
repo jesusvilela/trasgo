@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trasgo §1 — In-Context Virtualization</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 60px 40px 40px;
+    background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+    border-bottom: 1px solid #21262d;
+  }
+  .hero h1 {
+    font-size: 2.8em;
+    color: #58a6ff;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+  .hero .subtitle {
+    font-size: 1.15em;
+    color: #8b949e;
+    max-width: 600px;
+    margin: 0 auto 24px;
+  }
+  .hero .tags {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 14px;
+    font-size: 0.82em;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  .tag.blue { background: #1f6feb22; border: 1px solid #1f6feb; color: #58a6ff; }
+  .tag.green { background: #23863622; border: 1px solid #238636; color: #3fb950; }
+  .tag.orange { background: #d2992222; border: 1px solid #d29922; color: #e3b341; }
+
+  /* ── Layout ── */
+  .container { max-width: 1000px; margin: 0 auto; padding: 40px 30px; }
+
+  /* ── Progression diagram ── */
+  .progression {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin: 40px 0 50px;
+    position: relative;
+  }
+  .progression::after {
+    content: '';
+    position: absolute;
+    top: 36px;
+    left: 12%;
+    right: 12%;
+    height: 2px;
+    background: linear-gradient(90deg, #58a6ff, #3fb950, #e3b341, #f0883e);
+    z-index: 0;
+  }
+  .prog-step {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .prog-num {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0 auto 12px;
+  }
+  .prog-step:nth-child(1) .prog-num { background: #1f6feb33; border: 2px solid #58a6ff; color: #58a6ff; }
+  .prog-step:nth-child(2) .prog-num { background: #23863633; border: 2px solid #3fb950; color: #3fb950; }
+  .prog-step:nth-child(3) .prog-num { background: #d2992233; border: 2px solid #e3b341; color: #e3b341; }
+  .prog-step:nth-child(4) .prog-num { background: #f0883e33; border: 2px solid #f0883e; color: #f0883e; }
+  .prog-label {
+    font-size: 0.85em;
+    color: #8b949e;
+    margin-bottom: 4px;
+  }
+  .prog-title {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: #e6edf3;
+  }
+
+  /* ── Demo cards ── */
+  .demo-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    overflow: hidden;
+  }
+  .demo-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .demo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3em;
+    flex-shrink: 0;
+  }
+  .demo-card:nth-of-type(1) .demo-icon { background: #1f6feb33; color: #58a6ff; }
+  .demo-card:nth-of-type(2) .demo-icon { background: #23863633; color: #3fb950; }
+  .demo-card:nth-of-type(3) .demo-icon { background: #d2992233; color: #e3b341; }
+  .demo-card:nth-of-type(4) .demo-icon { background: #f0883e33; color: #f0883e; }
+  .demo-title { font-size: 1.1em; color: #e6edf3; }
+  .demo-desc { font-size: 0.85em; color: #8b949e; margin-top: 2px; }
+  .demo-body { padding: 20px 24px; }
+
+  /* ── Code blocks ── */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    font-size: 0.88em;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .code-label {
+    color: #484f58;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .k { color: #79c0ff; }  /* key */
+  .s { color: #a5d6ff; }  /* string */
+  .n { color: #ff9e64; }  /* number */
+  .c { color: #8b949e; font-style: italic; }  /* comment */
+  .h { color: #e3b341; font-weight: bold; }  /* highlight */
+
+  /* ── Result blocks ── */
+  .result {
+    background: #1c2128;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 0.9em;
+    border-left: 3px solid #3fb950;
+  }
+  .result-tag {
+    color: #3fb950;
+    font-weight: bold;
+    font-size: 0.8em;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  /* ── Insight blocks ── */
+  .insight {
+    background: #161b2280;
+    border: 1px solid #1f6feb44;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 0.9em;
+    color: #8b949e;
+  }
+  .insight strong { color: #58a6ff; }
+
+  /* ── Metrics row ── */
+  .metrics {
+    display: flex;
+    gap: 16px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .metric {
+    flex: 1;
+    min-width: 120px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .metric-val {
+    font-size: 1.6em;
+    font-weight: bold;
+    margin-bottom: 2px;
+  }
+  .metric-label {
+    font-size: 0.75em;
+    color: #484f58;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .metric:nth-child(1) .metric-val { color: #58a6ff; }
+  .metric:nth-child(2) .metric-val { color: #3fb950; }
+  .metric:nth-child(3) .metric-val { color: #e3b341; }
+  .metric:nth-child(4) .metric-val { color: #f0883e; }
+
+  /* ── Research section ── */
+  .research {
+    background: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 10px;
+    padding: 30px;
+    margin-top: 40px;
+  }
+  .research h2 {
+    color: #f0883e;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .research-q {
+    margin-bottom: 16px;
+    padding-left: 16px;
+    border-left: 2px solid #30363d;
+  }
+  .research-q strong { color: #e6edf3; }
+  .research-q p { color: #8b949e; font-size: 0.9em; margin-top: 4px; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #484f58;
+    font-size: 0.85em;
+    border-top: 1px solid #21262d;
+    margin-top: 50px;
+  }
+  .footer a { color: #58a6ff; text-decoration: none; }
+
+  /* ── Summary band ── */
+  .summary-band {
+    background: linear-gradient(90deg, #1f6feb11, #23863611, #d2992211, #f0883e11);
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    margin: 40px 0;
+  }
+  .summary-band h2 { color: #e6edf3; font-size: 1.4em; margin-bottom: 8px; }
+  .summary-band .eq {
+    font-size: 1.1em;
+    color: #8b949e;
+    margin: 16px 0;
+  }
+  .summary-band .eq span { font-weight: bold; }
+  .summary-band .eq .blue { color: #58a6ff; }
+  .summary-band .eq .green { color: #3fb950; }
+  .summary-band .eq .yellow { color: #e3b341; }
+  .summary-band .eq .orange { color: #f0883e; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HERO ═══════════════════════ -->
+<div class="hero">
+  <h1>TRASGO §1</h1>
+  <div class="subtitle">
+    In-Context Virtualization: teaching LLMs to compile, store, and execute
+    structured context — from 3 examples, with zero training.
+  </div>
+  <div class="tags">
+    <span class="tag blue">0 training</span>
+    <span class="tag blue">3 examples</span>
+    <span class="tag green">4-7x compression</span>
+    <span class="tag green">cross-model</span>
+    <span class="tag orange">ISA-compatible</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════ PROGRESSION ═══════════════════════ -->
+<div class="progression">
+  <div class="prog-step">
+    <div class="prog-num">01</div>
+    <div class="prog-label">Compile</div>
+    <div class="prog-title">Grammar<br>Induction</div>
+  </div>
+  <div class="prog-step">
+    <div class="prog-num">02</div>
+    <div class="prog-label">Generalize</div>
+    <div class="prog-title">Cross-Domain<br>ISA</div>
+  </div>
+  <div class="prog-step">
+    <div class="prog-num">03</div>
+    <div class="prog-label">Maintain</div>
+    <div class="prog-title">State<br>Machine</div>
+  </div>
+  <div class="prog-step">
+    <div class="prog-num">04</div>
+    <div class="prog-label">Execute</div>
+    <div class="prog-title">Protocol<br>Execution</div>
+  </div>
+</div>
+
+<div class="metrics">
+  <div class="metric">
+    <div class="metric-val">3</div>
+    <div class="metric-label">Boot examples</div>
+  </div>
+  <div class="metric">
+    <div class="metric-val">0</div>
+    <div class="metric-label">Training needed</div>
+  </div>
+  <div class="metric">
+    <div class="metric-val">4-7x</div>
+    <div class="metric-label">Compression</div>
+  </div>
+  <div class="metric">
+    <div class="metric-val">7/7</div>
+    <div class="metric-label">Tests passed</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DEMO 01 ═══════════════════════ -->
+<div class="demo-card">
+  <div class="demo-header">
+    <div class="demo-icon">01</div>
+    <div>
+      <div class="demo-title">Grammar Induction</div>
+      <div class="demo-desc">3 examples across 3 domains. The model compiles an operational codec.</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="code-block">
+      <span class="code-label">§1|BOOT &middot; 3 examples, no explanation</span>
+<span class="c">EX1: climate</span>  <span class="k">E:</span>{<span class="s">climate-sci, EU-policy, von der Leyen</span>}
+                  <span class="k">R:</span>[<span class="s">constrains, leads</span>]  <span class="k">D:</span>[<span class="s">temp:+1.2->+1.5</span>]
+
+<span class="c">EX2: finance</span>  <span class="k">E:</span>{<span class="s">TSLA, macro-overlay</span>}
+                  <span class="k">R:</span>[<span class="s">hedges</span>]  <span class="k">D:</span>[<span class="s">weight:0.12->0.08</span>]
+
+<span class="c">EX3: earth-obs</span> <span class="k">E:</span>{<span class="s">Sentinel-6, LEO-1336km, Poseidon-4</span>}
+                  <span class="k">R:</span>[<span class="s">occupies, payload</span>]  <span class="k">D:</span>[<span class="s">mode:LRM->SAR</span>]</div>
+
+    <div class="code-block">
+      <span class="code-label">§1|CALIBRATE &middot; dual query</span>
+<span class="h">Q_codec:</span>   What changed for K and why?
+<span class="h">Q_natural:</span> What happened to the Tesla position?</div>
+
+    <div class="result">
+      <div class="result-tag">PASS &mdash; grammar compiled</div>
+      Both answers identify: weight reduction 12%->8%, March 2026 timing,
+      gold ETC hedge, VIX>28 trigger. Semantic equivalence confirmed.
+    </div>
+
+    <div class="insight">
+      <strong>Why 3 examples work:</strong> Different domains (climate, finance, satellite) force the
+      model to learn <em>structure</em> (E, S, R, D, mu), not <em>content</em>. The model's inductive
+      bias favors compositional mappings. This is in-context gradient descent (Garg et al., 2022).
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DEMO 02 ═══════════════════════ -->
+<div class="demo-card">
+  <div class="demo-header">
+    <div class="demo-icon">02</div>
+    <div>
+      <div class="demo-title">Cross-Domain ISA</div>
+      <div class="demo-desc">Same instruction set, domains never seen in boot. The ISA generalizes.</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="code-block">
+      <span class="code-label">Novel domain: GDPR regulatory</span>
+{<span class="k">"§"</span>:<span class="n">1</span>,
+ <span class="k">"E"</span>:{<span class="s">"F"</span>:[<span class="s">"GDPR-case-2891"</span>,<span class="s">"legal-proc"</span>],<span class="s">"G"</span>:[<span class="s">"DataCorp"</span>,<span class="s">"org"</span>],<span class="s">"H"</span>:[<span class="s">"DPA-Ireland"</span>,<span class="s">"regulator"</span>]},
+ <span class="k">"S"</span>:{<span class="s">"F.fine"</span>:<span class="s">"potential-4%-revenue"</span>,<span class="s">"G.revenue"</span>:<span class="s">"2.1B"</span>},
+ <span class="k">"D"</span>:[<span class="s">"H.priority:routine->elevated@2026-02"</span>]}
+
+<span class="h">Q:</span> What's the worst case for G?</div>
+
+    <div class="result">
+      <div class="result-tag">PASS &mdash; derived 84M from 4% x 2.1B</div>
+      The model computed the maximum fine from codec fields, noted priority escalation,
+      and contextualized the regulatory risk. Entity keys F, G, H were never in boot.
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">Novel domain: energy grid</span>
+{<span class="k">"§"</span>:<span class="n">1</span>,
+ <span class="k">"E"</span>:{<span class="s">"W"</span>:[<span class="s">"NordWind-IV"</span>,<span class="s">"wind-farm"</span>],<span class="s">"G"</span>:[<span class="s">"DE-grid-north"</span>,<span class="s">"grid"</span>],<span class="s">"B"</span>:[<span class="s">"LiStore-200"</span>,<span class="s">"battery"</span>]},
+ <span class="k">"S"</span>:{<span class="s">"W.output"</span>:<span class="s">"112MW"</span>,<span class="s">"G.demand"</span>:<span class="s">"340MW"</span>,<span class="s">"B.charge"</span>:<span class="s">"78%"</span>},
+ <span class="k">"R"</span>:[<span class="s">"W->G:feeds"</span>,<span class="s">"B->G:stabilizes"</span>]}
+
+<span class="h">Q:</span> What fraction of demand is covered by wind?</div>
+
+    <div class="result">
+      <div class="result-tag">PASS &mdash; computed 112/340 = 33%</div>
+      Arithmetic over codec fields. Noted battery depletion trend. Domain transfer complete.
+    </div>
+
+    <div class="insight">
+      <strong>The ISA is domain-agnostic.</strong> Boot domains: climate, finance, satellite.
+      Test domains: GDPR law, energy grid. Same axes (E, S, R, D, mu) &mdash; different programs.
+      §1 packets are <em>programs</em>, not <em>data</em>. The model is a <em>runtime</em>, not a <em>database</em>.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DEMO 03 ═══════════════════════ -->
+<div class="demo-card">
+  <div class="demo-header">
+    <div class="demo-icon">03</div>
+    <div>
+      <div class="demo-title">Context as State Machine</div>
+      <div class="demo-desc">Deltas are state transitions. The model maintains a virtual register file.</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="code-block">
+      <span class="code-label">Base state &mdash; fusion experiment</span>
+{<span class="k">"§"</span>:<span class="n">1</span>,
+ <span class="k">"E"</span>:{<span class="s">"R"</span>:[<span class="s">"reactor-4"</span>,<span class="s">"fusion-exp"</span>],<span class="s">"P"</span>:[<span class="s">"plasma-ctrl"</span>,<span class="s">"subsystem"</span>]},
+ <span class="k">"S"</span>:{<span class="s">"R.status"</span>:<span class="s">"pre-ignition"</span>,<span class="s">"R.target-Q"</span>:<span class="n">10</span>,<span class="s">"P.mode"</span>:<span class="s">"calibration"</span>},
+ <span class="k">"mu"</span>:{<span class="s">"urg"</span>:<span class="n">0.3</span>}}</div>
+
+    <div class="code-block">
+      <span class="code-label">D-UPDATE #1 &mdash; plasma formation</span>
+<span class="k">"D"</span>:[<span class="s">"P.mode:calibration->active"</span>,
+     <span class="s">"R.status:pre-ignition->plasma-formation"</span>]
+<span class="k">"mu"</span>:{<span class="s">"urg"</span>:<span class="n">0.6</span>}</div>
+
+    <div class="code-block">
+      <span class="code-label">D-UPDATE #2 &mdash; sustained burn</span>
+<span class="k">"D"</span>:[<span class="s">"R.status:plasma-formation->sustained-burn"</span>,
+     <span class="s">"R.Q-measured:0->5.2"</span>,
+     <span class="s">"P.temp:target-150MK->measured-148MK"</span>]
+<span class="k">"mu"</span>:{<span class="s">"urg"</span>:<span class="n">0.8</span>,<span class="s">"cert"</span>:<span class="n">0.75</span>}</div>
+
+    <div class="result">
+      <div class="result-tag">PASS &mdash; triple-merged state</div>
+      After two deltas, the model reports: reactor in sustained burn, Q at 5.2 vs target 10
+      (52%), temp at 148MK vs 150MK target (98.7%), urgency escalated from 0.3 to 0.8,
+      certainty dropped to 0.75. No full context resent.
+    </div>
+
+    <div class="insight">
+      <strong>State transitions, not re-sends.</strong> Total context: ~135 tokens across 3 messages.
+      Natural language equivalent (resending full state each time): ~300+ tokens.
+      The model applied each delta to its internal register file and answered from merged state.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DEMO 04 ═══════════════════════ -->
+<div class="demo-card">
+  <div class="demo-header">
+    <div class="demo-icon">04</div>
+    <div>
+      <div class="demo-title">Protocol Execution</div>
+      <div class="demo-desc">§P atoms are opcodes. The model executes programs, not descriptions.</div>
+    </div>
+  </div>
+  <div class="demo-body">
+    <div class="code-block">
+      <span class="code-label">Context &mdash; 4 packets, 4 domains</span>
+<span class="c">A: Arctic ice (urg 0.8)   B: Wind energy (urg 0.3)</span>
+<span class="c">C: Carbon border (urg 0.5)  D: Baltic shipping (urg 0.6)</span></div>
+
+    <div class="code-block">
+      <span class="code-label">Opcode: FILTER</span>
+{<span class="k">"§P"</span>:<span class="s">"filter"</span>,<span class="k">"by"</span>:<span class="s">"mu.urg"</span>,<span class="k">"order"</span>:<span class="s">"desc"</span>,<span class="k">"top_k"</span>:<span class="n">2</span>}</div>
+
+    <div class="result">
+      <div class="result-tag">EXECUTED</div>
+      Selected: A (Arctic, 0.8) + D (Baltic, 0.6). Suppressed: C (0.5), B (0.3).
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">Opcode: MERGE</span>
+{<span class="k">"§P"</span>:<span class="s">"merge"</span>,<span class="k">"sources"</span>:[<span class="s">"A"</span>,<span class="s">"D"</span>],<span class="k">"conflict"</span>:<span class="s">"latest-wins"</span>}</div>
+
+    <div class="result">
+      <div class="result-tag">EXECUTED + INFERRED</div>
+      Merged A+D. <em>Inferred</em> cross-packet relation: Arctic ice decline causes elevated
+      shipping risk. Relation not in source packets &mdash; derived from merge semantics.
+    </div>
+
+    <div class="code-block">
+      <span class="code-label">Program: PIPELINE</span>
+{<span class="k">"§M"</span>:<span class="s">"pipeline"</span>,
+ <span class="k">"steps"</span>:[
+   {<span class="k">"§P"</span>:<span class="s">"filter"</span>,<span class="k">"by"</span>:<span class="s">"mu.urg"</span>,<span class="k">"top_k"</span>:<span class="n">3</span>},
+   {<span class="k">"§P"</span>:<span class="s">"compress"</span>,<span class="k">"mode"</span>:<span class="s">"delta-only"</span>},
+   {<span class="k">"§P"</span>:<span class="s">"merge"</span>,<span class="k">"conflict"</span>:<span class="s">"latest-wins"</span>}]}</div>
+
+    <div class="result">
+      <div class="result-tag">PIPELINE EXECUTED</div>
+      filter(top 3) -> compress(delta-only) -> merge = single briefing packet
+      with 3 entities, 3 deltas, inferred relations, merged urgency.
+    </div>
+
+    <div class="insight">
+      <strong>The full execution model:</strong><br>
+      §1 packets = data (context state)<br>
+      §P atoms = opcodes (filter, compress, merge, ...)<br>
+      §M machines = programs (pipeline, router, loop, ...)<br>
+      Context window = virtual machine<br>
+      LLM forward pass = CPU cycle
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SUMMARY ═══════════════════════ -->
+<div class="summary-band">
+  <h2>The In-Context Virtualization Thesis</h2>
+  <div class="eq">
+    <span class="blue">Compile</span> a language &rarr;
+    <span class="green">Generalize</span> across domains &rarr;
+    <span class="yellow">Maintain</span> state &rarr;
+    <span class="orange">Execute</span> programs
+  </div>
+  <div style="color:#8b949e;font-size:0.95em;margin-top:12px">
+    The context window is not memory. It is a virtual machine.<br>
+    The model is not a database. It is a runtime.<br>
+    §1 is not a format. It is an instruction set architecture.
+  </div>
+</div>
+
+<!-- ═══════════════════════ RESEARCH ═══════════════════════ -->
+<div class="research">
+  <h2>Open Research Questions</h2>
+
+  <div class="research-q">
+    <strong>Context-length scaling</strong>
+    <p>How does codec comprehension degrade as the context window fills? At what occupancy
+    does the VM start "dropping" state? Is there a sharp threshold or gradual decay?</p>
+  </div>
+
+  <div class="research-q">
+    <strong>Computational depth</strong>
+    <p>Can the model execute deeply nested pipelines (filter->compress->merge->filter->route)?
+    Where does opcode composability break down? Is there a circuit-depth equivalent?</p>
+  </div>
+
+  <div class="research-q">
+    <strong>State consistency</strong>
+    <p>After N deltas and M protocol executions, does internal state remain consistent with
+    ground truth? Can we build a verification protocol that detects drift?</p>
+  </div>
+
+  <div class="research-q">
+    <strong>Cross-runtime portability</strong>
+    <p>Same boot seed, same packets, same pipeline: Claude vs GPT-4o vs Gemini. How tight is
+    the ISA contract across runtimes? Where do execution semantics diverge?</p>
+  </div>
+
+  <div class="research-q">
+    <strong>Scale threshold mapping</strong>
+    <p>Self-initialization emerges between 7B (fails) and frontier (passes). Where exactly?
+    14B? 32B? 70B? Is the threshold tied to parameter count, training data, or architecture?</p>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <a href="https://github.com/jesusvilela/trasgo">github.com/jesusvilela/trasgo</a>
+  &nbsp;&middot;&nbsp; MIT License &nbsp;&middot;&nbsp; 2026
+</div>
+
+</body>
+</html>

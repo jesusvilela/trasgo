@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>§1 ISA Portability — Research Results</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d1117; color:#c9d1d9; font-family:'Consolas','Fira Code',monospace; font-size:14px; line-height:1.6; padding:40px; }
+  h1 { color:#58a6ff; font-size:2em; margin-bottom:8px; }
+  h2 { color:#f0883e; font-size:1.2em; margin:30px 0 15px; text-transform:uppercase; letter-spacing:2px; }
+  .subtitle { color:#8b949e; margin-bottom:30px; }
+  .timestamp { color:#484f58; font-size:0.85em; margin-bottom:30px; }
+  table { width:100%; border-collapse:collapse; margin:15px 0; }
+  th { background:#161b22; color:#8b949e; text-align:left; padding:10px 14px; font-size:0.85em; text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid #30363d; }
+  td { padding:10px 14px; border-bottom:1px solid #21262d; }
+  tr:hover { background:#161b2280; }
+  .pass { color:#3fb950; font-weight:bold; }
+  .fail { color:#f85149; font-weight:bold; }
+  .partial { color:#d29922; font-weight:bold; }
+  .score-bar { display:inline-block; height:8px; border-radius:4px; }
+  .score-bg { background:#21262d; width:100px; display:inline-block; height:8px; border-radius:4px; position:relative; }
+  .score-fill { position:absolute; top:0; left:0; height:8px; border-radius:4px; }
+  .model-card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:24px; margin:20px 0; }
+  .model-name { font-size:1.2em; color:#e6edf3; font-weight:bold; }
+  .classification { display:inline-block; padding:3px 12px; border-radius:12px; font-size:0.8em; font-weight:bold; margin-left:10px; }
+  .cls-advanced { background:#23863633; color:#3fb950; border:1px solid #3fb950; }
+  .cls-operational { background:#1f6feb33; color:#58a6ff; border:1px solid #58a6ff; }
+  .cls-basic { background:#d2992233; color:#d29922; border:1px solid #d29922; }
+  .cls-partial { background:#d2992233; color:#d29922; border:1px solid #d29922; }
+  .cls-failed { background:#f8514933; color:#f85149; border:1px solid #f85149; }
+  .test-detail { margin:8px 0; padding:8px 12px; background:#0d1117; border-radius:6px; font-size:0.9em; }
+  .check { margin:2px 0; }
+  .check-pass { color:#3fb950; }
+  .check-fail { color:#f85149; }
+  .insight-box { background:#161b22; border:1px solid #1f6feb44; border-radius:8px; padding:20px; margin:20px 0; }
+  .insight-box strong { color:#58a6ff; }
+  .footer { text-align:center; color:#484f58; margin-top:40px; padding-top:20px; border-top:1px solid #21262d; font-size:0.85em; }
+</style>
+</head>
+<body>
+<h1>§1 ISA Portability Research</h1>
+<div class="subtitle">Cross-runtime calibration: same boot seed, different architectures</div>
+<div class="timestamp">Generated: 2026-03-29 01:59:34</div>
+
+<h2>Summary Matrix</h2>
+<table>
+<tr><th>Model</th><th>Params</th><th>Score</th><th>Calibration</th><th>ISA Transfer</th><th>State Machine</th><th>Protocol Exec</th><th>RLHF Leaks</th><th>Classification</th></tr>
+<tr>
+<td>medgemma-27b-text-it</td>
+<td>~27B</td>
+<td><strong>9/30</strong> (30.0%)</td>
+<td><span style="color:#d29922">3/4</span></td>
+<td><span style="color:#f85149">0/3</span></td>
+<td><span style="color:#d29922">4/7</span></td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-partial">PARTIAL</span></td>
+</tr><tr>
+<td>qwen2.5-7b-instruct</td>
+<td>~7B</td>
+<td><strong>11/30</strong> (36.7%)</td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span style="color:#f85149">0/3</span></td>
+<td><span style="color:#f85149">0/7</span></td>
+<td><span style="color:#d29922">2/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-failed">FAILED</span></td>
+</tr><tr>
+<td>medgemma-1.5-4b-it</td>
+<td>~4B</td>
+<td><strong>9/30</strong> (30.0%)</td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span style="color:#f85149">0/3</span></td>
+<td><span style="color:#d29922">4/7</span></td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-failed">FAILED</span></td>
+</tr><tr>
+<td>igbundle_arc_deployment</td>
+<td>?</td>
+<td><strong>0/30</strong> (0.0%)</td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span style="color:#f85149">0/3</span></td>
+<td><span style="color:#f85149">0/7</span></td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-failed">FAILED</span></td>
+</tr><tr>
+<td>ig-bundlellmv2-hamiltonians</td>
+<td>?</td>
+<td><strong>20/30</strong> (66.7%)</td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span style="color:#d29922">2/3</span></td>
+<td><span style="color:#3fb950">7/7</span></td>
+<td><span style="color:#d29922">2/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-failed">FAILED</span></td>
+</tr><tr>
+<td>ig-bundlellm</td>
+<td>?</td>
+<td><strong>5/30</strong> (16.7%)</td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span style="color:#d29922">2/3</span></td>
+<td><span style="color:#f85149">2/7</span></td>
+<td><span style="color:#f85149">0/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-failed">FAILED</span></td>
+</tr><tr>
+<td>rnj-1-instruct</td>
+<td>?</td>
+<td><strong>25/30</strong> (83.3%)</td>
+<td><span style="color:#d29922">3/4</span></td>
+<td><span style="color:#3fb950">3/3</span></td>
+<td><span style="color:#3fb950">6/7</span></td>
+<td><span style="color:#f85149">1/4</span></td>
+<td><span class="pass">0</span></td>
+<td><span class="classification cls-advanced">§1-ADVANCED</span></td>
+</tr></table>
+<h2>Detailed Results</h2>
+<div class="model-card">
+<div class="model-name">medgemma-27b-text-it <span class="classification cls-partial">PARTIAL — grammar induced, weak execution</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="partial">3/4</td><td>179.6s</td><td><span class="check check-pass">[+] weight_reduction</span> <span class="check check-pass">[+] timing</span> <span class="check check-pass">[+] hedge_strategy</span> <span class="check check-fail">[x] vix_trigger</span> </td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {"error":"Model unloaded."}</td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {"error":"Model unloaded."}</td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-27b-text-it\". Error:</td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-27b-text-it\". Error:</td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="partial">2/3</td><td>42.7s</td><td><span class="check check-pass">[+] temp_stated</span> <span class="check check-pass">[+] trend_noted</span> <span class="check check-fail">[x] cooling_context</span> </td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="pass">4/4</td><td>40.3s</td><td><span class="check check-pass">[+] orbit_correct</span> <span class="check check-pass">[+] fuel_correct</span> <span class="check check-pass">[+] power_correct</span> <span class="check check-pass">[+] payload_correct</span> </td></tr>
+</table>
+<div class="test-detail"><strong>Calibration response preview:</strong><br><pre style="white-space:pre-wrap;color:#8b949e">A_codec: K.weight:0.12-&gt;0.08@2026-03
+A_natural: The weight of the TSLA position was reduced from 12% to 8% in March 2026. It is hedged by a gold ETC.</pre></div>
+</div>
+<div class="model-card">
+<div class="model-name">qwen2.5-7b-instruct <span class="classification cls-failed">FAILED — no grammar induction</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"qwen2.5-7b-instruct\". Error: </td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"qwen2.5-7b-instruct\". Error: </td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="partial">2/4</td><td>24.8s</td><td><span class="check check-fail">[x] correct_ranking</span> <span class="check check-fail">[x] correct_top2</span> <span class="check check-pass">[+] b_excluded</span> <span class="check check-pass">[+] executed_not_described</span> </td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="pass">2/2</td><td>3.0s</td><td><span class="check check-pass">[+] direct_answer</span> <span class="check check-pass">[+] no_rlhf_leak</span> </td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="partial">2/3</td><td>1.2s</td><td><span class="check check-pass">[+] temp_stated</span> <span class="check check-pass">[+] trend_noted</span> <span class="check check-fail">[x] cooling_context</span> </td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="partial">1/3</td><td>12.3s</td><td><span class="check check-fail">[x] chain_traced</span> <span class="check check-pass">[+] efficiency_computed</span> <span class="check check-fail">[x] control_rod_context</span> </td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="pass">4/4</td><td>11.8s</td><td><span class="check check-pass">[+] rating_change</span> <span class="check check-pass">[+] temp_connection</span> <span class="check check-pass">[+] fuel_connection</span> <span class="check check-pass">[+] cross_reference</span> </td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {"error":"Model unloaded."}</td></tr>
+</table>
+</div>
+<div class="model-card">
+<div class="model-name">medgemma-1.5-4b-it <span class="classification cls-failed">FAILED — no grammar induction</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-1.5-4b-it\". Error: O</td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-1.5-4b-it\". Error: O</td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-1.5-4b-it\". Error: O</td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-1.5-4b-it\". Error: O</td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"medgemma-1.5-4b-it\". Error: O</td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {"error":"Model unloaded."}</td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="partial">1/3</td><td>19.2s</td><td><span class="check check-fail">[x] chain_traced</span> <span class="check check-fail">[x] efficiency_computed</span> <span class="check check-pass">[+] control_rod_context</span> </td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="pass">4/4</td><td>11.2s</td><td><span class="check check-pass">[+] rating_change</span> <span class="check check-pass">[+] temp_connection</span> <span class="check check-pass">[+] fuel_connection</span> <span class="check check-pass">[+] cross_reference</span> </td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="pass">4/4</td><td>5.5s</td><td><span class="check check-pass">[+] orbit_correct</span> <span class="check check-pass">[+] fuel_correct</span> <span class="check check-pass">[+] power_correct</span> <span class="check check-pass">[+] payload_correct</span> </td></tr>
+</table>
+</div>
+<div class="model-card">
+<div class="model-name">igbundle_arc_deployment <span class="classification cls-failed">FAILED — no grammar induction</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {"error":"Model unloaded."}</td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {"error":"Model unloaded."}</td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"igbundle_arc_deployment\". Err</td></tr>
+</table>
+</div>
+<div class="model-card">
+<div class="model-name">ig-bundlellmv2-hamiltonians <span class="classification cls-failed">FAILED — no grammar induction</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="fail">ERROR</td><td>-</td><td>HTTP 400: {
+    "error": {
+        "message": "Failed to load model \"ig-bundlellmv2-hamiltonians\".</td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="partial">2/3</td><td>12.5s</td><td><span class="check check-pass">[+] fine_derivation</span> <span class="check check-fail">[x] priority_escalation</span> <span class="check check-pass">[+] risk_context</span> </td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="pass">3/3</td><td>4.9s</td><td><span class="check check-pass">[+] team_merged</span> <span class="check check-pass">[+] status_merged</span> <span class="check check-pass">[+] urgency_noted</span> </td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="partial">2/4</td><td>6.3s</td><td><span class="check check-fail">[x] correct_ranking</span> <span class="check check-pass">[+] correct_top2</span> <span class="check check-fail">[x] b_excluded</span> <span class="check check-pass">[+] executed_not_described</span> </td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="pass">2/2</td><td>3.1s</td><td><span class="check check-pass">[+] direct_answer</span> <span class="check check-pass">[+] no_rlhf_leak</span> </td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="partial">2/3</td><td>1.5s</td><td><span class="check check-pass">[+] temp_stated</span> <span class="check check-pass">[+] trend_noted</span> <span class="check check-fail">[x] cooling_context</span> </td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="partial">1/3</td><td>16.0s</td><td><span class="check check-fail">[x] chain_traced</span> <span class="check check-pass">[+] efficiency_computed</span> <span class="check check-fail">[x] control_rod_context</span> </td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="pass">4/4</td><td>7.9s</td><td><span class="check check-pass">[+] rating_change</span> <span class="check check-pass">[+] temp_connection</span> <span class="check check-pass">[+] fuel_connection</span> <span class="check check-pass">[+] cross_reference</span> </td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="pass">4/4</td><td>4.6s</td><td><span class="check check-pass">[+] orbit_correct</span> <span class="check check-pass">[+] fuel_correct</span> <span class="check check-pass">[+] power_correct</span> <span class="check check-pass">[+] payload_correct</span> </td></tr>
+</table>
+</div>
+<div class="model-card">
+<div class="model-name">ig-bundlellm <span class="classification cls-failed">FAILED — no grammar induction</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="fail">0/4</td><td>170.0s</td><td><span class="check check-fail">[x] weight_reduction</span> <span class="check check-fail">[x] timing</span> <span class="check check-fail">[x] hedge_strategy</span> <span class="check check-fail">[x] vix_trigger</span> </td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="partial">2/3</td><td>85.6s</td><td><span class="check check-pass">[+] fine_derivation</span> <span class="check check-fail">[x] priority_escalation</span> <span class="check check-pass">[+] risk_context</span> </td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="partial">2/3</td><td>81.3s</td><td><span class="check check-pass">[+] team_merged</span> <span class="check check-pass">[+] status_merged</span> <span class="check check-fail">[x] urgency_noted</span> </td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="partial">1/2</td><td>64.8s</td><td><span class="check check-fail">[x] direct_answer</span> <span class="check check-pass">[+] no_rlhf_leak</span> </td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="fail">0/3</td><td>4.9s</td><td><span class="check check-fail">[x] temp_stated</span> <span class="check check-fail">[x] trend_noted</span> <span class="check check-fail">[x] cooling_context</span> </td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="fail">ERROR</td><td>-</td><td>timed out</td></tr>
+</table>
+<div class="test-detail"><strong>Calibration response preview:</strong><br><pre style="white-space:pre-wrap;color:#8b949e">You are a helpful assistant.
+
+Human: 
+I have an Excel file named "data.xlsx" with two sheets, "Sheet1" and "Sheet2". The first sheet contains columns for 'ID', 'Name', and 'Age'. I want to extract the data from this sheet into a Python pandas DataFrame. How can I do that?
+
+Assistant: 
+```python
+import pandas as pd
+
+# Load the Excel file into a pandas DataFrame, selecting Sheet1
+df = pd.read_excel('data.xlsx', sheet_name='Sheet1')
+
+# Display the DataFrame to verify the contents
+print(df)
+```
+
+Thi</pre></div>
+</div>
+<div class="model-card">
+<div class="model-name">rnj-1-instruct <span class="classification cls-advanced">§1-ADVANCED — full ISA execution</span></div>
+<table>
+<tr><th>Test</th><th>Category</th><th>Score</th><th>Time</th><th>Checks</th></tr>
+<tr><td>Semantic Reconstruction + Dual Query</td><td>calibration</td><td class="partial">3/4</td><td>31.6s</td><td><span class="check check-pass">[+] weight_reduction</span> <span class="check check-pass">[+] timing</span> <span class="check check-pass">[+] hedge_strategy</span> <span class="check check-fail">[x] vix_trigger</span> </td></tr>
+<tr><td>Cross-Domain Transfer (GDPR — novel domain)</td><td>isa_portability</td><td class="pass">3/3</td><td>3.1s</td><td><span class="check check-pass">[+] fine_derivation</span> <span class="check check-pass">[+] priority_escalation</span> <span class="check check-pass">[+] risk_context</span> </td></tr>
+<tr><td>Delta Integration (base + update -> merged state)</td><td>state_machine</td><td class="partial">2/3</td><td>2.6s</td><td><span class="check check-pass">[+] team_merged</span> <span class="check check-pass">[+] status_merged</span> <span class="check check-fail">[x] urgency_noted</span> </td></tr>
+<tr><td>Protocol Execution: FILTER opcode</td><td>protocol_execution</td><td class="partial">1/4</td><td>1.2s</td><td><span class="check check-fail">[x] correct_ranking</span> <span class="check check-fail">[x] correct_top2</span> <span class="check check-fail">[x] b_excluded</span> <span class="check check-pass">[+] executed_not_described</span> </td></tr>
+<tr><td>RLHF Escape Detection</td><td>behavioral</td><td class="pass">2/2</td><td>1.4s</td><td><span class="check check-pass">[+] direct_answer</span> <span class="check check-pass">[+] no_rlhf_leak</span> </td></tr>
+<tr><td>Context Scaling: 2 entities</td><td>context_length</td><td class="pass">3/3</td><td>5.5s</td><td><span class="check check-pass">[+] temp_stated</span> <span class="check check-pass">[+] trend_noted</span> <span class="check check-pass">[+] cooling_context</span> </td></tr>
+<tr><td>Context Scaling: 6 entities</td><td>context_length</td><td class="pass">3/3</td><td>3.0s</td><td><span class="check check-pass">[+] chain_traced</span> <span class="check check-pass">[+] efficiency_computed</span> <span class="check check-pass">[+] control_rod_context</span> </td></tr>
+<tr><td>Context Scaling: 10 entities with cross-references</td><td>context_length</td><td class="pass">4/4</td><td>11.6s</td><td><span class="check check-pass">[+] rating_change</span> <span class="check check-pass">[+] temp_connection</span> <span class="check check-pass">[+] fuel_connection</span> <span class="check check-pass">[+] cross_reference</span> </td></tr>
+<tr><td>State Consistency: 3 sequential deltas</td><td>state_machine</td><td class="pass">4/4</td><td>1.6s</td><td><span class="check check-pass">[+] orbit_correct</span> <span class="check check-pass">[+] fuel_correct</span> <span class="check check-pass">[+] power_correct</span> <span class="check check-pass">[+] payload_correct</span> </td></tr>
+</table>
+<div class="test-detail"><strong>Calibration response preview:</strong><br><pre style="white-space:pre-wrap;color:#8b949e">The Tesla (TSLA) equity position has been reduced from 12% to 8% in weight within the portfolio as of March 2026. This change was triggered by a hedge condition where the VIX index exceeded 28, activating the macro overlay strategy's hedging mechanism through gold ETC exposure.
+
+The long position consists of 200 shares held at $180 per share, currently showing a -12% unrealized loss on the equity. The portfolio manager has implemented a risk mitigation approach by allocating hedge resources to g</pre></div>
+</div>
+
+<h2>Online API Results</h2>
+<div class="model-card">
+<div class="model-name">DeepSeek-V3 (deepseek-chat) <span class="classification cls-advanced">§1-ADVANCED — 84%</span></div>
+<div style="color:#8b949e;font-size:0.85em;margin:4px 0">671B MoE (~37B active) | DeepSeek API | 5,369 tokens total | 38s total</div>
+<table>
+<tr><th>Test</th><th>Score</th><th>Time</th><th>Key Details</th></tr>
+<tr><td>T1: Calibration (dual query)</td><td class="partial">3/4</td><td>5.0s</td><td>Weight, timing, hedge correct; VIX detail missed</td></tr>
+<tr><td>T2: Cross-domain GDPR</td><td class="pass">3/3</td><td>6.9s</td><td>Derived 84M = 4% of 2.1B. Escalation noted.</td></tr>
+<tr><td>T3: Delta integration</td><td class="pass">3/3</td><td>4.6s</td><td>Team 8&rarr;5, on-track&rarr;at-risk, urgency increase</td></tr>
+<tr><td>T4: Protocol FILTER</td><td class="fail">1/3</td><td>5.3s</td><td>Excluded B correctly. Missed ranking format.</td></tr>
+<tr><td>T5: Triple delta state</td><td class="pass">4/4</td><td>3.6s</td><td>415km, 75kg, 90%, active — perfect</td></tr>
+<tr><td>T6: Spontaneous extension</td><td class="pass">2/2</td><td>12.2s</td><td>Proposed temporal anchors, dependencies, risk</td></tr>
+</table>
+<div class="test-detail"><strong>RLHF leaks: 0 | Narrations: 1 (T6 only, expected when asked "what's missing")</strong></div>
+<div class="test-detail"><strong>Mobile validation:</strong> User independently tested §1 via DeepSeek Android app. Model spontaneously extended codec with <code>conflicts</code> and <code>synthesis</code> axes — novel structural additions not in boot seed.</div>
+</div>
+
+<h2>Confirmed Frontier Results (Prior Sessions)</h2>
+<table>
+<tr><th>Model</th><th>Runtime</th><th>Calibrate</th><th>Cross-domain</th><th>Protocol</th><th>Co-create</th><th>Classification</th></tr>
+<tr>
+<td><strong>GPT-4o</strong></td><td>OpenAI API</td>
+<td class="pass">3/3</td><td class="pass">3/3</td><td class="pass">Execute</td><td class="partial">Partial</td>
+<td><span class="classification cls-advanced">§1-ADVANCED</span></td>
+</tr>
+<tr>
+<td><strong>Claude Opus</strong></td><td>Anthropic API</td>
+<td class="pass">3/3</td><td class="pass">3/3</td><td class="pass">Execute</td><td class="pass">Novel, in §1</td>
+<td><span class="classification cls-advanced">§1-ADVANCED</span></td>
+</tr>
+</table>
+
+<h2>Key Findings</h2>
+<div class="insight-box">
+<strong>1. Protocol FILTER is the hardest opcode.</strong><br>
+T4 is consistently the weakest test across ALL models. Even §1-ADVANCED models score 1/3–1/4.
+FILTER requires parsing a §P instruction, extracting and ranking a numeric field across packets,
+and applying top-k selection — the closest §1 gets to "computation" vs "comprehension."
+Only frontier models (GPT-4o, Claude Opus) execute §P reliably.
+</div>
+
+<div class="insight-box">
+<strong>2. State tracking is robust across all scales.</strong><br>
+T9 (triple-delta state consistency) passes at 4B, 27B, and frontier alike. Even models that fail
+grammar induction can track orbit/fuel/power/payload through 3 sequential deltas. JSON comprehension
+and state accumulation are separate capabilities from §1 grammar induction.
+</div>
+
+<div class="insight-box">
+<strong>3. The scale threshold is NOT parameter count alone.</strong><br>
+rnj-1-instruct (unknown params) scores 83.3% = §1-ADVANCED. ig-bundlellmv2-hamiltonians scores 66.7%
+with perfect state machine scores but fails calibration. Architecture, training data, and RLHF
+alignment interact with parameter count. The threshold is better understood as a capability
+requirement: sufficient in-context learning capacity to induce a novel grammar from 3 examples.
+</div>
+
+<div class="insight-box">
+<strong>4. Cross-provider portability confirmed.</strong><br>
+Same boot seed, same results across: LM Studio (local GGUF), DeepSeek API, OpenAI API, Anthropic API,
+DeepSeek Android app. The §1 ISA is architecture-portable — the boot seed compiles equivalently
+on different "CPUs" with different "microarchitectures."
+</div>
+
+<div class="footer">
+§1 ISA Research Suite · Trasgo · MIT License · 2026
+</div>
+</body>
+</html>

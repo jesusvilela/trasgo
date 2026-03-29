@@ -34,8 +34,8 @@ EX2:
 = "Long 200 shares TSLA at $180, currently down 12%. Macro overlay hedges via gold ETC. Weight reduced from 12% to 8% in March 2026. Hedge triggers when VIX exceeds 28."
 
 EX3:
-{"§":1,"E":{"P":["patient-7291","person"],"D":["T2DM","condition"],"M":["metformin","drug"]},"S":{"P.age":58,"P.bmi":31.2,"D.hba1c":"7.8%","M.dose":"1000mg/d"},"R":["D→P:affects","M→D:treats"],"Δ":["D.hba1c:8.4→7.8@2026-01","M.dose:500→1000@2025-11"],"μ":{"scope":"clinical","urg":0.5,"cert":0.9}}
-= "Patient 7291, age 58, BMI 31.2, has T2DM. HbA1c improved from 8.4 to 7.8% after metformin dose doubled to 1000mg/d in Nov 2025."
+{"§":1,"E":{"V":["Sentinel-6","satellite"],"O":["LEO-1336km","orbit"],"I":["Poseidon-4","altimeter"]},"S":{"V.status":"operational","O.incl":"66°","O.period":"112min","I.mode":"SAR","I.coverage":"global-ocean"},"R":["V→O:occupies","I→V:payload"],"Δ":["I.mode:LRM→SAR@2026-02","V.power:nominal→eco@2026-03"],"μ":{"scope":"earth-observation","urg":0.3,"cert":0.95}}
+= "Sentinel-6 satellite in LEO at 1336km, 66° inclination, 112-min period. Poseidon-4 altimeter switched to SAR mode Feb 2026. Power shifted to eco mode March 2026."
 """)
 
 # ── Test 1: Calibration (semantic reconstruction + dual query) ──────────

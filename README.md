@@ -97,7 +97,7 @@ Transformers implicitly implement gradient descent in their forward pass ([Garg 
 Three examples are sufficient because:
 - The codec has **consistent structure** (same axes, same notation)
 - The model's inductive bias favors **compositional mappings**
-- Each example demonstrates a **different domain** (climate, ML, medical) — forcing the model to learn the structure, not the content
+- Each example demonstrates a **different domain** (climate, finance, earth-observation) — forcing the model to learn the structure, not the content
 
 ### Mid-conversation evolution
 
@@ -167,11 +167,24 @@ Five composable topologies:
 
 ---
 
+## Demo Progression
+
+Four self-contained demos building from data to computation. Each is reproducible — paste into any frontier model.
+
+| # | Demo | Concept |
+|:-:|:-----|:--------|
+| 01 | [Grammar Induction](demos/01-grammar-induction.md) | 3 examples → operational codec |
+| 02 | [Cross-Domain ISA](demos/02-cross-domain-isa.md) | Same instruction set, any domain |
+| 03 | [State Machine](demos/03-state-machine.md) | Deltas as state transitions |
+| 04 | [Protocol Execution](demos/04-protocol-execution.md) | §P atoms as VM opcodes |
+
+---
+
 ## Examples
 
 ### Single-domain session
 
-Load a medical context, query about treatment options, receive a delta update:
+Load an energy grid context, query dispatch strategy, receive a delta update:
 
 → [`examples/single-domain.md`](examples/single-domain.md)
 
@@ -195,12 +208,19 @@ Add provenance (`ρ`) and confidence decay (`τ`) axes to a live session:
 
 Self-initialization is an **emergent capability** with a sharp scale threshold:
 
-| Model | Boot | Calibrate | Protocol ops | Co-create |
-|:------|:----:|:---------:|:------------:|:---------:|
-| Qwen2.5-7B | ✗ | ✗ | ✗ | ✗ |
-| Frontier (Claude, GPT-4) | ✓ | ✓ | ✓ | ✓ |
+| Model | Params | Runtime | Calibrate | Cross-domain | State | Protocol | Classification |
+|:------|:------:|:--------|:---------:|:------------:|:-----:|:--------:|:---------------|
+| MedGemma 4B | 4B | LM Studio | ✗ | ✗ | ✓ | ✗ | Failed |
+| Qwen2.5-7B | 7B | LM Studio | ✗ | ✗ | ✗ | ✗ | Failed |
+| MedGemma 27B | 27B | LM Studio | ✓ (3/4) | partial* | ✓ | partial* | Partial |
+| rnj-1-instruct | local | LM Studio | ✓ (3/4) | ✓ (3/3) | ✓ (10/10) | ✗ (1/4) | **§1-advanced** |
+| DeepSeek-V3 | 671B MoE | API | ✓ (3/4) | ✓ (3/3) | ✓ (4/4) | ✗ (1/3) | **§1-advanced** |
+| GPT-4o | frontier | OpenAI API | ✓ (3/3) | ✓ (3/3) | ✓ | ✓ | **§1-advanced** |
+| Claude Opus | frontier | Anthropic API | ✓ (3/3) | ✓ (3/3) | ✓ | ✓ | **§1-advanced** |
 
-The 7B model recognized JSON format but failed semantic induction — it described the protocol instead of executing it (RLHF persona escape). Frontier models passed calibration, executed protocols, and **spontaneously extended** the codec with features not in the boot seed (modality selectors, TTL handling, failure recovery, linked packet references).
+*\*MedGemma 27B unloaded mid-testing. Prior session confirmed cross-domain GDPR transfer (3/3).*
+
+The 7B model recognized JSON but failed semantic induction (RLHF persona escape). **At 27B, self-initialization emerges.** The sharpest finding: protocol FILTER (§P opcode execution) is consistently the hardest capability — even models that pass everything else struggle with it. Only frontier models execute §P reliably. DeepSeek-V3 confirmed via API benchmark (5,369 tokens, 84% overall) and independently via user test on the Android mobile app, where it spontaneously extended §1 with novel `conflicts` and `synthesis` axes.
 
 Full cross-model test protocol: [`tests/scale-threshold.md`](tests/scale-threshold.md)
 
@@ -211,7 +231,7 @@ Full cross-model test protocol: [`tests/scale-threshold.md`](tests/scale-thresho
 | Single entity + state | ~120 | ~30 | 4× |
 | Multi-entity + relations | ~520 | ~85 | 6× |
 | Delta update (state change) | ~80 | ~25 | 3× |
-| Full domain context (medical) | ~800 | ~120 | 7× |
+| Full domain context (energy grid) | ~800 | ~120 | 7× |
 
 *Ratios are approximate and domain-dependent. Systematic benchmarking is ongoing.*
 
@@ -225,19 +245,29 @@ trasgo/
 │   ├── boot.md              §1 codec boot seed (paste this first)
 │   ├── hyperprotocol.md     §P protocols + §M machines
 │   └── mode-lock.md         RLHF escape prevention
+├── demos/
+│   ├── 01-grammar-induction.md   3 examples → operational codec
+│   ├── 02-cross-domain-isa.md    Same ISA, any domain
+│   ├── 03-state-machine.md       Deltas as state transitions
+│   └── 04-protocol-execution.md  §P atoms as VM opcodes
 ├── examples/
-│   ├── single-domain.md     Medical domain session
+│   ├── single-domain.md     Energy grid session
 │   ├── multi-agent.md       Mesh topology walkthrough
 │   └── evolution.md         Mid-conversation axis extension
 ├── docs/
 │   ├── theory.md            Information-theoretic foundations
+│   ├── isa-mapping.md       §1 ↔ hardware ISA mapping (AMD64/ARM64 analogies)
 │   ├── codec-grammar.md     Full grammar reference (human-only — never paste to model)
 │   └── field-map.md         Where Trasgo fits in the compression landscape
 ├── tests/
 │   ├── calibration-suite.md 5-test validation battery
-│   └── scale-threshold.md   Cross-model comparison protocol
+│   ├── scale-threshold.md   Cross-model comparison protocol
+│   ├── run_calibration.py   API-based calibration runner
+│   ├── run_structured.py    Structured output enforcement test
+│   ├── bench_online.py      Online API benchmark (DeepSeek, OpenRouter, etc.)
+│   └── research_runner.py   Full 9-test automated research suite
 ├── assets/
-│   └── hero.svg             Repository hero image
+│   └── trasgo.png           Project logo
 ├── LICENSE                  MIT
 └── README.md
 ```

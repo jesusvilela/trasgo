@@ -88,18 +88,18 @@
 
     <!-- NL text lines (simulated verbose context) -->
     <g font-family="SF Mono, Monaco, Consolas, monospace" font-size="10.5" opacity="0.7">
-      <text x="16" y="65" fill="#94a3b8">Jesús is a Senior Engineering</text>
-      <text x="16" y="82" fill="#94a3b8">Manager based in Madrid. He was</text>
-      <text x="16" y="99" fill="#94a3b8">dismissed from Volvo Car España</text>
-      <text x="16" y="116" fill="#94a3b8">in late February 2026. His lead</text>
-      <text x="16" y="133" fill="#94a3b8">lawyer Carlos Santolaya filed</text>
-      <text x="16" y="150" fill="#94a3b8">a SMAC papeleta requesting</text>
-      <text x="16" y="167" fill="#94a3b8">nullity with subsidiary unfair</text>
-      <text x="16" y="184" fill="#94a3b8">dismissal claim. The current</text>
-      <text x="16" y="201" fill="#94a3b8">compensation target range is</text>
-      <text x="16" y="218" fill="#94a3b8">85-120k€ depending on location</text>
-      <text x="16" y="235" fill="#94a3b8">and remote model, with a walk-</text>
-      <text x="16" y="252" fill="#94a3b8">away floor of 70-75k€ for...</text>
+      <text x="16" y="65" fill="#94a3b8">DataCorp is a large technology</text>
+      <text x="16" y="82" fill="#94a3b8">organization with 2.1 billion</text>
+      <text x="16" y="99" fill="#94a3b8">euros in annual revenue. It is</text>
+      <text x="16" y="116" fill="#94a3b8">currently under investigation by</text>
+      <text x="16" y="133" fill="#94a3b8">the Irish Data Protection Auth.</text>
+      <text x="16" y="150" fill="#94a3b8">for GDPR violations (case 2891).</text>
+      <text x="16" y="167" fill="#94a3b8">The investigation was escalated</text>
+      <text x="16" y="184" fill="#94a3b8">from routine to elevated priority</text>
+      <text x="16" y="201" fill="#94a3b8">in February 2026. The potential</text>
+      <text x="16" y="218" fill="#94a3b8">fine is up to 4% of annual rev.,</text>
+      <text x="16" y="235" fill="#94a3b8">which could reach approximately</text>
+      <text x="16" y="252" fill="#94a3b8">84 million euros in worst case.</text>
     </g>
 
     <!-- Token count badge -->
@@ -146,15 +146,16 @@
     <!-- Codec JSON -->
     <g font-family="SF Mono, Monaco, Consolas, monospace" font-size="10.5">
       <text x="16" y="65" fill="#c084fc">{"§"</text><text x="50" y="65" fill="#64748b">:</text><text x="57" y="65" fill="#f59e0b">1</text><text x="65" y="65" fill="#64748b">,</text>
-      <text x="16" y="82" fill="#c084fc"> "E"</text><text x="52" y="82" fill="#64748b">:{</text><text x="66" y="82" fill="#22d3ee">"J"</text><text x="82" y="82" fill="#64748b">:[</text><text x="90" y="82" fill="#86efac">"SrEngMgr"</text><text x="170" y="82" fill="#64748b">,</text><text x="178" y="82" fill="#86efac">"person"</text><text x="234" y="82" fill="#64748b">]},</text>
-      <text x="16" y="99" fill="#c084fc"> "S"</text><text x="52" y="99" fill="#64748b">:{</text><text x="66" y="99" fill="#22d3ee">"J.loc"</text><text x="114" y="99" fill="#64748b">:</text><text x="120" y="99" fill="#86efac">"MAD"</text><text x="152" y="99" fill="#64748b">,</text>
-      <text x="66" y="116" fill="#22d3ee">"J.comp"</text><text x="122" y="116" fill="#64748b">:</text><text x="128" y="116" fill="#86efac">"85-120k€"</text><text x="208" y="116" fill="#64748b">},</text>
-      <text x="16" y="133" fill="#c084fc"> "R"</text><text x="52" y="133" fill="#64748b">:[</text><text x="60" y="133" fill="#fbbf24">"V→J:dismissed"</text><text x="186" y="133" fill="#64748b">],</text>
-      <text x="16" y="150" fill="#c084fc"> "Δ"</text><text x="52" y="150" fill="#64748b">:[</text><text x="60" y="150" fill="#fb923c">"V.status:</text>
-      <text x="66" y="167" fill="#fb923c">employed→dismissed@2026-02"</text><text x="300" y="167" fill="#64748b">],</text>
-      <text x="16" y="184" fill="#c084fc"> "μ"</text><text x="52" y="184" fill="#64748b">:{</text><text x="66" y="184" fill="#22d3ee">"scope"</text><text x="110" y="184" fill="#64748b">:</text><text x="116" y="184" fill="#86efac">"legal"</text><text x="160" y="184" fill="#64748b">,</text>
-      <text x="66" y="201" fill="#22d3ee">"urg"</text><text x="98" y="201" fill="#64748b">:</text><text x="104" y="201" fill="#f59e0b">0.8</text><text x="127" y="201" fill="#64748b">,</text>
-      <text x="66" y="218" fill="#22d3ee">"cert"</text><text x="106" y="218" fill="#64748b">:</text><text x="112" y="218" fill="#f59e0b">0.9</text><text x="135" y="218" fill="#64748b">}}</text>
+      <text x="16" y="82" fill="#c084fc"> "E"</text><text x="52" y="82" fill="#64748b">:{</text><text x="66" y="82" fill="#22d3ee">"F"</text><text x="82" y="82" fill="#64748b">:[</text><text x="90" y="82" fill="#86efac">"GDPR-2891"</text><text x="174" y="82" fill="#64748b">,</text><text x="182" y="82" fill="#86efac">"legal"</text><text x="226" y="82" fill="#64748b">],</text>
+      <text x="66" y="99" fill="#22d3ee">"G"</text><text x="82" y="99" fill="#64748b">:[</text><text x="90" y="99" fill="#86efac">"DataCorp"</text><text x="166" y="99" fill="#64748b">,</text><text x="174" y="99" fill="#86efac">"org"</text><text x="204" y="99" fill="#64748b">]},</text>
+      <text x="16" y="116" fill="#c084fc"> "S"</text><text x="52" y="116" fill="#64748b">:{</text><text x="66" y="116" fill="#22d3ee">"F.fine"</text><text x="118" y="116" fill="#64748b">:</text><text x="124" y="116" fill="#86efac">"4%-rev"</text><text x="176" y="116" fill="#64748b">,</text>
+      <text x="66" y="133" fill="#22d3ee">"G.rev"</text><text x="114" y="133" fill="#64748b">:</text><text x="120" y="133" fill="#86efac">"2.1B"</text><text x="156" y="133" fill="#64748b">},</text>
+      <text x="16" y="150" fill="#c084fc"> "R"</text><text x="52" y="150" fill="#64748b">:[</text><text x="60" y="150" fill="#fbbf24">"H→G:investigates"</text><text x="210" y="150" fill="#64748b">],</text>
+      <text x="16" y="167" fill="#c084fc"> "Δ"</text><text x="52" y="167" fill="#64748b">:[</text><text x="60" y="167" fill="#fb923c">"H.priority:</text>
+      <text x="66" y="184" fill="#fb923c">routine→elevated@2026-02"</text><text x="280" y="184" fill="#64748b">],</text>
+      <text x="16" y="201" fill="#c084fc"> "μ"</text><text x="52" y="201" fill="#64748b">:{</text><text x="66" y="201" fill="#22d3ee">"scope"</text><text x="110" y="201" fill="#64748b">:</text><text x="116" y="201" fill="#86efac">"regulatory"</text><text x="196" y="201" fill="#64748b">,</text>
+      <text x="66" y="218" fill="#22d3ee">"urg"</text><text x="98" y="218" fill="#64748b">:</text><text x="104" y="218" fill="#f59e0b">0.6</text><text x="127" y="218" fill="#64748b">,</text>
+      <text x="66" y="235" fill="#22d3ee">"cert"</text><text x="106" y="235" fill="#64748b">:</text><text x="112" y="235" fill="#f59e0b">0.65</text><text x="140" y="235" fill="#64748b">}}</text>
     </g>
 
     <!-- Token count badge -->
