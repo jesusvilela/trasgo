@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(moduleDir, '..');
@@ -52,7 +53,104 @@ function parseJsonCommand(args) {
   }
 }
 
-function main() {
+async function withHttpBridge(test) {
+  const port = await reservePort();
+  const env = {
+    ...process.env,
+    TRASGO_LOGO: 'none',
+    TRASGO_HTTP_PORT: String(port),
+  };
+  const launcherScript = path.join(repoRoot, 'scripts', 'trasgo-launch.cjs');
+  const child = spawn(process.execPath, [launcherScript, 'serve', '--http', '--port', String(port)], {
+    cwd: repoRoot,
+    env,
+    shell: false,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  let stdout = '';
+  let stderr = '';
+  child.stdout.on('data', chunk => {
+    stdout += chunk.toString();
+  });
+  child.stderr.on('data', chunk => {
+    stderr += chunk.toString();
+  });
+
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(`http bridge did not become ready\n${stdout}\n${stderr}`));
+    }, 10000);
+
+    child.stdout.on('data', chunk => {
+      const text = chunk.toString();
+      if (text.includes('"type":"http-ready"')) {
+        clearTimeout(timeout);
+        resolve();
+      }
+    });
+
+    child.once('error', error => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+
+    child.once('exit', code => {
+      clearTimeout(timeout);
+      reject(new Error(`http bridge exited early with code ${code}\n${stdout}\n${stderr}`));
+    });
+  });
+
+  try {
+    await test(port);
+  } finally {
+    await stopChildProcess(child);
+  }
+}
+
+async function reservePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.unref();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : null;
+      server.close(error => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(port);
+      });
+    });
+  });
+}
+
+async function stopChildProcess(child) {
+  if (child.exitCode !== null) {
+    return;
+  }
+
+  child.kill('SIGTERM');
+
+  const exited = await new Promise(resolve => {
+    const timeout = setTimeout(() => resolve(false), 3000);
+    child.once('exit', () => {
+      clearTimeout(timeout);
+      resolve(true);
+    });
+  });
+
+  if (!exited && isWindows && child.pid) {
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
+      stdio: 'ignore',
+      shell: false,
+    });
+  }
+}
+
+async function main() {
   runLauncher(['--build-native'], { quiet: true });
 
   const status = parseJsonCommand(['--native-status']);
@@ -133,9 +231,41 @@ function main() {
   assert.equal(optimize.kind, 'trasgo-token-optimization');
   assert.ok(optimize.recommended?.id, 'optimize should recommend a candidate');
 
+  const quickstart = parseJsonCommand(['quickstart', '--json']);
+  assert.equal(quickstart.kind, 'trasgo-quickstart');
+  assert.ok(Array.isArray(quickstart.demos) && quickstart.demos.length >= 2);
+
+  const explainBalance = parseJsonCommand(['--session', sessionId, 'explain', 'balance', '--json']);
+  assert.equal(explainBalance.kind, 'trasgo-explain-balance');
+
+  const explainRoute = parseJsonCommand(['--session', sessionId, 'explain', 'route', '--json']);
+  assert.equal(explainRoute.kind, 'trasgo-explain-route');
+
+  const advice = parseJsonCommand([
+    'advise',
+    '--codec',
+    '{"§":1,"Δ":["A->B"],"μ":{"scope":"ops"}}',
+    '--natural',
+    'Operator state transition metadata envelope',
+    '--json',
+  ]);
+  assert.equal(advice.kind, 'trasgo-advise');
+  assert.ok(typeof advice.verdict === 'string' && advice.verdict.length > 0);
+
   const demos = runLauncher(['demo', 'list']);
   assert.match(demos.stdout, /factory-copilot/u);
   assert.match(demos.stdout, /revenue-guard/u);
+
+  const machineRun = parseJsonCommand(['run', 'factory-copilot', '--json']);
+  assert.equal(machineRun.kind, 'trasgo-machine-run');
+  assert.ok(machineRun.run_id, 'machine runs should persist a run id');
+
+  const traceList = parseJsonCommand(['trace', 'list', '--json']);
+  assert.equal(traceList.kind, 'trasgo-run-list');
+  assert.ok(traceList.runs.some(entry => entry.run_id === machineRun.run_id));
+
+  const traceShow = parseJsonCommand(['trace', 'show', machineRun.run_id, '--json']);
+  assert.equal(traceShow.run_id, machineRun.run_id);
 
   const scientificDemo = runLauncher(['run', 'the', 'factory', 'copilot', 'demo']);
   assert.match(scientificDemo.stdout, /CTX_CONTEXT/u);
@@ -153,7 +283,39 @@ function main() {
   assert.ok(revenue.metrics.recovered_gross_profit_usd > 0);
   assert.match(revenue.ctx_context.exact_method, /Exact tokenizer battery/u);
 
+  await withHttpBridge(async port => {
+    const baseUrl = `http://127.0.0.1:${port}`;
+
+    const statusResponse = await fetch(`${baseUrl}/status`);
+    const statusPayload = await statusResponse.json();
+    assert.equal(statusPayload.kind, 'trasgo-status');
+
+    const demosResponse = await fetch(`${baseUrl}/demos`);
+    const demosPayload = await demosResponse.json();
+    assert.ok(Array.isArray(demosPayload.demos) && demosPayload.demos.length >= 2);
+
+    const machineResponse = await fetch(`${baseUrl}/machine/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: 'factory-copilot' }),
+    });
+    const machinePayload = await machineResponse.json();
+    assert.equal(machinePayload.ok, true);
+    assert.equal(machinePayload.trace.machine.id, 'factory-copilot');
+
+    const adviseResponse = await fetch(`${baseUrl}/advise`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        codec: '{"§":1,"Δ":["A->B"],"μ":{"scope":"ops"}}',
+        natural: 'Operator state transition metadata envelope',
+      }),
+    });
+    const advisePayload = await adviseResponse.json();
+    assert.equal(advisePayload.kind, 'trasgo-advise');
+  });
+
   process.stdout.write(`smoke ok on ${os.platform()}\n`);
 }
 
-main();
+await main();

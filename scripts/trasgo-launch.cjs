@@ -9,7 +9,7 @@ const nodeCli = path.join(repoRoot, 'src', 'trasgo', 'cli.mjs');
 const binName = process.platform === 'win32' ? 'trasgo.exe' : 'trasgo';
 const cargoName = process.platform === 'win32' ? 'cargo.exe' : 'cargo';
 const nativeCommands = new Set([
-  'hello', 'ask', 'load', 'explain', 'route', 'prove', 'tokens', 'optimize', 'passthrough',
+  'hello', 'ask', 'load', 'route', 'prove', 'tokens', 'optimize', 'passthrough',
   '--version', '-V',
 ]);
 

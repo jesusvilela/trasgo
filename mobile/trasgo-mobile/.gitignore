@@ -1,0 +1,6 @@
+.expo/
+node_modules/
+dist/
+web-build/
+coverage/
+*.log

@@ -102,6 +102,6 @@ The context window is not storing data. It is compiling a program.
 
 The §1 boot seed is a bootloader. The model's forward pass is the runtime. The codec packets are the instruction set. The hyperprotocol machines are the standard library.
 
-The model doesn't need the geometry in its weights (this was the lesson of ManifoldGL — geometric constraints in parameter space don't propagate to task performance). It needs the geometry in its **input structure**, and it reconstructs the rest via in-context learning.
+The model doesn't need the geometry in its weights. What matters here is geometry in the **input structure**, which the model can then reconstruct and operate over in-context.
 
 This inverts the entire compression paradigm: instead of compressing for the model, you teach the model to think in compressed form. The compression is not a preprocessing step — it is the language.

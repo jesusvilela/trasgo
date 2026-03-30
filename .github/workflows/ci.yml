@@ -19,6 +19,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
 
     env:
       CARGO_BUILD_JOBS: 1
@@ -45,18 +46,90 @@ jobs:
       - name: Run launcher smoke tests
         run: node scripts/ci-smoke.mjs
 
-      - name: Upload Windows release binary
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v6
-        with:
-          name: trasgo-windows-native
-          path: rust/trasgo/target/release/trasgo.exe
-          if-no-files-found: error
+      - name: Package Unix CI artifact
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          asset_os=$(printf '%s' "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')
+          asset_arch=$(printf '%s' "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')
+          artifact_base="trasgo-${asset_os}-${asset_arch}-ci"
+          rm -rf dist
+          mkdir -p dist/payload
+          cp rust/trasgo/target/release/trasgo dist/payload/
+          cp README.md dist/payload/
+          cp LICENSE dist/payload/
+          asset="${artifact_base}.tar.gz"
+          tar -C dist/payload -czf "$asset" .
+          if command -v sha256sum >/dev/null 2>&1; then
+            checksum="$(sha256sum "$asset" | awk '{print $1}')"
+          else
+            checksum="$(shasum -a 256 "$asset" | awk '{print $1}')"
+          fi
+          manifest="${asset}.manifest.json"
+          checksum_file="${asset}.sha256"
+          cat > "$manifest" <<EOF
+{
+  "artifact": "${asset}",
+  "platform": "${asset_os}",
+  "arch": "${asset_arch}",
+  "binary": "trasgo",
+  "mode": "release",
+  "lane": "ci",
+  "checksum_sha256": "${checksum}"
+}
+EOF
+          printf '%s  %s\n' "$checksum" "$asset" > "$checksum_file"
+          {
+            echo "ARTIFACT_NAME=${artifact_base}"
+            echo "ASSET_PATH=${asset}"
+            echo "MANIFEST_PATH=${manifest}"
+            echo "CHECKSUM_PATH=${checksum_file}"
+          } >> "$GITHUB_ENV"
 
-      - name: Upload Linux release binary
-        if: runner.os == 'Linux'
+      - name: Package Windows CI artifact
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $artifactBase = "trasgo-$($env:RUNNER_OS.ToLower())-$($env:RUNNER_ARCH.ToLower())-ci"
+          if (Test-Path dist) {
+            Remove-Item -Recurse -Force dist
+          }
+          New-Item -ItemType Directory -Force dist\payload | Out-Null
+          Copy-Item rust\trasgo\target\release\trasgo.exe dist\payload\
+          Copy-Item README.md dist\payload\
+          Copy-Item LICENSE dist\payload\
+          $asset = "$artifactBase.zip"
+          if (Test-Path $asset) {
+            Remove-Item $asset -Force
+          }
+          Compress-Archive -Path dist\payload\* -DestinationPath $asset
+          $hash = (Get-FileHash $asset -Algorithm SHA256).Hash.ToLower()
+          $manifest = "$asset.manifest.json"
+          $checksum = "$asset.sha256"
+          @"
+{
+  "artifact": "$asset",
+  "platform": "$($env:RUNNER_OS.ToLower())",
+  "arch": "$($env:RUNNER_ARCH.ToLower())",
+  "binary": "trasgo.exe",
+  "mode": "release",
+  "lane": "ci",
+  "checksum_sha256": "$hash"
+}
+"@ | Set-Content -Encoding utf8 $manifest
+          "$hash  $asset" | Set-Content -Encoding ascii $checksum
+          "ARTIFACT_NAME=$artifactBase" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "ASSET_PATH=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "MANIFEST_PATH=$manifest" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CHECKSUM_PATH=$checksum" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Upload CI artifact
         uses: actions/upload-artifact@v6
         with:
-          name: trasgo-linux-native
-          path: rust/trasgo/target/release/trasgo
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            ${{ env.ASSET_PATH }}
+            ${{ env.MANIFEST_PATH }}
+            ${{ env.CHECKSUM_PATH }}
           if-no-files-found: error

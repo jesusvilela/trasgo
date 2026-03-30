@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 
 const REGISTRY_PATH = path.join('src', 'trasgo', 'registry.json');
+const RUNS_DIR = path.join('.trasgo-runtime', 'runs');
 
 export function loadRegistry(baseDir) {
   const fullPath = path.join(baseDir, REGISTRY_PATH);
@@ -62,16 +64,37 @@ export function spawnProcess(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
-      stdio: options.stdio || 'inherit',
+      stdio: options.capture ? ['ignore', 'pipe', 'pipe'] : (options.stdio || 'inherit'),
       shell: false,
     });
 
+    let stdout = '';
+    let stderr = '';
+
+    if (options.capture) {
+      child.stdout.on('data', chunk => {
+        stdout += chunk.toString();
+      });
+      child.stderr.on('data', chunk => {
+        stderr += chunk.toString();
+      });
+    }
+
     child.on('error', reject);
-    child.on('exit', code => resolve(code ?? 0));
+    child.on('exit', code => resolve({
+      code: code ?? 0,
+      stdout,
+      stderr,
+    }));
   });
 }
 
 export async function runTool(registry, toolId, extraArgs, runtime) {
+  const result = await runToolDetailed(registry, toolId, extraArgs, runtime);
+  return result.exit_code;
+}
+
+export async function runToolDetailed(registry, toolId, extraArgs, runtime, options = {}) {
   const tool = getEntry(registry, 'tools', toolId);
   if (!tool) {
     throw new Error(`unknown tool: ${toolId}`);
@@ -84,24 +107,109 @@ export async function runTool(registry, toolId, extraArgs, runtime) {
   const entry = path.join(runtime.baseDir, tool.entry);
   const args = [...(tool.args || []), ...extraArgs];
   const processArgs = tool.runner === 'python' ? [entry, ...args] : [entry, ...args];
+  const startedAt = new Date().toISOString();
+  const result = await spawnProcess(command, processArgs, {
+    cwd: runtime.baseDir,
+    capture: options.capture,
+  });
 
-  return spawnProcess(command, processArgs, { cwd: runtime.baseDir });
+  return {
+    tool: tool.id,
+    runner: tool.runner,
+    entry: tool.entry,
+    args,
+    command,
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    exit_code: result.code,
+    stdout: result.stdout,
+    stderr: result.stderr,
+  };
 }
 
 export async function runMachine(registry, machineId, extraArgs, runtime) {
+  const result = await runMachineDetailed(registry, machineId, extraArgs, runtime);
+  return result.exit_code;
+}
+
+function ensureRunsDir(baseDir) {
+  fs.mkdirSync(path.join(baseDir, RUNS_DIR), { recursive: true });
+}
+
+function writeMachineTrace(baseDir, trace) {
+  ensureRunsDir(baseDir);
+  const tracePath = path.join(baseDir, RUNS_DIR, `${trace.run_id}.json`);
+  fs.writeFileSync(tracePath, JSON.stringify(trace, null, 2));
+  return tracePath;
+}
+
+export function listRunTraces(baseDir) {
+  const dir = path.join(baseDir, RUNS_DIR);
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+
+  return fs.readdirSync(dir)
+    .filter(name => name.endsWith('.json'))
+    .map(name => {
+      const trace = JSON.parse(fs.readFileSync(path.join(dir, name), 'utf-8'));
+      return {
+        run_id: trace.run_id,
+        machine: trace.machine.id,
+        exit_code: trace.exit_code,
+        started_at: trace.started_at,
+        finished_at: trace.finished_at,
+        trace_path: path.join(dir, name),
+      };
+    })
+    .sort((a, b) => (b.started_at || '').localeCompare(a.started_at || ''));
+}
+
+export function loadRunTrace(baseDir, runId) {
+  const tracePath = path.join(baseDir, RUNS_DIR, `${runId}.json`);
+  if (!fs.existsSync(tracePath)) {
+    throw new Error(`run trace not found: ${runId}`);
+  }
+  return JSON.parse(fs.readFileSync(tracePath, 'utf-8'));
+}
+
+export async function runMachineDetailed(registry, machineId, extraArgs, runtime, options = {}) {
   const machine = getEntry(registry, 'machines', machineId);
   if (!machine) {
     throw new Error(`unknown machine: ${machineId}`);
   }
 
+  const trace = {
+    kind: 'trasgo-machine-run',
+    run_id: randomUUID(),
+    started_at: new Date().toISOString(),
+    machine: {
+      id: machine.id,
+      type: machine.type,
+      description: machine.description,
+    },
+    passthrough_args: extraArgs,
+    steps: [],
+  };
+
   let exitCode = 0;
   for (const step of machine.steps || []) {
     const args = step.passthrough ? extraArgs : [...(step.args || [])];
-    exitCode = await runTool(registry, step.tool, args, runtime);
-    if (exitCode !== 0) return exitCode;
+    const stepResult = await runToolDetailed(registry, step.tool, args, runtime, options);
+    trace.steps.push(stepResult);
+    exitCode = stepResult.exit_code;
+    if (exitCode !== 0) {
+      trace.finished_at = new Date().toISOString();
+      trace.exit_code = exitCode;
+      trace.trace_path = writeMachineTrace(runtime.baseDir, trace);
+      return trace;
+    }
   }
 
-  return exitCode;
+  trace.finished_at = new Date().toISOString();
+  trace.exit_code = exitCode;
+  trace.trace_path = writeMachineTrace(runtime.baseDir, trace);
+  return trace;
 }
 
 export async function commandVersion(command, args = ['--version']) {

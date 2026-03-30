@@ -13,9 +13,12 @@ import {
   buildDoctorReport,
   getCollection,
   getEntry,
+  listRunTraces,
+  loadRunTrace,
   loadRegistry,
   printTable,
   resolveBaseUrl,
+  runMachineDetailed,
   runMachine,
   runTool,
   summarizeRegistry,
@@ -38,12 +41,13 @@ import {
   setBalanceValue,
   unmountMcp,
 } from './runtime.mjs';
-import { serveStdio } from './service.mjs';
+import { serveHttp, serveStdio } from './service.mjs';
 import {
   getDemoWorkflow,
   listDemoWorkflows,
   runDemoWorkflow,
 } from './demo-workflows.mjs';
+import { runOptimizeReport, runTokenReport } from './token-science.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
@@ -85,6 +89,32 @@ const TRASGO_QUOTES = [
   'broker the local, invoke the cloud',
   'boot fast, pack sharp, route clean',
 ];
+
+const HELP_TOPICS = {
+  quickstart: [
+    '1. trasgo quickstart',
+    '2. trasgo demo list',
+    '3. trasgo demo run factory-copilot --json',
+    '4. trasgo advise --codec <json> --natural <text>',
+    '5. trasgo serve --http --port 8787',
+  ],
+  install: [
+    'CLI launcher: npm ci && npm run cli -- --help',
+    'Native Rust: cargo build --manifest-path rust/trasgo/Cargo.toml --release',
+    'Windows launcher: .\\trasgo.cmd',
+    'Unix launcher: ./bin/trasgo',
+  ],
+  native: [
+    'Native commands: hello ask load route prove tokens optimize passthrough',
+    'Launcher auto-builds native when needed if the Rust manifest is present.',
+    'Use trasgo --native-status to inspect detected native binary and manifest.',
+  ],
+  mobile: [
+    'Mobile wrappers consume the local HTTP bridge rather than emulating the terminal.',
+    'Start the bridge with trasgo serve --http --port 8787.',
+    'Wrapper app scaffold lives under mobile/trasgo-mobile.',
+  ],
+};
 
 function randomFrom(items) {
   return items[Math.floor(Math.random() * items.length)];
@@ -358,6 +388,223 @@ function outputValue(context, value, printer) {
   printer();
 }
 
+function launcherScript() {
+  return path.join(runtime.baseDir, 'scripts', 'trasgo-launch.cjs');
+}
+
+function nativeStatusSnapshot() {
+  const result = spawnSync(runtime.nodeBin, [launcherScript(), '--native-status'], {
+    cwd: runtime.baseDir,
+    encoding: 'utf8',
+    shell: false,
+  });
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return JSON.parse(result.stdout);
+}
+
+function printHelpTopic(topic) {
+  const lines = HELP_TOPICS[topic];
+  if (!lines) {
+    console.error(coral(`unknown help topic: ${topic}`));
+    console.log();
+    console.log(`topics: ${Object.keys(HELP_TOPICS).join(', ')}`);
+    console.log();
+    return 1;
+  }
+
+  console.log(accent(`Help · ${topic}`));
+  console.log();
+  for (const line of lines) {
+    console.log(`  ${line}`);
+  }
+  console.log();
+  return 0;
+}
+
+function parseServeOptions(rest) {
+  const options = {
+    stdio: false,
+    http: false,
+    port: Number.parseInt(process.env.TRASGO_HTTP_PORT || '8787', 10),
+  };
+
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (arg === '--stdio') {
+      options.stdio = true;
+      continue;
+    }
+    if (arg === '--http') {
+      options.http = true;
+      continue;
+    }
+    if (arg === '--port' && rest[i + 1]) {
+      options.port = Number.parseInt(rest[i + 1], 10);
+      i += 1;
+    }
+  }
+
+  return options;
+}
+
+function advisoryFromReport(report) {
+  const codecMedian = Math.round(report.summary.codec_tokens.median);
+  const naturalMedian = report.summary.natural_tokens
+    ? Math.round(report.summary.natural_tokens.median)
+    : null;
+  const delta = naturalMedian === null ? null : codecMedian - naturalMedian;
+
+  if (naturalMedian === null) {
+    return {
+      verdict: 'codec-only',
+      recommendation: 'Natural baseline missing; only codec cost was measured.',
+      delta,
+    };
+  }
+
+  if (codecMedian < naturalMedian) {
+    return {
+      verdict: 'use-codec',
+      recommendation: 'Codec is cheaper at the median tokenizer view and should buy context headroom here.',
+      delta,
+    };
+  }
+
+  if (codecMedian > naturalMedian) {
+    return {
+      verdict: 'prefer-natural',
+      recommendation: 'Natural language is cheaper for this shape; codec overhead is not earning its keep yet.',
+      delta,
+    };
+  }
+
+  return {
+    verdict: 'neutral',
+    recommendation: 'Codec and natural language are tied at the median; use codec only if structured downstream processing matters.',
+    delta,
+  };
+}
+
+function printAdvisory(advice) {
+  console.log(accent('Codec Advice'));
+  console.log(`  ${mint('verdict')}        ${gold(advice.verdict)}`);
+  console.log(`  ${mint('recommendation')} ${dim(advice.recommendation)}`);
+  if (advice.break_even_delta_tokens !== null) {
+    console.log(`  ${mint('delta')}          ${dim(`${advice.break_even_delta_tokens} tok (codec - natural)` )}`);
+  }
+  console.log(`  ${mint('best family')}    ${dim(advice.report.summary.best_codec_family)}`);
+  console.log(`  ${mint('worst family')}   ${dim(advice.report.summary.worst_codec_family)}`);
+  console.log();
+}
+
+function explainValue(value) {
+  if (Array.isArray(value)) {
+    return {
+      kind: 'array',
+      len: value.length,
+    };
+  }
+
+  if (value && typeof value === 'object') {
+    return {
+      kind: 'object',
+      keys: Object.keys(value),
+    };
+  }
+
+  if (typeof value === 'string') {
+    return {
+      kind: 'string',
+      len: value.length,
+    };
+  }
+
+  return {
+    kind: 'scalar',
+    value,
+  };
+}
+
+function explainGenericInput(rawInput) {
+  const candidatePath = path.resolve(runtime.baseDir, rawInput);
+  let value;
+
+  if (fs.existsSync(candidatePath)) {
+    const text = fs.readFileSync(candidatePath, 'utf8');
+    try {
+      value = JSON.parse(text);
+    } catch {
+      value = { text };
+    }
+  } else {
+    try {
+      value = JSON.parse(rawInput);
+    } catch {
+      value = { text: rawInput };
+    }
+  }
+
+  if (value?.kind === 'trasgo-pack') {
+    return {
+      summary: 'Trasgo pack bundle',
+      session: value.session ?? null,
+      contract: value.contract ?? null,
+      skills: Array.isArray(value.skills) ? value.skills.length : 0,
+      mcp: Array.isArray(value.mcp) ? value.mcp.length : 0,
+    };
+  }
+
+  return explainValue(value);
+}
+
+function parseCodecArgs(rest) {
+  const options = {
+    codec: null,
+    natural: null,
+    models: 'all',
+  };
+
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (arg === '--codec' && rest[i + 1]) {
+      options.codec = rest[i + 1];
+      i += 1;
+      continue;
+    }
+    if (arg === '--natural' && rest[i + 1]) {
+      options.natural = rest[i + 1];
+      i += 1;
+      continue;
+    }
+    if (arg === '--models' && rest[i + 1]) {
+      options.models = rest[i + 1];
+      i += 1;
+    }
+  }
+
+  return options;
+}
+
+function printQuickstart(result) {
+  console.log(accent('Quickstart'));
+  console.log();
+  console.log(`  ${mint('native')}    ${result.native.native_binary ? gold('ready') : coral('missing')}`);
+  console.log(`  ${mint('manifest')}  ${dim(result.native.cargo_manifest || 'none')}`);
+  console.log(`  ${mint('hello')}     ${gold(result.hello.output)}`);
+  console.log(`  ${mint('demos')}     ${gold(result.demos.length.toString())}`);
+  console.log(`  ${mint('advice')}    ${gold(result.advice.verdict)}`);
+  console.log();
+  console.log(dim('next steps'));
+  console.log(`  1. trasgo demo run ${result.demos[0]?.id || 'factory-copilot'}`);
+  console.log('  2. trasgo serve --http --port 8787');
+  console.log('  3. trasgo run observatory');
+  console.log();
+}
+
 function parseDemoOptions(rest) {
   const options = {
     outPath: null,
@@ -425,7 +672,7 @@ const EXACT_COMMANDS = new Set([
   'session', 'balance', 'skills', 'skill', 'mcp', 'send', 'packet',
   'providers', 'runtimes', 'tools', 'machines', 'orchestrations', 'orchestrate',
   'show', 'dashboard', 'live', 'watch', 'monitor', 'bench', 'calibrate',
-  'research', 'validate', 'run', 'demo',
+  'research', 'validate', 'run', 'demo', 'quickstart', 'advise', 'explain', 'trace',
   'tokens', 'optimize',
 ]);
 
@@ -742,6 +989,171 @@ async function runNamed(id, args = []) {
   return 1;
 }
 
+async function handleQuickstart(context) {
+  const native = nativeStatusSnapshot();
+  const helloSession = createSession(runtime.baseDir, registry, { title: 'quickstart-tour' });
+  const demos = listDemoWorkflows();
+  const advisoryCodec = JSON.stringify({
+    '§': 1,
+    E: { P1: ['pump-1', 'asset'], S1: ['supervisor-1', 'person'] },
+    S: { 'P1.state': 'derated', 'P1.flow': '4200kg/s' },
+    R: ['S1->P1:routes'],
+    'Δ': ['P1.state:nominal->derated@2026-03-30T08:00Z'],
+    'μ': { scope: 'operations', urg: 0.62, cert: 0.91 },
+  });
+  const advisoryNatural = 'Pump 1 was moved from nominal to derated operation and the supervisor needs the routing state preserved for the next decision.';
+  const report = runTokenReport({ codec: advisoryCodec, natural: advisoryNatural });
+  const advice = {
+    ...advisoryFromReport(report),
+    break_even_delta_tokens: advisoryFromReport(report).delta,
+    report,
+  };
+  const result = {
+    kind: 'trasgo-quickstart',
+    native,
+    hello: {
+      session: sessionState(helloSession),
+      output: 'Hello, Operator! Welcome to Trasgo.',
+    },
+    demos,
+    advice,
+  };
+
+  outputValue(context, result, () => {
+    printQuickstart(result);
+  });
+  return 0;
+}
+
+async function handleAdvise(rest, context) {
+  const options = parseCodecArgs(rest);
+  if (!options.codec) {
+    console.error(coral('advise requires --codec <json|text>'));
+    return 1;
+  }
+
+  const report = runTokenReport(options);
+  const advisory = advisoryFromReport(report);
+  const result = {
+    kind: 'trasgo-advise',
+    verdict: advisory.verdict,
+    recommendation: advisory.recommendation,
+    break_even_delta_tokens: advisory.delta,
+    report,
+  };
+
+  outputValue(context, result, () => {
+    printAdvisory(result);
+  });
+  return 0;
+}
+
+async function handleExplain(rest, context) {
+  const [subject = 'balance'] = rest;
+  if (subject === 'balance') {
+    const session = ensureSession(context);
+    const result = {
+      kind: 'trasgo-explain-balance',
+      contract: session.contract,
+      note: 'Balance sets targets, priorities, fallback mode, and locality/privacy constraints for runtime selection.',
+    };
+    outputValue(context, result, () => {
+      console.log(accent('Explain · balance'));
+      console.log();
+      console.log(dim(result.note));
+      console.log();
+      printBalanceState(session);
+    });
+    return 0;
+  }
+
+  if (subject === 'route') {
+    const session = ensureSession(context);
+    const decision = brokerDecision(session, registry);
+    const result = {
+      kind: 'trasgo-explain-route',
+      contract: session.contract,
+      decision,
+      note: 'Route ranking combines seeded runtime footprints with observed failures and latency.',
+    };
+    outputValue(context, result, () => {
+      console.log(accent('Explain · route'));
+      console.log();
+      console.log(dim(result.note));
+      console.log();
+      printBalanceState(session);
+    });
+    return 0;
+  }
+
+  const genericInput = rest.join(' ').trim();
+  if (!genericInput) {
+    console.error(coral('usage: trasgo explain <balance|route|json|path>'));
+    return 1;
+  }
+
+  const result = explainGenericInput(genericInput);
+  outputValue(context, result, () => {
+    console.log(accent('Explain · input'));
+    console.log();
+    console.log(dim('Generic packet/pack explanation for JSON or a file path.'));
+    console.log();
+    console.log(JSON.stringify(result, null, 2));
+    console.log();
+  });
+  return 0;
+}
+
+async function handleTrace(rest, context) {
+  const [action = 'list', runId] = rest;
+
+  if (action === 'list') {
+    const runs = listRunTraces(runtime.baseDir);
+    outputValue(context, { kind: 'trasgo-run-list', runs }, () => {
+      if (runs.length === 0) {
+        console.log(dim('no persisted run traces'));
+        console.log();
+        return;
+      }
+      printTable('Run Traces', [
+        { key: 'run_id', label: 'Run ID', width: 36 },
+        { key: 'machine', label: 'Machine', width: 20 },
+        { key: 'exit_code', label: 'Exit', width: 4 },
+        { key: 'started_at', label: 'Started', width: 24 },
+      ], runs, line => console.log(line));
+    });
+    return 0;
+  }
+
+  if (action === 'show' && runId) {
+    const trace = loadRunTrace(runtime.baseDir, runId);
+    outputValue(context, trace, () => {
+      console.log(accent(`Trace · ${trace.machine.id}`));
+      console.log();
+      console.log(`  ${mint('run')}      ${trace.run_id}`);
+      console.log(`  ${mint('started')}  ${trace.started_at}`);
+      console.log(`  ${mint('finished')} ${trace.finished_at}`);
+      console.log(`  ${mint('exit')}     ${trace.exit_code}`);
+      console.log(`  ${mint('path')}     ${dim(trace.trace_path)}`);
+      console.log();
+      for (const step of trace.steps) {
+        console.log(`${gold(step.tool)} ${dim(`(${step.exit_code})`)}`);
+        if (step.stdout?.trim()) {
+          console.log(dim(step.stdout.trim()));
+        }
+        if (step.stderr?.trim()) {
+          console.log(coral(step.stderr.trim()));
+        }
+        console.log();
+      }
+    });
+    return 0;
+  }
+
+  console.error(coral('usage: trasgo trace <list|show> [run-id]'));
+  return 1;
+}
+
 async function handleSession(rest, context) {
   const [action, ...args] = rest;
 
@@ -990,6 +1402,7 @@ function printHelp() {
   console.log();
   console.log(accent('Workflow'));
   console.log(`  ${mint('trasgo')}                            ${dim('interactive runtime shell')}`);
+  console.log(`  ${mint('trasgo quickstart')}                 ${dim('60-second first-run tour with token science and demos')}`);
   console.log(`  ${mint('trasgo init [title]')}               ${dim('seed a session contract + default runtime context')}`);
   console.log(`  ${mint('trasgo pack [--out file]')}          ${dim('build a reusable trasgo pack from the active session')}`);
   console.log(`  ${mint('trasgo boot [--from file]')}         ${dim('activate the bootstrap stack and broker a runtime')}`);
@@ -1003,11 +1416,14 @@ function printHelp() {
   console.log(`  ${mint('trasgo balance show')}               ${dim('show negotiated runtime contract')}`);
   console.log(`  ${mint('trasgo balance set <field> <value>')} ${dim('mutate balance contract')}`);
   console.log(`  ${mint('trasgo serve --stdio')}              ${dim('experimental foreground runtime host')}`);
+  console.log(`  ${mint('trasgo serve --http --port 8787')}   ${dim('local HTTP bridge for mobile and external shells')}`);
   console.log();
   console.log(accent('Demo Workflows'));
   console.log(`  ${mint('trasgo demo list')}                  ${dim('list built-in operator/economic demos')}`);
   console.log(`  ${mint('trasgo demo run factory-copilot')}   ${dim('predictive maintenance + downtime avoidance')}`);
   console.log(`  ${mint('trasgo demo run revenue-guard')}     ${dim('quote-margin guardrail + cash drag control')}`);
+  console.log(`  ${mint('trasgo run <machine-id>')}           ${dim('execute a machine with persisted trace output')}`);
+  console.log(`  ${mint('trasgo trace list | show <run-id>')} ${dim('inspect replayable run traces')}`);
   console.log();
   console.log(accent('Context Engines'));
   console.log(`  ${mint('trasgo skills attach <id>')}         ${dim('attach skill to active session')}`);
@@ -1018,6 +1434,9 @@ function printHelp() {
   console.log(accent('Operator'));
   console.log(`  ${mint('trasgo status')}                     ${dim('runtime/control-plane summary')}`);
   console.log(`  ${mint('trasgo doctor [--probe]')}          ${dim('env + optional runtime probes')}`);
+  console.log(`  ${mint('trasgo doctor --json')}             ${dim('machine-readable health report')}`);
+  console.log(`  ${mint('trasgo explain balance|route')}     ${dim('audit the current contract and route decision')}`);
+  console.log(`  ${mint('trasgo advise --codec <json> [--natural <text>]')} ${dim('say whether codec is worth it for this packet')}`);
   console.log(`  ${mint('trasgo runtimes | tools | machines')} ${dim('list registry surfaces')}`);
   console.log(`  ${mint('trasgo dashboard | live')}           ${dim('observatory views')}`);
   console.log(`  ${mint('trasgo tokens --codec <json> [--natural <text>]')} ${dim('exact multi-family token counts and compression')}`);
@@ -1027,6 +1446,7 @@ function printHelp() {
   console.log(accent('Global'));
   console.log(`  ${mint('--logo <auto|image|ascii|none>')}    ${dim('launch banner mode; image uses chafa when the terminal supports it')}`);
   console.log(`  ${mint('--json')}                            ${dim('machine-readable workflow output')}`);
+  console.log(`  ${mint('trasgo help <quickstart|install|native|mobile>')} ${dim('topic help without scanning the whole shell')}`);
   console.log();
 }
 
@@ -1047,6 +1467,9 @@ async function executeCommand(argv, context) {
   }
 
   if (command === 'help' || command === '--help' || command === '-h') {
+    if (rest[0]) {
+      return printHelpTopic(rest[0]);
+    }
     printHelp();
     return 0;
   }
@@ -1060,16 +1483,30 @@ async function executeCommand(argv, context) {
   if (command === 'pack') return handlePack(rest, context);
   if (command === 'boot') return handleBoot(rest, context);
 
+  if (command === 'quickstart') {
+    return handleQuickstart(context);
+  }
+
   if (command === 'doctor') {
+    if (context.outputJson) {
+      const report = await buildDoctorReport(registry, runtime, { probe: rest.includes('--probe') });
+      printJson({ kind: 'trasgo-doctor', ...report });
+      return 0;
+    }
     return printDoctor({ probe: rest.includes('--probe') });
   }
 
   if (command === 'serve') {
-    if (!rest.includes('--stdio')) {
-      console.error(coral('only --stdio is supported in v1'));
+    const options = parseServeOptions(rest);
+    if (!options.stdio && !options.http) {
+      console.error(coral('usage: trasgo serve <--stdio|--http> [--port 8787]'));
       return 1;
     }
-    await serveStdio(runtime.baseDir, registry);
+    if (options.stdio) {
+      await serveStdio(runtime.baseDir, registry);
+      return 0;
+    }
+    await serveHttp(runtime.baseDir, registry, runtime, { port: options.port });
     return 0;
   }
 
@@ -1092,7 +1529,16 @@ async function executeCommand(argv, context) {
 
   if (command === 'machines' || command === 'orchestrations' || command === 'orchestrate') {
     if (rest[0] === 'run' && rest[1]) {
-      return runMachine(registry, rest[1], rest.slice(2), runtime);
+      const trace = await runMachineDetailed(registry, rest[1], rest.slice(2), runtime, { capture: context.outputJson });
+      outputValue(context, trace, () => {
+        console.log(accent(`Machine Run · ${trace.machine.id}`));
+        console.log();
+        console.log(`  ${mint('run')}    ${trace.run_id}`);
+        console.log(`  ${mint('trace')}  ${dim(trace.trace_path)}`);
+        console.log(`  ${mint('exit')}   ${trace.exit_code}`);
+        console.log();
+      });
+      return trace.exit_code;
     }
     listMachines();
     return 0;
@@ -1108,13 +1554,31 @@ async function executeCommand(argv, context) {
     return showEntry(collectionName, id);
   }
 
+  if (command === 'advise') return handleAdvise(rest, context);
+  if (command === 'explain') return handleExplain(rest, context);
+  if (command === 'trace') return handleTrace(rest, context);
+
   if (command === 'dashboard') return runNamed('dashboard', rest);
   if (command === 'live' || command === 'watch' || command === 'monitor') return runNamed('live-dashboard', rest);
   if (command === 'bench') return runNamed('bench', rest);
   if (command === 'calibrate') return runNamed('calibrate', rest);
   if (command === 'research') return runNamed('research', rest);
   if (command === 'validate') return runNamed('validate', rest);
-  if (command === 'run' && rest[0]) return runNamed(rest[0], rest.slice(1));
+  if (command === 'run' && rest[0]) {
+    if (getEntry(registry, 'machines', rest[0])) {
+      const trace = await runMachineDetailed(registry, rest[0], rest.slice(1), runtime, { capture: context.outputJson });
+      outputValue(context, trace, () => {
+        console.log(accent(`Machine Run · ${trace.machine.id}`));
+        console.log();
+        console.log(`  ${mint('run')}    ${trace.run_id}`);
+        console.log(`  ${mint('trace')}  ${dim(trace.trace_path)}`);
+        console.log(`  ${mint('exit')}   ${trace.exit_code}`);
+        console.log();
+      });
+      return trace.exit_code;
+    }
+    return runNamed(rest[0], rest.slice(1));
+  }
 
   if (getEntry(registry, 'machines', command) || getEntry(registry, 'tools', command)) {
     return runNamed(command, rest);

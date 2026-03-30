@@ -14,6 +14,7 @@
   "scripts": {
     "test": "node scripts/ci-smoke.mjs",
     "cli": "node scripts/trasgo-launch.cjs",
+    "quickstart": "node scripts/trasgo-launch.cjs quickstart",
     "native:status": "node scripts/trasgo-launch.cjs --native-status",
     "native:build": "node scripts/trasgo-launch.cjs --build-native",
     "native:smoke": "node scripts/ci-smoke.mjs",
@@ -26,12 +27,16 @@
     "status": "node scripts/trasgo-launch.cjs status",
     "doctor": "node scripts/trasgo-launch.cjs doctor",
     "serve": "node scripts/trasgo-launch.cjs serve --stdio",
+    "serve:http": "node scripts/trasgo-launch.cjs serve --http --port 8787",
     "live": "node scripts/trasgo-launch.cjs live",
     "dashboard": "node scripts/trasgo-launch.cjs dashboard",
     "bench": "node scripts/trasgo-launch.cjs bench",
     "calibrate": "node scripts/trasgo-launch.cjs calibrate",
     "research": "node scripts/trasgo-launch.cjs research",
-    "validate": "node scripts/trasgo-launch.cjs validate"
+    "validate": "node scripts/trasgo-launch.cjs validate",
+    "mobile:dev": "cd mobile/trasgo-mobile && npx expo start",
+    "mobile:ios": "cd mobile/trasgo-mobile && npx expo run:ios",
+    "mobile:android": "cd mobile/trasgo-mobile && npx expo run:android"
   },
   "repository": {
     "type": "git",

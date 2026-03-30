@@ -23,6 +23,31 @@ jobs:
           gh release view "$TAG_NAME" >/dev/null 2>&1 || \
           gh release create "$TAG_NAME" --verify-tag --title "$TAG_NAME" --generate-notes
 
+      - name: Upload release coverage catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          cat > release-catalog.json <<'EOF'
+          {
+            "family": "trasgo",
+            "native_targets": [
+              {"platform": "linux", "arch": "x64", "surface": "cli"},
+              {"platform": "linux", "arch": "arm64", "surface": "cli"},
+              {"platform": "windows", "arch": "x64", "surface": "cli"},
+              {"platform": "windows", "arch": "arm64", "surface": "cli"},
+              {"platform": "macos", "arch": "x64", "surface": "cli"},
+              {"platform": "macos", "arch": "arm64", "surface": "cli"}
+            ],
+            "mobile_targets": [
+              {"platform": "android", "surface": "wrapper", "status": "planned"},
+              {"platform": "ios", "surface": "wrapper", "status": "planned"}
+            ],
+            "notes": "Native artifacts are built per host in the matrix. Mobile wrapper artifacts are uploaded if present in mobile/trasgo-mobile."
+          }
+          EOF
+          gh release upload "$TAG_NAME" release-catalog.json --clobber
+
   publish-binaries:
     name: Publish Native Binary (${{ matrix.os }})
     needs: create-release
@@ -48,36 +73,132 @@ jobs:
 
       - name: Package Unix artifact
         if: runner.os != 'Windows'
+        shell: bash
         env:
           TAG_NAME: ${{ github.ref_name }}
-          OS_NAME: ${{ runner.os }}
         run: |
-          mkdir -p dist
-          cp rust/trasgo/target/release/trasgo dist/
-          cp README.md LICENSE dist/
-          asset="trasgo-${OS_NAME,,}-${TAG_NAME}.tar.gz"
-          tar -C dist -czf "$asset" .
-          echo "ASSET_PATH=$asset" >> "$GITHUB_ENV"
+          set -euo pipefail
+          asset_os=$(printf '%s' "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')
+          asset_arch=$(printf '%s' "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')
+          artifact_base="trasgo-${asset_os}-${asset_arch}-${TAG_NAME}"
+          rm -rf dist
+          mkdir -p dist/payload
+          cp rust/trasgo/target/release/trasgo dist/payload/
+          cp README.md dist/payload/
+          cp LICENSE dist/payload/
+          asset="${artifact_base}.tar.gz"
+          tar -C dist/payload -czf "$asset" .
+          if command -v sha256sum >/dev/null 2>&1; then
+            checksum="$(sha256sum "$asset" | awk '{print $1}')"
+          else
+            checksum="$(shasum -a 256 "$asset" | awk '{print $1}')"
+          fi
+          manifest="${asset}.manifest.json"
+          checksum_file="${asset}.sha256"
+          cat > "$manifest" <<EOF
+{
+  "artifact": "${asset}",
+  "platform": "${asset_os}",
+  "arch": "${asset_arch}",
+  "binary": "trasgo",
+  "mode": "release",
+  "lane": "release",
+  "checksum_sha256": "${checksum}"
+}
+EOF
+          printf '%s  %s\n' "$checksum" "$asset" > "$checksum_file"
+          {
+            echo "ARTIFACT_NAME=${artifact_base}"
+            echo "ASSET_PATH=${asset}"
+            echo "MANIFEST_PATH=${manifest}"
+            echo "CHECKSUM_PATH=${checksum_file}"
+          } >> "$GITHUB_ENV"
 
       - name: Package Windows artifact
         if: runner.os == 'Windows'
+        shell: pwsh
         env:
           TAG_NAME: ${{ github.ref_name }}
-        shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item rust\trasgo\target\release\trasgo.exe dist\
-          Copy-Item README.md dist\
-          Copy-Item LICENSE dist\
-          $asset = "trasgo-windows-$env:TAG_NAME.zip"
+          $artifactBase = "trasgo-$($env:RUNNER_OS.ToLower())-$($env:RUNNER_ARCH.ToLower())-$env:TAG_NAME"
+          if (Test-Path dist) {
+            Remove-Item -Recurse -Force dist
+          }
+          New-Item -ItemType Directory -Force dist\payload | Out-Null
+          Copy-Item rust\trasgo\target\release\trasgo.exe dist\payload\
+          Copy-Item README.md dist\payload\
+          Copy-Item LICENSE dist\payload\
+          $asset = "$artifactBase.zip"
           if (Test-Path $asset) {
             Remove-Item $asset -Force
           }
-          Compress-Archive -Path dist\* -DestinationPath $asset
+          Compress-Archive -Path dist\payload\* -DestinationPath $asset
+          $hash = (Get-FileHash $asset -Algorithm SHA256).Hash.ToLower()
+          $manifest = "$asset.manifest.json"
+          $checksum = "$asset.sha256"
+          @"
+{
+  "artifact": "$asset",
+  "platform": "$($env:RUNNER_OS.ToLower())",
+  "arch": "$($env:RUNNER_ARCH.ToLower())",
+  "binary": "trasgo.exe",
+  "mode": "release",
+  "lane": "release",
+  "checksum_sha256": "$hash"
+}
+"@ | Set-Content -Encoding utf8 $manifest
+          "$hash  $asset" | Set-Content -Encoding ascii $checksum
+          "ARTIFACT_NAME=$artifactBase" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "ASSET_PATH=$asset" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "MANIFEST_PATH=$manifest" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "CHECKSUM_PATH=$checksum" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Upload release asset
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
-        run: gh release upload "$TAG_NAME" "$ASSET_PATH" --clobber
+        run: gh release upload "$TAG_NAME" "$ASSET_PATH" "$MANIFEST_PATH" "$CHECKSUM_PATH" --clobber
+
+  publish-mobile-wrappers:
+    name: Publish Mobile Wrappers
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Package mobile wrapper projects
+        run: |
+          set -euo pipefail
+          if [ ! -d mobile/trasgo-mobile ]; then
+            echo "mobile/trasgo-mobile not present; skipping packaging."
+            exit 0
+          fi
+
+          TAG_NAME="${{ github.ref_name }}"
+          mkdir -p dist
+          android_asset="trasgo-android-wrapper-${TAG_NAME}.zip"
+          ios_asset="trasgo-ios-wrapper-${TAG_NAME}.zip"
+          (
+            cd mobile
+            zip -r "../dist/${android_asset}" trasgo-mobile >/dev/null
+            cp "../dist/${android_asset}" "../dist/${ios_asset}"
+          )
+
+      - name: Upload mobile wrapper artifacts if present
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ ! -d dist ]; then
+            echo "No packaged mobile wrapper assets found; skipping mobile upload."
+            exit 0
+          fi
+
+          mapfile -d '' files < <(find dist -type f \( -name '*.apk' -o -name '*.aab' -o -name '*.ipa' -o -name '*.zip' \) -print0)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No mobile wrapper artifacts found; skipping mobile upload."
+            exit 0
+          fi
+
+          gh release upload "$TAG_NAME" "${files[@]}" --clobber

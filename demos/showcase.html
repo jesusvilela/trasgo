@@ -353,28 +353,28 @@
   <div class="demo-body">
     <div class="code-block">
       <span class="code-label">§1|BOOT &middot; 3 examples, no explanation</span>
-<span class="c">EX1: climate</span>  <span class="k">E:</span>{<span class="s">climate-sci, EU-policy, von der Leyen</span>}
-                  <span class="k">R:</span>[<span class="s">constrains, leads</span>]  <span class="k">D:</span>[<span class="s">temp:+1.2->+1.5</span>]
+<span class="c">EX1: climate</span>  <span class="k">E:</span>{<span class="s">climate-sci, coastal-policy, climate-council</span>}
+                  <span class="k">R:</span>[<span class="s">constrains, governs</span>]  <span class="k">D:</span>[<span class="s">temp:+1.2->+1.5</span>]
 
-<span class="c">EX2: finance</span>  <span class="k">E:</span>{<span class="s">TSLA, macro-overlay</span>}
-                  <span class="k">R:</span>[<span class="s">hedges</span>]  <span class="k">D:</span>[<span class="s">weight:0.12->0.08</span>]
+<span class="c">EX2: operations</span>  <span class="k">E:</span>{<span class="s">cooling-loop-7, safeguard-policy</span>}
+                  <span class="k">R:</span>[<span class="s">protects</span>]  <span class="k">D:</span>[<span class="s">state:nominal->derated</span>]
 
 <span class="c">EX3: earth-obs</span> <span class="k">E:</span>{<span class="s">Sentinel-6, LEO-1336km, Poseidon-4</span>}
                   <span class="k">R:</span>[<span class="s">occupies, payload</span>]  <span class="k">D:</span>[<span class="s">mode:LRM->SAR</span>]</div>
 
-    <div class="code-block">
+<div class="code-block">
       <span class="code-label">§1|CALIBRATE &middot; dual query</span>
 <span class="h">Q_codec:</span>   What changed for K and why?
-<span class="h">Q_natural:</span> What happened to the Tesla position?</div>
+<span class="h">Q_natural:</span> What happened to cooling loop 7?</div>
 
     <div class="result">
       <div class="result-tag">PASS &mdash; grammar compiled</div>
-      Both answers identify: weight reduction 12%->8%, March 2026 timing,
-      gold ETC hedge, VIX>28 trigger. Semantic equivalence confirmed.
+      Both answers identify: nominal->derated state change, March 2026 timing,
+      safeguard policy, and tighter threshold. Semantic equivalence confirmed.
     </div>
 
     <div class="insight">
-      <strong>Why 3 examples work:</strong> Different domains (climate, finance, satellite) force the
+      <strong>Why 3 examples work:</strong> Different domains (climate, operations, satellite) force the
       model to learn <em>structure</em> (E, S, R, D, mu), not <em>content</em>. The model's inductive
       bias favors compositional mappings. This is in-context gradient descent (Garg et al., 2022).
     </div>
@@ -392,16 +392,16 @@
   </div>
   <div class="demo-body">
     <div class="code-block">
-      <span class="code-label">Novel domain: GDPR regulatory</span>
+      <span class="code-label">Novel domain: industrial compliance</span>
 {<span class="k">"§"</span>:<span class="n">1</span>,
- <span class="k">"E"</span>:{<span class="s">"F"</span>:[<span class="s">"GDPR-case-2891"</span>,<span class="s">"legal-proc"</span>],<span class="s">"G"</span>:[<span class="s">"DataCorp"</span>,<span class="s">"org"</span>],<span class="s">"H"</span>:[<span class="s">"DPA-Ireland"</span>,<span class="s">"regulator"</span>]},
- <span class="k">"S"</span>:{<span class="s">"F.fine"</span>:<span class="s">"potential-4%-revenue"</span>,<span class="s">"G.revenue"</span>:<span class="s">"2.1B"</span>},
+ <span class="k">"E"</span>:{<span class="s">"F"</span>:[<span class="s">"safety-audit-17"</span>,<span class="s">"compliance-proc"</span>],<span class="s">"G"</span>:[<span class="s">"plant-7"</span>,<span class="s">"facility"</span>],<span class="s">"H"</span>:[<span class="s">"inspectorate-west"</span>,<span class="s">"regulator"</span>]},
+ <span class="k">"S"</span>:{<span class="s">"F.fine"</span>:<span class="s">"potential-4%-revenue"</span>,<span class="s">"G.revenue"</span>:<span class="s">"420M"</span>},
  <span class="k">"D"</span>:[<span class="s">"H.priority:routine->elevated@2026-02"</span>]}
 
 <span class="h">Q:</span> What's the worst case for G?</div>
 
     <div class="result">
-      <div class="result-tag">PASS &mdash; derived 84M from 4% x 2.1B</div>
+      <div class="result-tag">PASS &mdash; derived 16.8M from 4% x 420M</div>
       The model computed the maximum fine from codec fields, noted priority escalation,
       and contextualized the regulatory risk. Entity keys F, G, H were never in boot.
     </div>
@@ -421,8 +421,8 @@
     </div>
 
     <div class="insight">
-      <strong>The ISA is domain-agnostic.</strong> Boot domains: climate, finance, satellite.
-      Test domains: GDPR law, energy grid. Same axes (E, S, R, D, mu) &mdash; different programs.
+      <strong>The ISA is domain-agnostic.</strong> Boot domains: climate, operations, satellite.
+      Test domains: industrial compliance, energy grid. Same axes (E, S, R, D, mu) &mdash; different programs.
       §1 packets are <em>programs</em>, not <em>data</em>. The model is a <em>runtime</em>, not a <em>database</em>.
     </div>
   </div>
@@ -586,7 +586,7 @@
 </div><!-- /container -->
 
 <div class="footer">
-  <a href="https://github.com/jesusvilela/trasgo">github.com/jesusvilela/trasgo</a>
+  <span>Trasgo repository</span>
   &nbsp;&middot;&nbsp; MIT License &nbsp;&middot;&nbsp; 2026
 </div>
 

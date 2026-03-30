@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Trasgo Mobile",
+    "slug": "trasgo-mobile",
+    "scheme": "trasgo-mobile",
+    "platforms": ["ios", "android"],
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": ["expo-router"],
+    "ios": {
+      "bundleIdentifier": "com.trasgo.mobile",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSAllowsArbitraryLoadsInWebContent": true
+        }
+      }
+    },
+    "android": {
+      "package": "com.trasgo.mobile",
+      "usesCleartextTraffic": true
+    },
+    "extra": {
+      "bridgeUrl": "http://127.0.0.1:8787"
+    }
+  }
+}
