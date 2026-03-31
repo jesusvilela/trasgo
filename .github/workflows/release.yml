@@ -40,10 +40,10 @@ jobs:
               {"platform": "macos", "arch": "arm64", "surface": "cli"}
             ],
             "mobile_targets": [
-              {"platform": "android", "surface": "wrapper-project", "status": "published"},
+              {"platform": "android", "surface": "apk", "status": "published"},
               {"platform": "ios", "surface": "wrapper-project", "status": "published"}
             ],
-            "notes": "Native artifacts are published per explicit target lane. Mobile assets are wrapper project bundles from mobile/trasgo-mobile, not signed store builds."
+            "notes": "Native artifacts are published per explicit target lane. Android publishes a sideloadable APK. iOS assets remain wrapper project bundles, not signed store builds."
           }
           EOF
           gh release upload "$TAG_NAME" release-catalog.json --clobber
@@ -249,12 +249,10 @@ EOF
 
           TAG_NAME="${{ github.ref_name }}"
           mkdir -p dist
-          android_asset="trasgo-android-wrapper-${TAG_NAME}.zip"
           ios_asset="trasgo-ios-wrapper-${TAG_NAME}.zip"
           (
             cd mobile
-            zip -r "../dist/${android_asset}" trasgo-mobile >/dev/null
-            cp "../dist/${android_asset}" "../dist/${ios_asset}"
+            zip -r "../dist/${ios_asset}" trasgo-mobile >/dev/null
           )
 
       - name: Emit mobile wrapper manifest
@@ -266,15 +264,11 @@ EOF
           fi
           cat > dist/mobile-wrapper-manifest.json <<'EOF'
           {
-            "android": {
-              "surface": "expo-wrapper-project",
-              "artifact_kind": "source-zip"
-            },
             "ios": {
               "surface": "expo-wrapper-project",
               "artifact_kind": "source-zip"
             },
-            "note": "These mobile release assets are wrapper app projects, not signed store builds."
+            "note": "The iOS mobile release asset is a wrapper app project, not a signed store build."
           }
           EOF
 
@@ -296,3 +290,66 @@ EOF
           fi
 
           gh release upload "$TAG_NAME" "${files[@]}" --clobber
+
+  publish-android-apk:
+    name: Publish Android APK
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install mobile dependencies
+        working-directory: mobile/trasgo-mobile
+        run: npm install --legacy-peer-deps
+
+      - name: Generate Android project
+        working-directory: mobile/trasgo-mobile
+        run: npx expo prebuild --platform android --non-interactive
+
+      - name: Point Gradle to Android SDK
+        working-directory: mobile/trasgo-mobile/android
+        run: echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
+
+      - name: Build debug APK
+        working-directory: mobile/trasgo-mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Package Android APK
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          apk_path="mobile/trasgo-mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+          asset="trasgo-android-apk-${TAG_NAME}.apk"
+          cp "$apk_path" "dist/$asset"
+          checksum="$(sha256sum "dist/$asset" | awk '{print $1}')"
+          cat > "dist/${asset}.manifest.json" <<EOF
+          {
+            "artifact": "${asset}",
+            "platform": "android",
+            "arch": "universal",
+            "surface": "apk",
+            "variant": "debug",
+            "checksum_sha256": "${checksum}",
+            "note": "Sideloadable debug APK built from the Expo wrapper."
+          }
+          EOF
+          printf '%s  %s\n' "$checksum" "$asset" > "dist/${asset}.sha256"
+
+      - name: Upload Android APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG_NAME" dist/*.apk dist/*.json dist/*.sha256 --clobber
