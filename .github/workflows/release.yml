@@ -40,25 +40,76 @@ jobs:
               {"platform": "macos", "arch": "arm64", "surface": "cli"}
             ],
             "mobile_targets": [
-              {"platform": "android", "surface": "wrapper", "status": "planned"},
-              {"platform": "ios", "surface": "wrapper", "status": "planned"}
+              {"platform": "android", "surface": "wrapper-project", "status": "published"},
+              {"platform": "ios", "surface": "wrapper-project", "status": "published"}
             ],
-            "notes": "Native artifacts are built per host in the matrix. Mobile wrapper artifacts are uploaded if present in mobile/trasgo-mobile."
+            "notes": "Native artifacts are published per explicit target lane. Mobile assets are wrapper project bundles from mobile/trasgo-mobile, not signed store builds."
           }
           EOF
           gh release upload "$TAG_NAME" release-catalog.json --clobber
 
   publish-binaries:
-    name: Publish Native Binary (${{ matrix.os }})
+    name: Publish Native Binary (${{ matrix.id }})
     needs: create-release
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-          - macos-latest
+        include:
+          - id: linux-x64
+            platform: linux
+            arch: x64
+            runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+            binary_name: trasgo
+            archive_ext: tar.gz
+            package_shell: bash
+            build_mode: native
+          - id: linux-arm64
+            platform: linux
+            arch: arm64
+            runner: ubuntu-latest
+            rust_target: aarch64-unknown-linux-gnu
+            binary_name: trasgo
+            archive_ext: tar.gz
+            package_shell: bash
+            build_mode: cross-linux-arm64
+          - id: windows-x64
+            platform: windows
+            arch: x64
+            runner: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            binary_name: trasgo.exe
+            archive_ext: zip
+            package_shell: pwsh
+            build_mode: native
+          - id: windows-arm64
+            platform: windows
+            arch: arm64
+            runner: windows-latest
+            rust_target: aarch64-pc-windows-msvc
+            binary_name: trasgo.exe
+            archive_ext: zip
+            package_shell: pwsh
+            build_mode: cross-windows-arm64
+          - id: macos-x64
+            platform: macos
+            arch: x64
+            runner: macos-13
+            rust_target: x86_64-apple-darwin
+            binary_name: trasgo
+            archive_ext: tar.gz
+            package_shell: bash
+            build_mode: native
+          - id: macos-arm64
+            platform: macos
+            arch: arm64
+            runner: macos-latest
+            rust_target: aarch64-apple-darwin
+            binary_name: trasgo
+            archive_ext: tar.gz
+            package_shell: bash
+            build_mode: native
 
     env:
       CARGO_BUILD_JOBS: 1
@@ -67,23 +118,45 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
 
-      - name: Build release binary
-        run: cargo build --manifest-path rust/trasgo/Cargo.toml --release -j 1
+      - name: Install Linux ARM64 linker
+        if: matrix.build_mode == 'cross-linux-arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build release binary on Unix
+        if: matrix.package_shell == 'bash'
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="${{ matrix.rust_target }}"
+          if [ "${{ matrix.build_mode }}" = "cross-linux-arm64" ]; then
+            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          fi
+          cargo build --manifest-path rust/trasgo/Cargo.toml --release --target "$target" -j 1
+
+      - name: Build release binary on Windows
+        if: matrix.package_shell == 'pwsh'
+        shell: pwsh
+        run: |
+          cargo build --manifest-path rust\trasgo\Cargo.toml --release --target ${{ matrix.rust_target }} -j 1
 
       - name: Package Unix artifact
-        if: runner.os != 'Windows'
+        if: matrix.package_shell == 'bash'
         shell: bash
         env:
           TAG_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          asset_os=$(printf '%s' "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')
-          asset_arch=$(printf '%s' "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')
+          asset_os="${{ matrix.platform }}"
+          asset_arch="${{ matrix.arch }}"
           artifact_base="trasgo-${asset_os}-${asset_arch}-${TAG_NAME}"
           rm -rf dist
           mkdir -p dist/payload
-          cp rust/trasgo/target/release/trasgo dist/payload/
+          cp "rust/trasgo/target/${{ matrix.rust_target }}/release/${{ matrix.binary_name }}" "dist/payload/${{ matrix.binary_name }}"
           cp README.md dist/payload/
           cp LICENSE dist/payload/
           asset="${artifact_base}.tar.gz"
@@ -115,17 +188,17 @@ EOF
           } >> "$GITHUB_ENV"
 
       - name: Package Windows artifact
-        if: runner.os == 'Windows'
+        if: matrix.package_shell == 'pwsh'
         shell: pwsh
         env:
           TAG_NAME: ${{ github.ref_name }}
         run: |
-          $artifactBase = "trasgo-$($env:RUNNER_OS.ToLower())-$($env:RUNNER_ARCH.ToLower())-$env:TAG_NAME"
+          $artifactBase = "trasgo-${{ matrix.platform }}-${{ matrix.arch }}-$env:TAG_NAME"
           if (Test-Path dist) {
             Remove-Item -Recurse -Force dist
           }
           New-Item -ItemType Directory -Force dist\payload | Out-Null
-          Copy-Item rust\trasgo\target\release\trasgo.exe dist\payload\
+          Copy-Item "rust\trasgo\target\${{ matrix.rust_target }}\release\${{ matrix.binary_name }}" "dist\payload\${{ matrix.binary_name }}"
           Copy-Item README.md dist\payload\
           Copy-Item LICENSE dist\payload\
           $asset = "$artifactBase.zip"
@@ -139,8 +212,8 @@ EOF
           @"
 {
   "artifact": "$asset",
-  "platform": "$($env:RUNNER_OS.ToLower())",
-  "arch": "$($env:RUNNER_ARCH.ToLower())",
+  "platform": "${{ matrix.platform }}",
+  "arch": "${{ matrix.arch }}",
   "binary": "trasgo.exe",
   "mode": "release",
   "lane": "release",
@@ -184,6 +257,27 @@ EOF
             cp "../dist/${android_asset}" "../dist/${ios_asset}"
           )
 
+      - name: Emit mobile wrapper manifest
+        run: |
+          set -euo pipefail
+          if [ ! -d dist ]; then
+            echo "No dist directory; skipping manifest."
+            exit 0
+          fi
+          cat > dist/mobile-wrapper-manifest.json <<'EOF'
+          {
+            "android": {
+              "surface": "expo-wrapper-project",
+              "artifact_kind": "source-zip"
+            },
+            "ios": {
+              "surface": "expo-wrapper-project",
+              "artifact_kind": "source-zip"
+            },
+            "note": "These mobile release assets are wrapper app projects, not signed store builds."
+          }
+          EOF
+
       - name: Upload mobile wrapper artifacts if present
         env:
           GH_TOKEN: ${{ github.token }}
@@ -195,7 +289,7 @@ EOF
             exit 0
           fi
 
-          mapfile -d '' files < <(find dist -type f \( -name '*.apk' -o -name '*.aab' -o -name '*.ipa' -o -name '*.zip' \) -print0)
+          mapfile -d '' files < <(find dist -type f \( -name '*.apk' -o -name '*.aab' -o -name '*.ipa' -o -name '*.zip' -o -name '*.json' \) -print0)
           if [ ${#files[@]} -eq 0 ]; then
             echo "No mobile wrapper artifacts found; skipping mobile upload."
             exit 0
