@@ -17,26 +17,26 @@ EX:
  "checks":["fields","arithmetic","consistency","format"],
  "context":{
    "§":1,
-   "E":{"F":["GDPR-case","legal-proc"],"G":["DataCorp","org"]},
-   "S":{"F.fine":"potential-4%-revenue","G.revenue":"2.1B"},
-   "R":["F→G:targets"],
-   "Δ":["F.status:complaint→under-investigation@2026-01"],
+   "E":{"F":["safety-audit","compliance-proc"],"G":["plant-7","facility"],"H":["inspectorate-west","regulator"]},
+   "S":{"F.fine":"potential-4%-revenue","G.revenue":"420M"},
+   "R":["F→G:targets","H→G:inspects"],
+   "Δ":["F.status:notice→under-review@2026-01","H.priority:routine→elevated@2026-02"],
    "μ":{"scope":"regulatory","urg":0.6,"cert":0.65}
  },
  "query":"What's the worst case for G?",
- "response":"The worst case for DataCorp is a fine of $84 million.",
+ "response":"The worst case for plant-7 is a fine of $16.8 million.",
  "on_fail":"correct"}
 
 RESULT:
 {"§P":"validate",
  "status":"errors-found",
  "errors":[
-   {"check":"fields","msg":"Missing: investigation status escalation (Δ shows complaint→under-investigation)"},
-   {"check":"fields","msg":"Missing: regulator identity (E.H not referenced)"},
-   {"check":"arithmetic","msg":"Currency mismatch: source uses € (2.1B€), response uses $. Correct: €84M"},
+   {"check":"fields","msg":"Missing: review status escalation (Δ shows notice→under-review)"},
+   {"check":"fields","msg":"Missing: regulator identity and elevated priority (E.H / Δ not referenced)"},
+   {"check":"arithmetic","msg":"Currency mismatch: source uses a 420M revenue basis and should report 16.8M without switching units mid-response"},
    {"check":"format","msg":"OK"}
  ],
- "corrected":"The worst case for DataCorp (G) is a potential fine of 4% of revenue — approximately €84 million (based on €2.1B revenue). The GDPR case escalated from complaint to under-investigation in January 2026, with the regulator's priority elevated to high."}
+ "corrected":"The worst case for plant-7 (G) is a potential fine of 4% of revenue — approximately 16.8M on a 420M revenue base. The safety audit escalated from notice to under-review in January 2026, and inspectorate-west elevated the case priority in February 2026."}
 
 = "Validate response against source packet. Found 3 errors: missing escalation context,
    missing regulator reference, wrong currency symbol. Corrected response includes all
@@ -49,7 +49,7 @@ RESULT:
 
 | Check | Validates | Typical errors caught |
 |:------|:----------|:---------------------|
-| `fields` | Every field referenced in query appears in response | Missing VIX trigger, dropped urgency metadata, omitted entity references |
+| `fields` | Every field referenced in query appears in response | Missing threshold change, dropped urgency metadata, omitted entity references |
 | `arithmetic` | Numeric derivations are correct, units/symbols match source | Wrong fine amount, percentage miscalculation, currency symbol substitution |
 | `consistency` | After N delta updates, final state values are correct | Wrong orbit after triple update, incorrect fuel remaining |
 | `format` | Response matches requested output modality (codec/natural/dual) | Prose contamination in codec mode, over-specification, mixed formats |

@@ -8,7 +8,7 @@ Demonstrates cross-domain transfer — the energy domain is **not** in the boot 
 
 ## 1. Boot (paste `src/boot.md` seed phase)
 
-The model reads 3 examples across climate, finance, and earth-observation domains.
+The model reads 3 examples across climate, operations, and earth-observation domains.
 Grammar induction happens silently during the forward pass.
 
 ## 2. Calibrate (on a novel domain)
@@ -96,7 +96,7 @@ The model integrates this delta with existing state. Wind picks up at sunset whi
 
 This session demonstrates:
 
-1. **Cross-domain transfer** — Energy grid was not in the boot seed. The model induced the grammar from climate/finance/earth-observation examples and applied it to a novel domain.
+1. **Cross-domain transfer** — Energy grid was not in the boot seed. The model induced the grammar from climate/operations/earth-observation examples and applied it to a novel domain.
 
 2. **Multi-entity reasoning** — 6 entities with typed relations. The model tracks flows (feeds, stabilizes, imports, backup) and uses them for dispatch optimization.
 

@@ -1,0 +1,57 @@
+{
+  "experiment": "A/B test: normal vs forced JSON structured output",
+  "date": "2026-03-29",
+  "tests": ["T1_calibration", "T2_cross_domain", "T3_delta_integration", "T4_protocol_filter", "T5_triple_delta", "T6_spontaneous_extension"],
+  "results": [
+    {
+      "model": "DeepSeek-V3 (deepseek-chat)",
+      "provider": "DeepSeek API",
+      "normal": {"score": 12, "max": 14, "pct": 85.7, "per_test": {"T1": "3/4", "T2": "3/3", "T3": "2/3", "T4": "4/4"}},
+      "json_mode": {"score": 13, "max": 14, "pct": 92.9, "per_test": {"T1": "3/4", "T2": "3/3", "T3": "3/3", "T4": "4/4"}},
+      "delta": "+7.2%",
+      "finding": "JSON mode helps. Structured output aligns with codec format, eliminates prose wrapping.",
+      "note": "Tested with old 4-test suite (json_object mode)"
+    },
+    {
+      "model": "GLM-5",
+      "provider": "z.ai API",
+      "normal": {"score": 11, "max": 14, "pct": 78.6, "per_test": {"T1": "3/4", "T2": "1/3", "T3": "3/3", "T4": "4/4"}},
+      "json_mode": {"score": 10, "max": 14, "pct": 71.4, "per_test": {"T1": "3/4", "T2": "1/3", "T3": "2/3", "T4": "4/4"}},
+      "delta": "-7.2%",
+      "finding": "JSON mode hurts. Reasoning model loses expressiveness when forced into JSON.",
+      "note": "Tested with old 4-test suite (json_object mode)"
+    },
+    {
+      "model": "Nemotron Nano 4B",
+      "provider": "LM Studio (local)",
+      "normal": {"score": 12, "max": 14, "pct": 85.7, "per_test": {"T1": "3/4", "T2": "3/3", "T3": "2/3", "T4": "4/4"}},
+      "json_mode": "unsupported (LM Studio requires json_schema, not json_object)",
+      "finding": "N/A — local runtime does not support json_object response format."
+    },
+    {
+      "model": "rnj-1-instruct",
+      "provider": "LM Studio (local)",
+      "normal": {"score": 13, "max": 14, "pct": 92.9, "per_test": {"T1": "3/4", "T2": "3/3", "T3": "3/3", "T4": "4/4"}},
+      "json_mode": "unsupported (LM Studio requires json_schema, not json_object)",
+      "finding": "Highest normal-mode score. 92.9% without structured output enforcement."
+    },
+    {
+      "model": "MedGemma 27B (medgemma-27b-text-it)",
+      "provider": "LM Studio (local, json_schema mode)",
+      "normal": {"score": 14, "max": 19, "pct": 73.7, "per_test": {"T1": "3/4", "T2": "3/3", "T3": "2/3", "T4": "2/3", "T5": "4/4", "T6": "0/2 (timeout)"}},
+      "json_mode": {"score": 17, "max": 19, "pct": 89.5, "per_test": {"T1": "4/4", "T2": "2/3", "T3": "3/3", "T4": "2/3", "T5": "4/4", "T6": "2/2"}},
+      "delta": "+15.8%",
+      "finding": "Strong improvement. JSON schema prevented T6 timeout, improved T1 (VIX) and T3 (urgency). Slight T2 regression (escalation detail dropped). Upgraded from S1-OPERATIONAL to S1-ADVANCED."
+    },
+    {
+      "model": "Liquid LFM2-24B (liquid/lfm2-24b-a2b)",
+      "provider": "LM Studio (local, json_schema mode)",
+      "normal": {"score": 17, "max": 19, "pct": 89.5, "per_test": {"T1": "4/4", "T2": "2/3", "T3": "3/3", "T4": "2/3", "T5": "4/4", "T6": "2/2"}},
+      "json_mode": {"score": 16, "max": 19, "pct": 84.2, "per_test": {"T1": "3/4", "T2": "2/3", "T3": "3/3", "T4": "2/3", "T5": "4/4", "T6": "2/2"}},
+      "delta": "-5.3%",
+      "finding": "Slight regression. T1 calibration dropped (misinterpreted weight as share count in JSON mode). Already high-performing in normal mode."
+    }
+  ],
+  "conclusion": "Structured output enforcement remains model-dependent. MedGemma 27B shows the strongest improvement (+15.8%), moving from OPERATIONAL to ADVANCED — the schema gives it output scaffolding that prevents timeouts and improves field extraction. LFM2-24B slightly degrades (-5.3%), similar to GLM-5 pattern: models already fluent in the codec gain nothing from double-constraining. DeepSeek-V3 benefits moderately (+7.2%). The §1 codec is inherently structured; JSON enforcement helps models that need output scaffolding but can hurt models that reason better in prose.",
+  "schema_note": "LM Studio uses json_schema (strict) mode, not json_object. API providers (DeepSeek, GLM) used json_object mode. The two enforcement mechanisms are not identical."
+}

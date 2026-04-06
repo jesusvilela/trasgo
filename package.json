@@ -95,7 +95,7 @@
   "bugs": {
     "url": "https://github.com/jesusvilela/trasgo/issues"
   },
-  "homepage": "https://jesusvilela.github.io/trasgo/",
+  "homepage": "https://github.com/jesusvilela/trasgo#readme",
   "publishConfig": {
     "access": "public"
   },
@@ -106,6 +106,7 @@
     "cli-table3": "^0.6.5",
     "figlet": "^1.11.0",
     "gradient-string": "^3.0.0",
-    "ora": "^9.3.0"
+    "ora": "^9.3.0",
+    "user": "^0.0.0"
   }
 }

@@ -22,7 +22,7 @@ function main() {
   assert.equal(pkg.license, 'MIT', 'license must be MIT');
   assert.equal(pkg.bin?.trasgo, './bin/trasgo', 'bin.trasgo must point to ./bin/trasgo');
   assert.equal(pkg.publishConfig?.access, 'public', 'publishConfig.access must be public');
-  assert.match(pkg.homepage || '', /jesusvilela\.github\.io\/trasgo/i, 'homepage must target GitHub Pages');
+  assert.match(pkg.homepage || '', /github\.com\/jesusvilela\/trasgo#readme/i, 'homepage must target the GitHub README');
   assert.ok(Array.isArray(pkg.files) && pkg.files.length > 0, 'files whitelist must be present');
 
   const requiredMedia = [
@@ -37,8 +37,8 @@ function main() {
     assert.ok(fs.existsSync(absolutePath), `missing required release asset: ${relativePath}`);
   }
 
-  assert.match(readme, /<img src="assets\/trasgo-s1-codec-demo\.gif"/u, 'README must embed codec demo GIF');
-  assert.match(readme, /<img src="assets\/trasgo-live-demo\.gif"/u, 'README must embed runtime demo GIF');
+  assert.match(readme, /<img src="https:\/\/raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets\/trasgo-s1-codec-demo\.gif"/u, 'README must embed codec demo GIF');
+  assert.match(readme, /<img src="https:\/\/raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets\/trasgo-live-demo\.gif"/u, 'README must embed runtime demo GIF');
   assert.match(docsIndex, /assets\/trasgo-s1-codec-demo\.gif/u, 'docs/index.html must embed codec demo GIF');
   assert.match(docsIndex, /assets\/trasgo-live-demo\.gif/u, 'docs/index.html must embed runtime demo GIF');
 

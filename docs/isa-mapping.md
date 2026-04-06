@@ -27,9 +27,9 @@ A CPU instruction set architecture defines:
 |:------------|:-------------|:-----------------|
 | **Instruction format** | §1 packet JSON structure | `{"§":1, "E":{...}, "S":{...}, "R":[...], "Δ":[...], "μ":{...}}` |
 | **Opcode field** | `"§":1` (codec version) + top-level axis key | `"§P":"filter"` is opcode FILTER |
-| **Operand fields** | Axis contents | `"E":{"K":["TSLA","equity"]}` — operand K of type equity |
+| **Operand fields** | Axis contents | `"E":{"K":["cooling-loop-7","industrial-asset"]}` — operand K of type industrial asset |
 | **Register file** | Entity keys (A, B, K, V, ...) | `K`, `L`, `V` are named registers holding entity state |
-| **Register contents** | `S` axis (state per entity) | `"S":{"K.pos":"long 200sh@$180"}` — register K contains position data |
+| **Register contents** | `S` axis (state per entity) | `"S":{"K.flow":"4200kg/s"}` — register K contains state data |
 | **Addressing modes** | Dot notation | `K.pos` = register K, field pos (like `[R1 + offset]` in ARM) |
 | **Immediate values** | Inline state values | `"K.pnl":"-12%"` — literal value encoded in instruction |
 | **ALU operations** | §P atoms | `§P:filter`, `§P:compress`, `§P:merge` — computational primitives |
@@ -95,17 +95,17 @@ Entity keys ARE registers. Like how ARM64 has `x0-x30` and `sp`, §1 has user-de
 ```
 Register    Contents                    Type
 ────────    ────────                    ────
-K           TSLA equity position        entity
-L           macro-overlay strategy      entity
+K           cooling-loop-7              entity
+L           safeguard-policy            entity
 V           Sentinel-6 satellite        entity
-F           GDPR-case-2891              entity
+F           safety-audit-17             entity
 ```
 
 **Key difference from hardware:** §1 registers are dynamically allocated and named, not fixed-width. This is closer to a virtual register machine (like LLVM IR) than a physical register file.
 
 State access uses dot-notation addressing:
-- `K.pos` — Register K, field `pos` (like `[x1, #offset]` in ARM)
-- `K.pnl` — Register K, field `pnl`
+- `K.flow` — Register K, field `flow` (like `[x1, #offset]` in ARM)
+- `K.state` — Register K, field `state`
 
 ---
 

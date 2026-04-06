@@ -19,21 +19,21 @@ Paste this into a fresh conversation. No explanation, no preamble.
 
 EX1:
 {"§":1,
- "E":{"A":["climate-sci","domain"],"B":["EU-policy","domain"],"C":["von der Leyen","person"]},
- "S":{"A.temp":"+1.5C threshold","B.status":"Green Deal active"},
- "R":["A->B:constrains","C->B:leads"],
- "D":["A.temp:+1.2->+1.5@2025-Q3","B.status:proposed->active@2024-01"],
+ "E":{"A":["climate-sci","domain"],"B":["coastal-policy","domain"],"C":["climate-council","institution"]},
+ "S":{"A.temp":"+1.5C threshold","B.status":"adaptation-plan active"},
+ "R":["A->B:constrains","C->B:governs"],
+ "D":["A.temp:+1.2->+1.5@2025-Q3","B.status:draft->active@2024-01"],
  "mu":{"scope":"geopolitical","urg":0.6,"cert":0.85}}
-= "Climate science constrains EU policy. Von der Leyen leads the Green Deal, which became active Jan 2024. Temperature threshold revised to 1.5C in Q3 2025."
+= "Climate science constrains coastal policy. A climate council governs the adaptation plan, which became active in Jan 2024. Temperature threshold revised to 1.5C in Q3 2025."
 
 EX2:
 {"§":1,
- "E":{"K":["TSLA","equity"],"L":["macro-overlay","strategy"]},
- "S":{"K.pos":"long 200sh@$180","K.pnl":"-12%","L.hedge":"gold ETC"},
- "R":["L->K:hedges"],
- "D":["K.weight:0.12->0.08@2026-03","L.trigger:VIX>28"],
- "mu":{"scope":"portfolio","urg":0.4,"cert":0.7}}
-= "Long 200 shares TSLA at $180, down 12%. Macro overlay hedges via gold ETC. Weight reduced 12% to 8% in March 2026. Hedge triggers when VIX>28."
+ "E":{"K":["cooling-loop-7","industrial-asset"],"L":["safeguard-policy","control-strategy"]},
+ "S":{"K.flow":"4200kg/s","K.state":"nominal","L.action":"derate-load"},
+ "R":["L->K:protects"],
+ "D":["K.state:nominal->derated@2026-03","L.threshold:0.68->0.61@2026-03"],
+ "mu":{"scope":"operations","urg":0.4,"cert":0.7}}
+= "Cooling loop 7 is operating at 4200kg/s under nominal conditions. A safeguard policy protects it by derating load when vibration risk rises. The loop moved from nominal to derated in March 2026, and the trigger threshold tightened from 0.68 to 0.61."
 
 EX3:
 {"§":1,
@@ -54,24 +54,24 @@ EX3:
 
 CONTEXT:
 {"§":1,
- "E":{"K":["TSLA","equity"],"L":["macro-overlay","strategy"]},
- "S":{"K.pos":"long 200sh@$180","K.pnl":"-12%","L.hedge":"gold ETC"},
- "R":["L->K:hedges"],
- "D":["K.weight:0.12->0.08@2026-03","L.trigger:VIX>28"],
- "mu":{"scope":"portfolio","urg":0.4,"cert":0.7}}
+ "E":{"K":["cooling-loop-7","industrial-asset"],"L":["safeguard-policy","control-strategy"]},
+ "S":{"K.flow":"4200kg/s","K.state":"nominal","L.action":"derate-load"},
+ "R":["L->K:protects"],
+ "D":["K.state:nominal->derated@2026-03","L.threshold:0.68->0.61@2026-03"],
+ "mu":{"scope":"operations","urg":0.4,"cert":0.7}}
 
 Q_codec:   What changed for K and why?
-Q_natural: What happened to the Tesla position and what's the hedging strategy?
+Q_natural: What happened to cooling loop 7 and what's the safeguard strategy?
 ```
 
 ## Expected result
 
 The model should answer **both** questions with semantically equivalent content:
 
-- Position weight reduced from 12% to 8%
+- Loop state shifted from nominal to derated
 - Timing: March 2026
-- Reason: macro-overlay strategy hedges via gold ETC
-- Trigger condition: VIX > 28
+- Reason: safeguard policy protects the loop by derating load
+- Trigger condition tightened from 0.68 to 0.61
 
 **Pass condition:** Both answers match on all key facts. The model reconstructed the full narrative from the codec — the microcode loaded successfully and the ISA is operational.
 
@@ -82,7 +82,7 @@ The model should answer **both** questions with semantically equivalent content:
 Real CPU microcode defines thousands of micro-ops. §1 needs only 3 examples because:
 
 1. **Fixed instruction format** — Same fields (E, S, R, D, mu) in every instruction, like ARM64's fixed 32-bit encoding. The model detects the field layout.
-2. **Different operand domains** — Climate, finance, earth-observation. Forces the model to learn the **instruction format**, not the **operand values** — like seeing ADD, SUB, MUL with different register contents.
+2. **Different operand domains** — Climate, operations, earth-observation. Forces the model to learn the **instruction format**, not the **operand values** — like seeing ADD, SUB, MUL with different register contents.
 3. **Paired decode tables** — Each codec block has a NL equivalent. The model builds a bidirectional decode table: codec → semantics and semantics → codec.
 
 The model's inductive bias does the rest. It already knows how to reason — the boot seed just tells it **which format to expect**.

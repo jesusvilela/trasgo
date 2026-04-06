@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/trasgo.png" alt="Trasgo" width="280"/>
+  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo.png" alt="Trasgo" width="280"/>
 </p>
 
 <h1 align="center">TRASGO §1</h1>
@@ -24,10 +24,6 @@
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen.svg" alt="Zero dependencies"/>
 </p>
 
-<p align="center">
-  <a href="https://jesusvilela.github.io/trasgo/">GitHub Pages</a>
-</p>
-
 ---
 
 ## What is Trasgo?
@@ -49,14 +45,6 @@ The context window **is** the compiler.
 > things while you're not looking. This one rearranges your context.
 
 
-
-## GitHub Pages
-
-A project site is included at [`docs/index.html`](docs/index.html) and deploys automatically via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
-
-- Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-- Push to `main` to publish updates.
-- The page loads live GitHub repo metrics and contributor highlights from the GitHub API.
 
 ## Quick Start
 
@@ -156,11 +144,11 @@ Demo assets:
 Recorded animated demos:
 
 <p align="center">
-  <img src="assets/trasgo-s1-codec-demo.gif" alt="Trasgo §1 codec demo" width="900"/>
+  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo §1 codec demo" width="900"/>
 </p>
 
 <p align="center">
-  <img src="assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" width="900"/>
+  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" width="900"/>
 </p>
 
 §CoT preview layer:

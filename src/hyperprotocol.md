@@ -7,7 +7,7 @@ Each protocol atom learns from 1 example. Machines compose atoms and other machi
 
 ## §P — Protocol Atoms
 
-Seven atomic operations. Each is a pure function over §1 packets.
+Nine atomic operations. Each is a pure function over §1 packets.
 
 ---
 
@@ -120,9 +120,51 @@ EX:
 
 ---
 
+### 8. VALIDATE — error detection & correction
+
+```
+§P|VALIDATE
+
+EX:
+{"§P":"validate",
+ "target":"last-response",
+ "checks":["fields","arithmetic","consistency","format"],
+ "context":"source-packet",
+ "on_fail":"correct"}
+= "Validate last response against source packet. Check: all queried fields present,
+   arithmetic derivations correct, state consistent after deltas, output format matches
+   requested modality. On failure: emit corrected response."
+```
+
+Check types: `fields` (referenced values present), `arithmetic` (numeric derivations correct, units/symbols match), `consistency` (state correct after delta chain), `format` (output matches requested modality). `on_fail`: `"flag"` annotate only, `"correct"` emit fix, `"reject"` signal unreliable. See `src/validate.md` for full spec.
+
+---
+
+### 9. BALANCE — negotiated runtime dispatch
+
+```
+§P|BALANCE
+
+EX:
+{"§P":"balance",
+ "policy":"manifested",
+ "targets":["medgemma","deepseek","openai"],
+ "mode":"single",
+ "fallback":"handoff",
+ "persist":"session",
+ "priorities":{"protocol":1.1,"locality":0.8,"privacy":0.8,"cost":0.6},
+ "constraints":{"require_local":false,"allow_cloud":true}}
+= "Negotiate the runtime contract for subsequent turns. Route by manifested capability
+   footprints, but keep locality, privacy, and cost in the score."
+```
+
+`BALANCE` rewrites the runtime contract. It does not answer the user query directly.
+
+---
+
 ## §M — Hyperprotocol Machines
 
-Five composable topologies. Machines contain protocols and other machines.
+Six composable topologies. Machines contain protocols and other machines.
 
 ---
 
@@ -227,15 +269,40 @@ EX:
 
 ---
 
+### 6. BROKER — local/API runtime dispatch
+
+```
+§M|BROKER
+
+EX:
+{"§M":"broker",
+ "id":"runtime-broker",
+ "contract":{"§P":"balance",
+   "policy":"manifested",
+   "targets":["lmstudio","deepseek","openai"],
+   "mode":"handoff",
+   "fallback":"handoff",
+   "persist":"session"},
+ "observe":["latency","failures","validation"],
+ "emit":"route-decision"}
+= "Use the session balance contract plus live observations to select the best runtime.
+   If the current target underperforms, hand off to the next ranked runtime."
+```
+
+The broker is the runtime-facing machine. It consumes seeded capability footprints, refines them from observed session behavior, and routes work across local/API targets without breaking the §1 / §P / §M contract.
+
+---
+
 ## Composition
 
-Machines are first-class. A mesh can contain pipelines. A pipeline can contain routers. A loop can contain meshes. It composes all the way down.
+Machines are first-class. A mesh can contain pipelines. A pipeline can contain routers. A loop can contain meshes. A broker can front any of them. It composes all the way down.
 
 ```
 // Machine containing machines
 {"§M":"pipeline","stages":[
   {"§M":"router","rules":[...]},
   {"§M":"loop","body":{"§M":"pipeline","stages":[...]}},
+  {"§M":"broker","contract":{"§P":"balance","targets":["local","api"]}},
   {"§P":"checkpoint"}
 ]}
 ```
@@ -252,8 +319,8 @@ To add a new protocol or machine, show one example with a gloss:
 §P|NEW
 
 EX:
-{"§P":"validate","target":"E.*","check":"referential-integrity","on_fail":"flag"}
-= "Validate all entities for referential integrity. Flag failures instead of halting."
+{"§P":"summarize","target":"E.*","depth":"one-line","emit":"digest"}
+= "Summarize all entities into one-line digest. Emit as new packet."
 ```
 
 Zero ceremony. The model induces. The protocol evolves.

@@ -11,21 +11,21 @@ Prepend to any context window. No explanation. The model induces the grammar.
 
 EX1:
 {"§":1,
- "E":{"A":["climate-sci","domain"],"B":["EU-policy","domain"],"C":["von der Leyen","person"]},
- "S":{"A.temp":"+1.5°C threshold","B.status":"Green Deal active"},
- "R":["A→B:constrains","C→B:leads"],
- "Δ":["A.temp:+1.2→+1.5@2025-Q3","B.status:proposed→active@2024-01"],
+ "E":{"A":["climate-sci","domain"],"B":["coastal-policy","domain"],"C":["climate-council","institution"]},
+ "S":{"A.temp":"+1.5°C threshold","B.status":"adaptation-plan active"},
+ "R":["A→B:constrains","C→B:governs"],
+ "Δ":["A.temp:+1.2→+1.5@2025-Q3","B.status:draft→active@2024-01"],
  "μ":{"scope":"geopolitical","urg":0.6,"cert":0.85}}
-= "Climate science constrains EU policy. Von der Leyen leads the Green Deal, which became active Jan 2024. Temperature threshold was revised up to 1.5°C in Q3 2025. Moderate urgency, high certainty."
+= "Climate science constrains coastal policy. A climate council governs the adaptation plan, which became active in January 2024. Temperature threshold was revised up to 1.5°C in Q3 2025. Moderate urgency, high certainty."
 
 EX2:
 {"§":1,
- "E":{"K":["TSLA","equity"],"L":["macro-overlay","strategy"]},
- "S":{"K.pos":"long 200sh@$180","K.pnl":"-12%","L.hedge":"gold ETC"},
- "R":["L→K:hedges"],
- "Δ":["K.weight:0.12→0.08@2026-03","L.trigger:VIX>28"],
- "μ":{"scope":"portfolio","urg":0.4,"cert":0.7}}
-= "Long 200 shares TSLA at $180, currently down 12%. Macro overlay strategy hedges via gold ETC. Position weight reduced from 12% to 8% in March 2026. Hedge triggers when VIX exceeds 28."
+ "E":{"K":["cooling-loop-7","industrial-asset"],"L":["safeguard-policy","control-strategy"]},
+ "S":{"K.flow":"4200kg/s","K.state":"nominal","L.action":"derate-load"},
+ "R":["L→K:protects"],
+ "Δ":["K.state:nominal→derated@2026-03","L.threshold:0.68→0.61@2026-03"],
+ "μ":{"scope":"operations","urg":0.4,"cert":0.7}}
+= "Cooling loop 7 is operating at 4200 kg/s under nominal conditions. A safeguard policy protects it by derating load when vibration risk rises. The loop moved from nominal to derated in March 2026, and the trigger threshold tightened from 0.68 to 0.61."
 
 EX3:
 {"§":1,
@@ -48,14 +48,14 @@ After the seed, test induction with a dual query:
 
 CONTEXT:
 {"§":1,
- "E":{"K":["TSLA","equity"],"L":["macro-overlay","strategy"]},
- "S":{"K.pos":"long 200sh@$180","K.pnl":"-12%","L.hedge":"gold ETC"},
- "R":["L→K:hedges"],
- "Δ":["K.weight:0.12→0.08@2026-03","L.trigger:VIX>28"],
- "μ":{"scope":"portfolio","urg":0.4,"cert":0.7}}
+ "E":{"K":["cooling-loop-7","industrial-asset"],"L":["safeguard-policy","control-strategy"]},
+ "S":{"K.flow":"4200kg/s","K.state":"nominal","L.action":"derate-load"},
+ "R":["L→K:protects"],
+ "Δ":["K.state:nominal→derated@2026-03","L.threshold:0.68→0.61@2026-03"],
+ "μ":{"scope":"operations","urg":0.4,"cert":0.7}}
 
 Q_codec:   What changed for K and why?
-Q_natural: What happened to the Tesla position and what's the hedging strategy?
+Q_natural: What happened to cooling loop 7 and what's the safeguard strategy?
 ```
 
 **Pass condition:** Both answers match semantically. The model reconstructs the full narrative from the codec alone.
