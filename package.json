@@ -1,5 +1,5 @@
 {
-  "name": "incontextcompilation",
+  "name": "trasgo",
   "version": "1.0.0",
   "description": "<p align=\"center\">   <img src=\"assets/trasgo.png\" alt=\"Trasgo\" width=\"280\"/> </p>",
   "main": "scripts/trasgo-launch.cjs",
