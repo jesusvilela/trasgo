@@ -126,8 +126,8 @@ Installed or linked via npm, the command is simply `trasgo`.
 Install surfaces:
 
 ```bash
-# global npm install (scoped package, `trasgo` command)
-npm install -g @trasgo/trasgo
+# global npm install
+npm install -g trasgo
 trasgo --help
 
 # local repo

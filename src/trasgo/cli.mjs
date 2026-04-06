@@ -100,7 +100,7 @@ const HELP_TOPICS = {
     '5. trasgo serve --http --port 8787',
   ],
   install: [
-    'Published npm: npm install -g @trasgo/trasgo',
+    'Published npm: npm install -g trasgo',
     'CLI launcher: npm ci && npm run cli -- --help',
     'Native Rust: cargo build --manifest-path rust/trasgo/Cargo.toml --release',
     'Windows launcher: .\\trasgo.cmd',

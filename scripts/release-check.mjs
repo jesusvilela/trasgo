@@ -18,9 +18,9 @@ function main() {
   const readme = fs.readFileSync(readmePath, 'utf8');
   const docsIndex = fs.readFileSync(docsIndexPath, 'utf8');
 
-  assert.equal(pkg.name, '@trasgo/trasgo', 'package name must be @trasgo/trasgo');
+  assert.equal(pkg.name, 'trasgo', 'package name must be trasgo');
   assert.equal(pkg.license, 'MIT', 'license must be MIT');
-  assert.equal(pkg.bin?.trasgo, 'bin/trasgo', 'bin.trasgo must point to bin/trasgo');
+  assert.equal(pkg.bin?.trasgo, './bin/trasgo', 'bin.trasgo must point to ./bin/trasgo');
   assert.equal(pkg.publishConfig?.access, 'public', 'publishConfig.access must be public');
   assert.match(pkg.homepage || '', /jesusvilela\.github\.io\/trasgo/i, 'homepage must target GitHub Pages');
   assert.ok(Array.isArray(pkg.files) && pkg.files.length > 0, 'files whitelist must be present');

@@ -1,10 +1,10 @@
 {
-  "name": "@trasgo/trasgo",
+  "name": "trasgo",
   "version": "1.0.0",
   "description": "Trasgo runtime shell and self-initializing context codec for local/cloud LLM workflows.",
   "main": "scripts/trasgo-launch.cjs",
   "bin": {
-    "trasgo": "bin/trasgo"
+    "trasgo": "./bin/trasgo"
   },
   "files": [
     "LICENSE",
