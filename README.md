@@ -58,6 +58,15 @@ A project site is included at [`docs/index.html`](docs/index.html) and deploys a
 - Push to `main` to publish updates.
 - The page loads live GitHub repo metrics and contributor highlights from the GitHub API.
 
+
+## GitHub Pages
+
+A project site is included at [`docs/index.html`](docs/index.html) and deploys automatically via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+
+- Enable **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+- Push to `main` to publish updates.
+- The page loads live GitHub repo metrics and contributor highlights from the GitHub API.
+
 ## Quick Start
 
 **Step 1.** Paste [`src/boot.md`](src/boot.md) into any frontier model's context window.
