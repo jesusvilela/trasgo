@@ -1,11 +1,27 @@
 {
-  "name": "incontextcompilation",
+  "name": "trasgo",
   "version": "1.0.0",
-  "description": "<p align=\"center\">   <img src=\"assets/trasgo.png\" alt=\"Trasgo\" width=\"280\"/> </p>",
+  "description": "Trasgo runtime shell and self-initializing context codec for local/cloud LLM workflows.",
   "main": "scripts/trasgo-launch.cjs",
   "bin": {
     "trasgo": "./bin/trasgo"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "assets",
+    "bin",
+    "demos",
+    "docs",
+    "rust/trasgo/assets",
+    "rust/trasgo/Cargo.lock",
+    "rust/trasgo/Cargo.toml",
+    "rust/trasgo/src",
+    "scripts",
+    "src",
+    "tests",
+    "trasgo.cmd"
+  ],
   "directories": {
     "doc": "docs",
     "example": "examples",
@@ -34,6 +50,7 @@
     "calibrate": "node scripts/trasgo-launch.cjs calibrate",
     "research": "node scripts/trasgo-launch.cjs research",
     "validate": "node scripts/trasgo-launch.cjs validate",
+    "pack:check": "npm pack --dry-run",
     "mobile:dev": "cd mobile/trasgo-mobile && npx expo start",
     "mobile:ios": "cd mobile/trasgo-mobile && npx expo run:ios",
     "mobile:android": "cd mobile/trasgo-mobile && npx expo run:android"
@@ -42,14 +59,26 @@
     "type": "git",
     "url": "git+https://github.com/jesusvilela/trasgo.git"
   },
-  "keywords": [],
+  "keywords": [
+    "trasgo",
+    "llm",
+    "context",
+    "codec",
+    "cli",
+    "compression",
+    "runtime",
+    "json"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/jesusvilela/trasgo/issues"
   },
-  "homepage": "https://github.com/jesusvilela/trasgo#readme",
+  "homepage": "https://jesusvilela.github.io/trasgo/",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "boxen": "^8.0.1",
     "chalk": "^5.6.2",

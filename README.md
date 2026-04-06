@@ -24,6 +24,10 @@
   <img src="https://img.shields.io/badge/dependencies-zero-brightgreen.svg" alt="Zero dependencies"/>
 </p>
 
+<p align="center">
+  <a href="https://jesusvilela.github.io/trasgo/">GitHub Pages</a>
+</p>
+
 ---
 
 ## What is Trasgo?
@@ -64,18 +68,18 @@ A project site is included at [`docs/index.html`](docs/index.html) and deploys a
 
 ```
 Q_codec:   What changed for K and why?
-Q_natural: What happened to the Tesla position and what's the hedging strategy?
+Q_natural: What happened to cooling loop 7 and what's the safeguard strategy?
 ```
 
 **Step 4.** If both answers match semantically → codec is live. Start sending context as §1 packets:
 
 ```json
 {"§":1,
- "E":{"N":["startup-founder","person","Berlin"]},
- "S":{"N.funding":"seed-2.1M€","N.domains":["MLOps","infra","data"]},
- "R":["N→X:founded"],
- "Δ":["X.stage:idea→mvp@2026-01"],
- "μ":{"scope":"business","urg":0.6,"cert":0.85}}
+ "E":{"N":["edge-cluster-7","compute-node"],"X":["vision-service","workload"]},
+ "S":{"N.capacity":"12GPU","N.domains":["vision","telemetry","ops"]},
+ "R":["N→X:hosts"],
+ "Δ":["X.stage:staging→active@2026-01"],
+ "μ":{"scope":"operations","urg":0.6,"cert":0.85}}
 ```
 
 The model reads this at native speed. No decompression step. It **thinks** in codec.
@@ -119,6 +123,21 @@ Repo-local launchers are included:
 
 Installed or linked via npm, the command is simply `trasgo`.
 
+Install surfaces:
+
+```bash
+# global npm install (package name reserved as `trasgo`)
+npm install -g trasgo
+trasgo --help
+
+# local repo
+npm ci
+./bin/trasgo --help
+
+# native Rust
+cargo build --manifest-path rust/trasgo/Cargo.toml --release
+```
+
 Natural-language shell surface:
 - `trasgo "show me the runtimes"`
 - `trasgo "run the factory copilot demo"`
@@ -133,6 +152,16 @@ Built-in demo workflows:
 Demo assets:
 - Video walkthrough: [`demos/trasgo-evolved-cli-demo.gif`](demos/trasgo-evolved-cli-demo.gif)
 - Scientific artifacts: [`demos/generated/factory-copilot.json`](demos/generated/factory-copilot.json), [`demos/generated/revenue-guard.json`](demos/generated/revenue-guard.json)
+
+Recorded animated demos:
+
+<p align="center">
+  <img src="assets/trasgo-s1-codec-demo.gif" alt="Trasgo §1 codec demo" width="900"/>
+</p>
+
+<p align="center">
+  <img src="assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" width="900"/>
+</p>
 
 Exact scientific surfaces:
 - `trasgo tokens` measures exact token counts across `openai-o200k`, `openai-cl100k`, `llama3`, `gemma`, `deepseek`, and `glm`.
@@ -181,7 +210,7 @@ Transformers implicitly implement gradient descent in their forward pass ([Garg 
 Three examples are sufficient because:
 - The codec has **consistent structure** (same axes, same notation)
 - The model's inductive bias favors **compositional mappings**
-- Each example demonstrates a **different domain** (climate, finance, earth-observation) — forcing the model to learn the structure, not the content
+- Each example demonstrates a **different domain** (climate, operations, earth-observation) — forcing the model to learn the structure, not the content
 
 ### Mid-conversation evolution
 

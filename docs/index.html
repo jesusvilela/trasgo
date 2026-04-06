@@ -19,7 +19,6 @@
         --brand-2: #4de3cc;
         --accent: #f8b4ff;
         --border: #2a376d;
-        --good: #53e7a2;
       }
 
       * { box-sizing: border-box; }
@@ -103,18 +102,35 @@
         padding: .45rem .6rem;
         font-size: .9rem;
       }
+      .two-up {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+      }
+      .demo {
+        width: 100%;
+        border-radius: 1rem;
+        border: 1px solid var(--border);
+        background: rgba(7, 9, 22, .85);
+      }
       footer {
         border-top: 1px solid var(--border);
         margin-top: 2rem;
         padding: 1.2rem 0 2rem;
         color: var(--text-dim);
       }
-      code.inline {
+      code.inline, pre {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        padding: .15rem .35rem;
-        border-radius: .4rem;
+        border-radius: .6rem;
         border: 1px solid var(--border);
         background: rgba(7, 9, 22, .8);
+      }
+      code.inline { padding: .15rem .35rem; }
+      pre {
+        padding: .85rem 1rem;
+        white-space: pre-wrap;
+        overflow: auto;
+        color: var(--text);
       }
     </style>
   </head>
@@ -127,11 +143,12 @@
       </h1>
       <p class="lead">
         A shared playground for codec-first AI systems: bring your workflows, publish your
-        protocol patterns, and evolve the runtime with the community. No fine-tune required.
+        protocol patterns, and evolve the runtime with the community. The verb is
+        <strong>trasgo</strong> across the shell, npm package, and native crate.
       </p>
       <div class="actions">
         <a class="btn primary" href="https://github.com/jesusvilela/trasgo">Explore the repo</a>
-        <a class="btn" href="https://github.com/jesusvilela/trasgo/blob/main/CONTRIBUTING.md">Contribute</a>
+        <a class="btn" href="https://github.com/jesusvilela/trasgo/blob/main/README.md">Read the README</a>
         <a class="btn" href="https://github.com/jesusvilela/trasgo/issues/new/choose">Open an issue</a>
       </div>
     </header>
@@ -146,22 +163,40 @@
         </div>
       </section>
 
+      <section class="grid">
+        <article class="card">
+          <h2>Install as <code class="inline">trasgo</code></h2>
+          <pre>npm install -g trasgo
+trasgo --help
+
+npm ci
+./bin/trasgo --help
+
+cargo build --manifest-path rust/trasgo/Cargo.toml --release</pre>
+          <p class="label">The npm package name is prepared as <code class="inline">trasgo</code>. The Rust crate is also named <code class="inline">trasgo</code>.</p>
+        </article>
+        <article class="card">
+          <h2>Core workflow</h2>
+          <pre>trasgo init "portfolio runtime"
+trasgo pack --out .trasgo-runtime/packs/portfolio.json
+trasgo boot --from .trasgo-runtime/packs/portfolio.json
+trasgo send "What changed for K and why?"
+trasgo bench lmstudio
+trasgo calibrate</pre>
+          <p class="label">One verb, one shell, one runtime surface.</p>
+        </article>
+      </section>
+
       <section>
         <h2>Why this site is community-first</h2>
         <ul class="list">
           <li>Live repository metrics keep the project pulse transparent.</li>
           <li>Contributor wall updates from GitHub so new builders are visible immediately.</li>
-          <li>Clear pathways to propose demos, protocol atoms, and runtime experiments.</li>
+          <li>Recorded demos render directly here and in the README.</li>
         </ul>
       </section>
 
       <section class="grid">
-        <article class="card">
-          <h2>Get started in minutes</h2>
-          <p class="label">Install and run your first workflow:</p>
-          <p><code class="inline">npm i -g incontextcompilation && trasgo quickstart</code></p>
-          <p class="label">Then open the dashboard and iterate with your own §1 packets.</p>
-        </article>
         <article class="card">
           <h2>2026 dev stack alignment</h2>
           <div class="chipset">
@@ -172,12 +207,19 @@
             <span class="chip">Human + agent co-piloting</span>
           </div>
         </article>
+        <article class="card">
+          <h2>Top contributors</h2>
+          <div class="contributors" id="contributors">
+            <span class="contrib">Loading contributors…</span>
+          </div>
+        </article>
       </section>
 
       <section>
-        <h2>Top contributors</h2>
-        <div class="contributors" id="contributors">
-          <span class="contrib">Loading contributors…</span>
+        <h2>Recorded demos</h2>
+        <div class="two-up">
+          <img class="demo" src="assets/trasgo-s1-codec-demo.gif" alt="Trasgo codec demo" />
+          <img class="demo" src="assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" />
         </div>
       </section>
     </main>

@@ -2,6 +2,11 @@
 name = "trasgo"
 version = "0.1.0"
 edition = "2021"
+description = "Trasgo native CLI for codec-native token science and routing."
+license = "MIT"
+repository = "https://github.com/jesusvilela/trasgo"
+homepage = "https://jesusvilela.github.io/trasgo/"
+readme = "../../README.md"
 publish = false
 
 [dependencies]

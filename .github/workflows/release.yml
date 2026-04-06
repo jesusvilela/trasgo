@@ -48,6 +48,30 @@ jobs:
           EOF
           gh release upload "$TAG_NAME" release-catalog.json --clobber
 
+  publish-npm:
+    name: Publish npm package
+    needs: create-release
+    if: ${{ secrets.NPM_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run npm smoke tests
+        run: npm test
+
+      - name: Publish trasgo to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   publish-binaries:
     name: Publish Native Binary (${{ matrix.id }})
     needs: create-release

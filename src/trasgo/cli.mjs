@@ -187,8 +187,12 @@ function renderInlineLogo(width) {
     return false;
   }
 
-  const imagePath = path.join(runtime.baseDir, 'trasgo.png');
-  if (!fs.existsSync(imagePath)) {
+  const imagePathCandidates = [
+    path.join(runtime.baseDir, 'trasgo.png'),
+    path.join(runtime.baseDir, 'assets', 'trasgo.png'),
+  ];
+  const imagePath = imagePathCandidates.find(candidate => fs.existsSync(candidate));
+  if (!imagePath) {
     return false;
   }
 
