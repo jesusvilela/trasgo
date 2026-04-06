@@ -12,6 +12,7 @@ import { spawn, spawnSync } from 'node:child_process';
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(moduleDir, '..');
 const isWindows = process.platform === 'win32';
+const packageVersion = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).version;
 
 function runLauncher(args, options = {}) {
   const env = {
@@ -315,6 +316,11 @@ async function main() {
     const statusPayload = await statusResponse.json();
     assert.equal(statusPayload.kind, 'trasgo-status');
 
+    const versionResponse = await fetch(`${baseUrl}/version`);
+    const versionPayload = await versionResponse.json();
+    assert.equal(versionPayload.kind, 'trasgo-version');
+    assert.equal(versionPayload.version, packageVersion);
+
     const demosResponse = await fetch(`${baseUrl}/demos`);
     const demosPayload = await demosResponse.json();
     assert.ok(Array.isArray(demosPayload.demos) && demosPayload.demos.length >= 2);
@@ -344,3 +350,5 @@ async function main() {
 }
 
 await main();
+
+

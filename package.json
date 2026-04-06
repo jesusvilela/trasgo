@@ -1,6 +1,6 @@
 {
   "name": "trasgo",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Trasgo runtime shell and self-initializing context codec for local/cloud LLM workflows.",
   "main": "scripts/trasgo-launch.cjs",
   "bin": {
@@ -106,7 +106,6 @@
     "cli-table3": "^0.6.5",
     "figlet": "^1.11.0",
     "gradient-string": "^3.0.0",
-    "ora": "^9.3.0",
-    "user": "^0.0.0"
+    "ora": "^9.3.0"
   }
 }

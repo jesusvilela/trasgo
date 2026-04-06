@@ -10,16 +10,31 @@ import { fileURLToPath } from 'node:url';
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(moduleDir, '..');
 const pkgPath = path.join(repoRoot, 'package.json');
+const packageLockPath = path.join(repoRoot, 'package-lock.json');
+const cargoTomlPath = path.join(repoRoot, 'rust', 'trasgo', 'Cargo.toml');
 const readmePath = path.join(repoRoot, 'README.md');
 const docsIndexPath = path.join(repoRoot, 'docs', 'index.html');
 
+
+function readCargoVersion() {
+  const cargoToml = fs.readFileSync(cargoTomlPath, 'utf8');
+  const match = cargoToml.match(/^version\s*=\s*"([^"]+)"/mu);
+  assert.ok(match, 'Cargo.toml must declare a version');
+  return match[1];
+}
+
 function main() {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const packageLock = JSON.parse(fs.readFileSync(packageLockPath, 'utf8'));
   const readme = fs.readFileSync(readmePath, 'utf8');
   const docsIndex = fs.readFileSync(docsIndexPath, 'utf8');
+  const cargoVersion = readCargoVersion();
 
   assert.equal(pkg.name, 'trasgo', 'package name must be trasgo');
   assert.equal(pkg.license, 'MIT', 'license must be MIT');
+  assert.equal(pkg.version, cargoVersion, 'package.json version must match rust/trasgo/Cargo.toml');
+  assert.equal(packageLock.version, pkg.version, 'package-lock version must match package.json');
+  assert.equal(packageLock.packages?.['']?.version, pkg.version, 'root package-lock entry must match package.json');
   assert.equal(pkg.bin?.trasgo, './bin/trasgo', 'bin.trasgo must point to ./bin/trasgo');
   assert.equal(pkg.publishConfig?.access, 'public', 'publishConfig.access must be public');
   assert.match(pkg.homepage || '', /github\.com\/jesusvilela\/trasgo#readme/i, 'homepage must target the GitHub README');
@@ -41,6 +56,12 @@ function main() {
   assert.match(readme, /<img src="https:\/\/raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets\/trasgo-live-demo\.gif"/u, 'README must embed runtime demo GIF');
   assert.match(docsIndex, /assets\/trasgo-s1-codec-demo\.gif/u, 'docs/index.html must embed codec demo GIF');
   assert.match(docsIndex, /assets\/trasgo-live-demo\.gif/u, 'docs/index.html must embed runtime demo GIF');
+
+  const refName = process.env.GITHUB_REF_NAME || '';
+  const refType = process.env.GITHUB_REF_TYPE || '';
+  if (refName.startsWith('v') && (refType === 'tag' || refType === '')) {
+    assert.equal(refName.slice(1), pkg.version, 'release tag must match package version');
+  }
 
   const packed = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], {
     cwd: repoRoot,
@@ -85,3 +106,4 @@ function main() {
 }
 
 main();
+

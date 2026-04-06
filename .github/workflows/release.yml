@@ -8,12 +8,94 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  create-release:
-    name: Create GitHub Release
+  validate-release:
+    name: Validate release inputs
     runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: 1
+    outputs:
+      package_version: ${{ steps.meta.outputs.package_version }}
+      npm_tarball: ${{ steps.meta.outputs.npm_tarball }}
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: rust/trasgo -> target
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Check npm release surface
+        run: npm run release:check
+
+      - name: Run npm smoke tests
+        run: npm test
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path rust/trasgo/Cargo.toml -j 1
+
+      - name: Verify tag and crate version alignment
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          cargo="$(node -e "const fs=require('fs'); const text=fs.readFileSync('rust/trasgo/Cargo.toml','utf8'); const match=text.match(/^version\\s*=\\s*\"([^\"]+)\"/m); if (!match) { process.exit(2); } process.stdout.write(match[1]);")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "Tag version ($tag) does not match package.json ($pkg)." >&2
+            exit 1
+          fi
+          if [ "$pkg" != "$cargo" ]; then
+            echo "package.json version ($pkg) does not match rust/trasgo/Cargo.toml ($cargo)." >&2
+            exit 1
+          fi
+
+      - name: Pack npm tarball
+        run: npm pack --json > npm-pack.json
+
+      - name: Capture release metadata
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkg="$(node -p "require('./package.json').version")"
+          tarball="$(node -e "const fs=require('fs'); const info=JSON.parse(fs.readFileSync('npm-pack.json','utf8'))[0]; process.stdout.write(info.filename);")"
+          echo "package_version=$pkg" >> "$GITHUB_OUTPUT"
+          echo "npm_tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: npm-package
+          path: |
+            npm-pack.json
+            ${{ steps.meta.outputs.npm_tarball }}
+          if-no-files-found: error
+
+  create-release:
+    name: Create GitHub Release
+    needs: validate-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: npm-package
+          path: dist/npm
 
       - name: Create release if missing
         env:
@@ -23,46 +105,61 @@ jobs:
           gh release view "$TAG_NAME" >/dev/null 2>&1 || \
           gh release create "$TAG_NAME" --verify-tag --title "$TAG_NAME" --generate-notes
 
-      - name: Upload release coverage catalog
+      - name: Upload release catalog and npm tarball
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
+          PACKAGE_VERSION: ${{ needs.validate-release.outputs.package_version }}
+        shell: bash
         run: |
-          cat > release-catalog.json <<'EOF'
-          {
-            "family": "trasgo",
-            "native_targets": [
-              {"platform": "linux", "arch": "x64", "surface": "cli"},
-              {"platform": "linux", "arch": "arm64", "surface": "cli"},
-              {"platform": "windows", "arch": "x64", "surface": "cli"},
-              {"platform": "windows", "arch": "arm64", "surface": "cli"},
-              {"platform": "macos", "arch": "x64", "surface": "cli"},
-              {"platform": "macos", "arch": "arm64", "surface": "cli"}
-            ],
-            "mobile_targets": [
-              {"platform": "android", "surface": "apk", "status": "published"},
-              {"platform": "ios", "surface": "wrapper-project", "status": "published"}
-            ],
-            "notes": "Native artifacts are published per explicit target lane. Android publishes a sideloadable APK. iOS assets remain wrapper project bundles, not signed store builds."
-          }
-          EOF
-          gh release upload "$TAG_NAME" release-catalog.json --clobber
+          set -euo pipefail
+          cat > release-catalog.json <<EOF
+{
+  "family": "trasgo",
+  "version": "${PACKAGE_VERSION}",
+  "npm": {
+    "package": "trasgo",
+    "install": "npm install -g trasgo"
+  },
+  "native_targets": [
+    {"platform": "linux", "arch": "x64", "surface": "cli"},
+    {"platform": "linux", "arch": "arm64", "surface": "cli"},
+    {"platform": "windows", "arch": "x64", "surface": "cli"},
+    {"platform": "windows", "arch": "arm64", "surface": "cli"},
+    {"platform": "macos", "arch": "x64", "surface": "cli"},
+    {"platform": "macos", "arch": "arm64", "surface": "cli"}
+  ],
+  "mobile_targets": [
+    {"platform": "android", "surface": "apk", "status": "published"},
+    {"platform": "ios", "surface": "wrapper-project", "status": "published"}
+  ],
+  "notes": "Release lane validates Node and Rust surfaces, uploads the npm tarball, then publishes binaries and optional mobile assets."
+}
+EOF
+          gh release upload "$TAG_NAME" release-catalog.json dist/npm/* --clobber
 
   publish-npm:
     name: Publish npm package
-    needs: create-release
+    needs:
+      - validate-release
+      - create-release
     if: ${{ secrets.NPM_TOKEN != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 24
+          cache: npm
           registry-url: https://registry.npmjs.org/
 
       - name: Install Node dependencies
         run: npm ci
+
+      - name: Re-run release checks
+        run: npm run release:check
 
       - name: Run npm smoke tests
         run: npm test
@@ -74,8 +171,11 @@ jobs:
 
   publish-binaries:
     name: Publish Native Binary (${{ matrix.id }})
-    needs: create-release
+    needs:
+      - validate-release
+      - create-release
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +244,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.rust_target }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: rust/trasgo -> target
+          key: ${{ matrix.id }}
 
       - name: Install Linux ARM64 linker
         if: matrix.build_mode == 'cross-linux-arm64'
@@ -258,19 +363,18 @@ EOF
 
   publish-mobile-wrappers:
     name: Publish Mobile Wrappers
-    needs: create-release
+    needs:
+      - validate-release
+      - create-release
+    if: ${{ hashFiles('mobile/trasgo-mobile/package.json') != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
 
       - name: Package mobile wrapper projects
         run: |
           set -euo pipefail
-          if [ ! -d mobile/trasgo-mobile ]; then
-            echo "mobile/trasgo-mobile not present; skipping packaging."
-            exit 0
-          fi
-
           TAG_NAME="${{ github.ref_name }}"
           mkdir -p dist
           ios_asset="trasgo-ios-wrapper-${TAG_NAME}.zip"
@@ -282,10 +386,6 @@ EOF
       - name: Emit mobile wrapper manifest
         run: |
           set -euo pipefail
-          if [ ! -d dist ]; then
-            echo "No dist directory; skipping manifest."
-            exit 0
-          fi
           cat > dist/mobile-wrapper-manifest.json <<'EOF'
           {
             "ios": {
@@ -296,35 +396,35 @@ EOF
           }
           EOF
 
-      - name: Upload mobile wrapper artifacts if present
+      - name: Upload mobile wrapper artifacts
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          if [ ! -d dist ]; then
-            echo "No packaged mobile wrapper assets found; skipping mobile upload."
-            exit 0
-          fi
-
           mapfile -d '' files < <(find dist -type f \( -name '*.apk' -o -name '*.aab' -o -name '*.ipa' -o -name '*.zip' -o -name '*.json' \) -print0)
           if [ ${#files[@]} -eq 0 ]; then
             echo "No mobile wrapper artifacts found; skipping mobile upload."
             exit 0
           fi
-
           gh release upload "$TAG_NAME" "${files[@]}" --clobber
 
   publish-android-apk:
     name: Publish Android APK
-    needs: create-release
+    needs:
+      - validate-release
+      - create-release
+    if: ${{ hashFiles('mobile/trasgo-mobile/package.json') != '' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/trasgo-mobile/package-lock.json
 
       - uses: actions/setup-java@v4
         with:

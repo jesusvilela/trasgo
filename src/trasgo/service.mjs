@@ -1,6 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import readline from 'node:readline';
 import http from 'node:http';
-import { URL } from 'node:url';
+import { URL, fileURLToPath } from 'node:url';
 import {
   bootSession,
   brokerDecision,
@@ -22,6 +24,13 @@ import {
 } from './control-plane.mjs';
 import { getDemoWorkflow, listDemoWorkflows, runDemoWorkflow } from './demo-workflows.mjs';
 import { runOptimizeReport, runTokenReport } from './token-science.mjs';
+
+const packageVersion = (() => {
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const pkgPath = path.resolve(moduleDir, '..', '..', 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  return pkg.version;
+})();
 
 async function respond(payload) {
   process.stdout.write(`${JSON.stringify(payload)}\n`);
@@ -241,7 +250,7 @@ export async function serveHttp(baseDir, registry, runtime, options = {}) {
       }
 
       if (req.method === 'GET' && pathName === '/version') {
-        return jsonResponse(res, 200, { ok: true, kind: 'trasgo-version', version: '0.1.0' });
+        return jsonResponse(res, 200, { ok: true, kind: 'trasgo-version', version: packageVersion });
       }
 
       if (req.method === 'GET' && pathName === '/status') {
@@ -327,50 +336,65 @@ export async function serveHttp(baseDir, registry, runtime, options = {}) {
 
       if (req.method === 'GET' && pathName.startsWith('/runs/')) {
         const runId = decodeURIComponent(pathName.slice('/runs/'.length));
-        return jsonResponse(res, 200, { ok: true, trace: loadRunTrace(baseDir, runId) });
+        const trace = loadRunTrace(baseDir, runId);
+        if (!trace) {
+          return jsonResponse(res, 404, { ok: false, error: 'run-not-found' });
+        }
+        return jsonResponse(res, 200, { ok: true, trace });
       }
 
       if (req.method === 'POST' && pathName === '/session/new') {
-        activeSession = createSession(baseDir, registry, await readJsonBody(req));
+        const body = await readJsonBody(req);
+        activeSession = createSession(baseDir, registry, body || {});
         return jsonResponse(res, 200, { ok: true, session: sessionState(activeSession) });
       }
 
       if (req.method === 'POST' && pathName === '/session/init') {
-        activeSession = initSessionContract(baseDir, registry, await readJsonBody(req));
+        const body = await readJsonBody(req);
+        activeSession = initSessionContract(baseDir, registry, body || {});
         return jsonResponse(res, 200, { ok: true, session: sessionState(activeSession) });
       }
 
       if (req.method === 'POST' && pathName === '/session/boot') {
-        const result = bootSession(baseDir, registry, await readJsonBody(req));
+        const body = await readJsonBody(req);
+        const result = bootSession(baseDir, registry, {
+          ...(body || {}),
+          sessionId: body?.sessionId || activeSession?.id || null,
+        });
         activeSession = result.session;
-        return jsonResponse(res, 200, { ok: true, result });
+        return jsonResponse(res, 200, {
+          ok: true,
+          session: sessionState(activeSession),
+          decision: result.decision,
+          pack_path: result.packPath,
+        });
       }
 
       if (req.method === 'POST' && pathName === '/session/send') {
+        const body = await readJsonBody(req);
         if (!activeSession) {
           activeSession = createSession(baseDir, registry, {});
         }
-        const body = await readJsonBody(req);
         const result = await executeInput(baseDir, registry, activeSession, body.input || '');
         activeSession = result.session;
         return jsonResponse(res, 200, { ok: true, result });
       }
 
-      if (req.method === 'GET' && pathName === '/explain/balance') {
+      if (req.method === 'GET' && pathName === '/session/explain/balance') {
         if (!activeSession) {
-          activeSession = createSession(baseDir, registry, {});
+          activeSession = initSessionContract(baseDir, registry, {});
         }
-        return jsonResponse(res, 200, { ok: true, explanation: explainBalance(activeSession) });
+        return jsonResponse(res, 200, { ok: true, ...explainBalance(activeSession) });
       }
 
-      if (req.method === 'GET' && pathName === '/explain/route') {
+      if (req.method === 'GET' && pathName === '/session/explain/route') {
         if (!activeSession) {
-          activeSession = createSession(baseDir, registry, {});
+          activeSession = initSessionContract(baseDir, registry, {});
         }
-        return jsonResponse(res, 200, { ok: true, explanation: explainRoute(activeSession, registry) });
+        return jsonResponse(res, 200, { ok: true, ...explainRoute(activeSession, registry) });
       }
 
-      return jsonResponse(res, 404, { ok: false, error: 'not-found' });
+      return jsonResponse(res, 404, { ok: false, error: 'unknown-endpoint' });
     } catch (error) {
       return jsonResponse(res, 500, { ok: false, error: error.message });
     }
@@ -379,13 +403,7 @@ export async function serveHttp(baseDir, registry, runtime, options = {}) {
   return new Promise(resolve => {
     server.listen(port, '127.0.0.1', () => {
       process.stdout.write(`${JSON.stringify({ ok: true, type: 'http-ready', port })}\n`);
+      resolve(server);
     });
-
-    const shutdown = () => {
-      server.close(() => resolve());
-    };
-
-    process.once('SIGINT', shutdown);
-    process.once('SIGTERM', shutdown);
   });
 }
