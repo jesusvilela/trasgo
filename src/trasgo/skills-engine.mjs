@@ -1,6 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+function roots(baseDir) {
+  if (baseDir && typeof baseDir === 'object') {
+    const assetDir = baseDir.assetDir || baseDir.baseDir || baseDir.stateDir || process.cwd();
+    const stateDir = baseDir.stateDir || baseDir.baseDir || assetDir;
+    return { assetDir, stateDir };
+  }
+  return { assetDir: baseDir, stateDir: baseDir };
+}
+
 export function attachSkill(session, skillId) {
   if (!session.skills.includes(skillId)) {
     session.skills.push(skillId);
@@ -12,7 +21,7 @@ export function detachSkill(session, skillId) {
 }
 
 export function skillFilePath(baseDir, skill) {
-  return path.join(baseDir, skill.entry);
+  return path.join(roots(baseDir).assetDir, skill.entry);
 }
 
 export function loadSkillContent(baseDir, skill) {

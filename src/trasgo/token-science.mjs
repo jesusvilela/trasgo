@@ -11,6 +11,14 @@ const cargoManifest = path.join(repoRoot, 'rust', 'trasgo', 'Cargo.toml');
 const binName = process.platform === 'win32' ? 'trasgo.exe' : 'trasgo';
 const cargoName = process.platform === 'win32' ? 'cargo.exe' : 'cargo';
 const tokenCache = new Map();
+const TOKEN_FAMILIES = [
+  { id: 'openai-o200k', family: 'OpenAI O200k', tokenizer: 'gpt-4o', backend: 'heuristic-fallback', charsPerToken: 3.55 },
+  { id: 'openai-cl100k', family: 'OpenAI CL100k', tokenizer: 'gpt-4', backend: 'heuristic-fallback', charsPerToken: 3.7 },
+  { id: 'llama3', family: 'Llama 3', tokenizer: 'Meta-Llama-3', backend: 'heuristic-fallback', charsPerToken: 3.85 },
+  { id: 'gemma', family: 'Gemma', tokenizer: 'Gemma 2', backend: 'heuristic-fallback', charsPerToken: 3.5 },
+  { id: 'deepseek', family: 'DeepSeek', tokenizer: 'DeepSeek-V3', backend: 'heuristic-fallback', charsPerToken: 3.3 },
+  { id: 'glm', family: 'GLM', tokenizer: 'GLM HF tokenizer', backend: 'heuristic-fallback', charsPerToken: 3.8 },
+];
 
 function isExecutable(candidate) {
   try {
@@ -58,6 +66,11 @@ function spawnNative(args) {
   }
 
   const nativeArgs = ['--repo-root', repoRoot, ...args];
+  const allowCargoRun = env.TRASGO_ALLOW_CARGO_RUN === '1' || fs.existsSync(path.join(repoRoot, '.git'));
+  if (!nativeBinary && !allowCargoRun) {
+    throw new Error('native token science binary not prebuilt; falling back');
+  }
+
   const command = nativeBinary || resolveCargoBinary();
   const commandArgs = nativeBinary
     ? nativeArgs
@@ -94,6 +107,170 @@ function reportCacheKey(kind, payload) {
   return `${kind}:${JSON.stringify(payload)}`;
 }
 
+function median(values) {
+  if (!values.length) return null;
+  const ordered = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(ordered.length / 2);
+  return ordered.length % 2 === 0
+    ? (ordered[mid - 1] + ordered[mid]) / 2
+    : ordered[mid];
+}
+
+function round(value, digits = 2) {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+
+function describeInput(label, value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+  const source_kind = typeof value === 'string' && fs.existsSync(value) ? 'file' : 'inline';
+  const content_kind = (() => {
+    try {
+      JSON.parse(text);
+      return 'json';
+    } catch {
+      return 'text';
+    }
+  })();
+  return {
+    bytes: Buffer.byteLength(text, 'utf8'),
+    chars: text.length,
+    content_kind,
+    label,
+    source_kind,
+  };
+}
+
+function selectedFamilies(models) {
+  if (!models || models === 'all') {
+    return TOKEN_FAMILIES;
+  }
+  const requested = new Set(String(models).split(',').map(item => item.trim()).filter(Boolean));
+  const filtered = TOKEN_FAMILIES.filter(entry => requested.has(entry.id));
+  return filtered.length ? filtered : TOKEN_FAMILIES;
+}
+
+function estimateTokens(text, family) {
+  const punctuation = (text.match(/[{}\[\]":,]/gu) || []).length;
+  const operators = (text.match(/[→§Δμ]/gu) || []).length;
+  const words = (text.match(/[\p{L}\p{N}_-]+/gu) || []).length;
+  const newlines = (text.match(/\n/gu) || []).length;
+  const estimated = Math.ceil(
+    text.length / family.charsPerToken
+      + punctuation * 0.18
+      + operators * 0.45
+      + words * 0.03
+      + newlines * 0.12,
+  );
+  return Math.max(1, estimated);
+}
+
+function occupancy(tokens) {
+  return {
+    '4k': round(tokens / 4096, 4),
+    '32k': round(tokens / 32768, 4),
+    '128k': round(tokens / 128000, 4),
+  };
+}
+
+function fallbackNote(error) {
+  const reason = error?.message
+    ? ` Native token science unavailable (${error.message.split('\n')[0]}).`
+    : '';
+  return `Heuristic fallback estimate.${reason} Install Cargo and run the native build for exact tokenizer counts.`;
+}
+
+function buildHeuristicTokenReport({ codec, natural = null, models = 'all' }, error = null) {
+  const codecText = typeof codec === 'string' ? codec : JSON.stringify(codec);
+  const naturalText = natural === null || natural === undefined
+    ? null
+    : (typeof natural === 'string' ? natural : JSON.stringify(natural));
+  const effectiveNote = fallbackNote(error);
+  const families = selectedFamilies(models);
+
+  const reports = families.map(family => {
+    const codecTokens = estimateTokens(codecText, family);
+    const naturalTokens = naturalText === null ? null : estimateTokens(naturalText, family);
+    return {
+      backend: family.backend,
+      codec_tokens: codecTokens,
+      compression_ratio: naturalTokens ? round(naturalTokens / codecTokens, 2) : null,
+      effective_context_note: effectiveNote,
+      family: family.family,
+      id: family.id,
+      natural_tokens: naturalTokens,
+      tokenizer: family.tokenizer,
+      window_occupancy: {
+        codec: occupancy(codecTokens),
+        natural: naturalTokens === null ? null : occupancy(naturalTokens),
+      },
+    };
+  });
+
+  const codecValues = reports.map(entry => entry.codec_tokens);
+  const naturalValues = reports.map(entry => entry.natural_tokens).filter(value => typeof value === 'number');
+  const compressionValues = reports.map(entry => entry.compression_ratio).filter(value => typeof value === 'number');
+  const best = [...reports].sort((a, b) => a.codec_tokens - b.codec_tokens)[0];
+  const worst = [...reports].sort((a, b) => b.codec_tokens - a.codec_tokens)[0];
+
+  return {
+    codec_input: describeInput('codec', codec),
+    kind: 'trasgo-token-report',
+    exact: false,
+    measurement_mode: 'heuristic-fallback',
+    fallback_reason: error?.message || null,
+    models: reports,
+    natural_input: describeInput('natural', natural),
+    summary: {
+      best_codec_family: best.id,
+      codec_tokens: {
+        min: Math.min(...codecValues),
+        median: median(codecValues),
+        max: Math.max(...codecValues),
+      },
+      compression_ratio: compressionValues.length
+        ? {
+            min: Math.min(...compressionValues),
+            median: median(compressionValues),
+            max: Math.max(...compressionValues),
+          }
+        : null,
+      natural_tokens: naturalValues.length
+        ? {
+            min: Math.min(...naturalValues),
+            median: median(naturalValues),
+            max: Math.max(...naturalValues),
+          }
+        : null,
+      worst_codec_family: worst.id,
+    },
+  };
+}
+
+function optimizeMedian(report) {
+  return report.summary.codec_tokens.median ?? Number.POSITIVE_INFINITY;
+}
+
+function optimizeCandidate(id, description, replacements, transformed_codec, report, baseline) {
+  return {
+    id,
+    description,
+    replacements,
+    transformed_codec,
+    report,
+    delta_vs_baseline: report.models.map(entry => {
+      const baselineEntry = baseline.models.find(item => item.id === entry.id);
+      return {
+        id: entry.id,
+        codec_token_delta: entry.codec_tokens - (baselineEntry?.codec_tokens ?? entry.codec_tokens),
+      };
+    }),
+  };
+}
+
 function materializeInput(tempDir, stem, value) {
   const text = typeof value === 'string' ? value : JSON.stringify(value);
   const extension = (() => {
@@ -115,8 +292,8 @@ export function runTokenReport({ codec, natural = null, models = 'all' }) {
     return tokenCache.get(cacheKey);
   }
 
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'trasgo-token-'));
   const report = (() => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'trasgo-token-'));
     try {
       const codecArg = materializeInput(tempDir, 'codec', codec);
       const args = ['tokens', '--codec', codecArg, '--models', models, '--json'];
@@ -124,7 +301,14 @@ export function runTokenReport({ codec, natural = null, models = 'all' }) {
         const naturalArg = materializeInput(tempDir, 'natural', natural);
         args.push('--natural', naturalArg);
       }
-      return parseJsonReport(spawnNative(args), 'tokens');
+      try {
+        return parseJsonReport(spawnNative(args), 'tokens');
+      } catch (error) {
+        if (process.env.TRASGO_DISABLE_TOKEN_FALLBACK === '1') {
+          throw error;
+        }
+        return buildHeuristicTokenReport({ codec, natural, models }, error);
+      }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
@@ -139,14 +323,58 @@ export function runOptimizeReport({ codec, models = 'all' }) {
     return tokenCache.get(cacheKey);
   }
 
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'trasgo-opt-'));
   const report = (() => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'trasgo-opt-'));
     try {
       const codecArg = materializeInput(tempDir, 'codec', codec);
-      return parseJsonReport(
-        spawnNative(['optimize', '--codec', codecArg, '--models', models, '--json']),
-        'optimize',
-      );
+      try {
+        return parseJsonReport(
+          spawnNative(['optimize', '--codec', codecArg, '--models', models, '--json']),
+          'optimize',
+        );
+      } catch (error) {
+        if (process.env.TRASGO_DISABLE_TOKEN_FALLBACK === '1') {
+          throw error;
+        }
+        const baseline = buildHeuristicTokenReport({ codec, models }, error);
+        const text = typeof codec === 'string' ? codec : JSON.stringify(codec);
+        const candidates = [
+          ['section-ascii', 'Replace § with S1', ['§ -> S1'], text.replaceAll('§', 'S1')],
+          ['delta-ascii', 'Replace Δ with D', ['Δ -> D'], text.replaceAll('Δ', 'D')],
+          ['mu-ascii', 'Replace μ with mu', ['μ -> mu'], text.replaceAll('μ', 'mu')],
+          ['arrow-ascii', 'Replace Unicode arrow with ->', ['→ -> ->'], text.replaceAll('→', '->')],
+        ].map(([id, description, replacements, transformed]) => optimizeCandidate(
+          id,
+          description,
+          replacements,
+          transformed,
+          buildHeuristicTokenReport({ codec: transformed, models }, error),
+          baseline,
+        ));
+        const asciiCore = text
+          .replaceAll('§', 'S1')
+          .replaceAll('Δ', 'D')
+          .replaceAll('μ', 'mu')
+          .replaceAll('→', '->');
+        candidates.push(optimizeCandidate(
+          'ascii-core',
+          'Apply the full ASCII alias core',
+          ['§ -> S1', 'Δ -> D', 'μ -> mu', '→ -> ->'],
+          asciiCore,
+          buildHeuristicTokenReport({ codec: asciiCore, models }, error),
+          baseline,
+        ));
+        const recommended = [...candidates].sort((a, b) => optimizeMedian(a.report) - optimizeMedian(b.report))[0];
+        return {
+          kind: 'trasgo-token-optimization',
+          exact: false,
+          measurement_mode: 'heuristic-fallback',
+          fallback_reason: error.message,
+          baseline,
+          candidates,
+          recommended,
+        };
+      }
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
@@ -199,9 +427,4 @@ export function buildScientificContext(report) {
 function average(values) {
   if (values.length === 0) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function round(value, digits = 2) {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
 }

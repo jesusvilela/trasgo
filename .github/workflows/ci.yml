@@ -59,6 +59,9 @@ jobs:
       - name: Run launcher smoke tests
         run: node scripts/ci-smoke.mjs
 
+      - name: Run packaged install smoke tests
+        run: node scripts/packaged-smoke.mjs
+
       - name: Package Unix CI artifact
         if: runner.os != 'Windows'
         shell: bash

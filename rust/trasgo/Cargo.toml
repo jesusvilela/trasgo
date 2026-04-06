@@ -1,6 +1,6 @@
 [package]
 name = "trasgo"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Trasgo native CLI for codec-native token science and routing."
 license = "MIT"

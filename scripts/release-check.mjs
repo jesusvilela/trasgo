@@ -35,7 +35,8 @@ function main() {
   assert.equal(pkg.version, cargoVersion, 'package.json version must match rust/trasgo/Cargo.toml');
   assert.equal(packageLock.version, pkg.version, 'package-lock version must match package.json');
   assert.equal(packageLock.packages?.['']?.version, pkg.version, 'root package-lock entry must match package.json');
-  assert.equal(pkg.bin?.trasgo, './bin/trasgo', 'bin.trasgo must point to ./bin/trasgo');
+  assert.equal(pkg.bin?.trasgo, './scripts/trasgo-launch.cjs', 'bin.trasgo must point to ./scripts/trasgo-launch.cjs');
+  assert.equal(packageLock.packages?.['']?.bin?.trasgo, 'scripts/trasgo-launch.cjs', 'package-lock bin.trasgo must match scripts/trasgo-launch.cjs');
   assert.equal(pkg.publishConfig?.access, 'public', 'publishConfig.access must be public');
   assert.match(pkg.homepage || '', /github\.com\/jesusvilela\/trasgo#readme/i, 'homepage must target the GitHub README');
   assert.ok(Array.isArray(pkg.files) && pkg.files.length > 0, 'files whitelist must be present');
@@ -45,6 +46,7 @@ function main() {
     'assets/trasgo-live-demo.gif',
     'assets/trasgo.png',
     'docs/index.html',
+    'scripts/trasgo-launch.cjs',
   ];
 
   for (const relativePath of requiredMedia) {
@@ -54,8 +56,8 @@ function main() {
 
   assert.match(readme, /<img src="https:\/\/raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets\/trasgo-s1-codec-demo\.gif"/u, 'README must embed codec demo GIF');
   assert.match(readme, /<img src="https:\/\/raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets\/trasgo-live-demo\.gif"/u, 'README must embed runtime demo GIF');
-  assert.match(docsIndex, /assets\/trasgo-s1-codec-demo\.gif/u, 'docs/index.html must embed codec demo GIF');
-  assert.match(docsIndex, /assets\/trasgo-live-demo\.gif/u, 'docs/index.html must embed runtime demo GIF');
+  assert.match(docsIndex, /(assets|raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets)\/trasgo-s1-codec-demo\.gif/u, 'docs/index.html must embed codec demo GIF');
+  assert.match(docsIndex, /(assets|raw\.githubusercontent\.com\/jesusvilela\/trasgo\/main\/assets)\/trasgo-live-demo\.gif/u, 'docs/index.html must embed runtime demo GIF');
 
   const refName = process.env.GITHUB_REF_NAME || '';
   const refType = process.env.GITHUB_REF_TYPE || '';
@@ -106,4 +108,3 @@ function main() {
 }
 
 main();
-

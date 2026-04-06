@@ -9,8 +9,21 @@ const RUNTIME_ROOT = path.join('.trasgo-runtime');
 const SESSIONS_DIR = path.join(RUNTIME_ROOT, 'sessions');
 const PACKS_DIR = path.join(RUNTIME_ROOT, 'packs');
 
+function roots(baseDir) {
+  if (baseDir && typeof baseDir === 'object') {
+    const assetDir = baseDir.assetDir || baseDir.baseDir || baseDir.stateDir || process.cwd();
+    const stateDir = baseDir.stateDir || baseDir.baseDir || assetDir;
+    return { assetDir, stateDir };
+  }
+  return { assetDir: baseDir, stateDir: baseDir };
+}
+
 function runtimePath(baseDir, ...parts) {
-  return path.join(baseDir, ...parts);
+  return path.join(roots(baseDir).stateDir, ...parts);
+}
+
+function assetPath(baseDir, ...parts) {
+  return path.join(roots(baseDir).assetDir, ...parts);
 }
 
 function ensureRuntimeDirs(baseDir) {
@@ -252,7 +265,7 @@ function packSummary(session, registry, baseDir) {
           kind: skill.kind,
           entry: skill.entry,
           description: skill.description,
-          content: fs.readFileSync(path.join(baseDir, skill.entry), 'utf-8'),
+          content: fs.readFileSync(assetPath(baseDir, skill.entry), 'utf-8'),
         };
       })
       .filter(Boolean),
@@ -275,7 +288,7 @@ function packSummary(session, registry, baseDir) {
 function packPrompt(session, registry, baseDir) {
   const bootSkill = skillEntry(registry, 'boot-loader');
   return {
-    boot: bootSkill ? fs.readFileSync(path.join(baseDir, bootSkill.entry), 'utf-8') : null,
+    boot: bootSkill ? fs.readFileSync(assetPath(baseDir, bootSkill.entry), 'utf-8') : null,
     balance: balancePacketForSession(session),
     mcp_messages: buildMcpMessages(session, registry, baseDir),
   };
@@ -301,7 +314,7 @@ export function packSession(baseDir, registry, session, options = {}) {
   };
 
   const outputPath = options.outPath
-    ? path.resolve(baseDir, options.outPath)
+    ? path.resolve(roots(baseDir).stateDir, options.outPath)
     : packFilePath(baseDir, session.id);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, JSON.stringify(bundle, null, 2));
@@ -318,7 +331,7 @@ export function packSession(baseDir, registry, session, options = {}) {
 }
 
 export function loadPack(baseDir, packPath) {
-  const resolvedPath = path.resolve(baseDir, packPath);
+  const resolvedPath = path.resolve(roots(baseDir).stateDir, packPath);
   if (!fs.existsSync(resolvedPath)) {
     throw new Error(`pack not found: ${resolvedPath}`);
   }

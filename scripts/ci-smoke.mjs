@@ -14,17 +14,25 @@ const repoRoot = path.resolve(moduleDir, '..');
 const isWindows = process.platform === 'win32';
 const packageVersion = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).version;
 
+function quoteWindowsArg(arg) {
+  if (arg.length === 0) return '""';
+  if (!/[\s"]/u.test(arg)) return arg;
+  return `"${arg
+    .replace(/(\\*)"/gu, '$1$1\\"')
+    .replace(/(\\+)$/u, '$1$1')}"`;
+}
+
 function runLauncher(args, options = {}) {
   const env = {
     ...process.env,
     TRASGO_LOGO: 'none',
   };
-  const command = isWindows ? path.join(repoRoot, 'trasgo.cmd') : path.join(repoRoot, 'bin', 'trasgo');
-  const launch = spawnSync(command, args, {
+  const launcherScript = path.join(repoRoot, 'scripts', 'trasgo-launch.cjs');
+  const launch = spawnSync(process.execPath, [launcherScript, ...args], {
     cwd: repoRoot,
     env,
     encoding: 'utf8',
-    shell: isWindows,
+    shell: false,
   });
 
   if (launch.error) {
@@ -350,5 +358,3 @@ async function main() {
 }
 
 await main();
-
-

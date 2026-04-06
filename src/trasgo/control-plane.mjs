@@ -6,6 +6,16 @@ import { randomUUID } from 'node:crypto';
 const REGISTRY_PATH = path.join('src', 'trasgo', 'registry.json');
 const RUNS_DIR = path.join('.trasgo-runtime', 'runs');
 
+
+function runtimeRoots(baseDir) {
+  if (baseDir && typeof baseDir === 'object') {
+    const assetDir = baseDir.assetDir || baseDir.baseDir || baseDir.stateDir || process.cwd();
+    const stateDir = baseDir.stateDir || baseDir.baseDir || assetDir;
+    return { assetDir, stateDir };
+  }
+  return { assetDir: baseDir, stateDir: baseDir };
+}
+
 export function loadRegistry(baseDir) {
   const fullPath = path.join(baseDir, REGISTRY_PATH);
   return {
@@ -104,12 +114,12 @@ export async function runToolDetailed(registry, toolId, extraArgs, runtime, opti
     ? (runtime.pythonBin || 'python')
     : (runtime.nodeBin || process.execPath);
 
-  const entry = path.join(runtime.baseDir, tool.entry);
+  const entry = path.join(runtime.assetDir || runtime.baseDir, tool.entry);
   const args = [...(tool.args || []), ...extraArgs];
   const processArgs = tool.runner === 'python' ? [entry, ...args] : [entry, ...args];
   const startedAt = new Date().toISOString();
   const result = await spawnProcess(command, processArgs, {
-    cwd: runtime.baseDir,
+    cwd: runtime.assetDir || runtime.baseDir,
     capture: options.capture,
   });
 
@@ -133,18 +143,18 @@ export async function runMachine(registry, machineId, extraArgs, runtime) {
 }
 
 function ensureRunsDir(baseDir) {
-  fs.mkdirSync(path.join(baseDir, RUNS_DIR), { recursive: true });
+  fs.mkdirSync(path.join(runtimeRoots(baseDir).stateDir, RUNS_DIR), { recursive: true });
 }
 
 function writeMachineTrace(baseDir, trace) {
   ensureRunsDir(baseDir);
-  const tracePath = path.join(baseDir, RUNS_DIR, `${trace.run_id}.json`);
+  const tracePath = path.join(runtimeRoots(baseDir).stateDir, RUNS_DIR, `${trace.run_id}.json`);
   fs.writeFileSync(tracePath, JSON.stringify(trace, null, 2));
   return tracePath;
 }
 
 export function listRunTraces(baseDir) {
-  const dir = path.join(baseDir, RUNS_DIR);
+  const dir = path.join(runtimeRoots(baseDir).stateDir, RUNS_DIR);
   if (!fs.existsSync(dir)) {
     return [];
   }
@@ -166,7 +176,7 @@ export function listRunTraces(baseDir) {
 }
 
 export function loadRunTrace(baseDir, runId) {
-  const tracePath = path.join(baseDir, RUNS_DIR, `${runId}.json`);
+  const tracePath = path.join(runtimeRoots(baseDir).stateDir, RUNS_DIR, `${runId}.json`);
   if (!fs.existsSync(tracePath)) {
     throw new Error(`run trace not found: ${runId}`);
   }
@@ -201,14 +211,14 @@ export async function runMachineDetailed(registry, machineId, extraArgs, runtime
     if (exitCode !== 0) {
       trace.finished_at = new Date().toISOString();
       trace.exit_code = exitCode;
-      trace.trace_path = writeMachineTrace(runtime.baseDir, trace);
+      trace.trace_path = writeMachineTrace(runtime.stateDir || runtime.baseDir, trace);
       return trace;
     }
   }
 
   trace.finished_at = new Date().toISOString();
   trace.exit_code = exitCode;
-  trace.trace_path = writeMachineTrace(runtime.baseDir, trace);
+  trace.trace_path = writeMachineTrace(runtime.stateDir || runtime.baseDir, trace);
   return trace;
 }
 
@@ -266,11 +276,11 @@ export async function buildDoctorReport(registry, runtime, options = {}) {
   const pythonVersion = await commandVersion(runtime.pythonBin, ['--version']);
   const tools = getCollection(registry, 'tools').map(tool => ({
     id: tool.id,
-    exists: fs.existsSync(path.join(runtime.baseDir, tool.entry)),
+    exists: fs.existsSync(path.join(runtime.assetDir || runtime.baseDir, tool.entry)),
   }));
   const skills = getCollection(registry, 'skills').map(skill => ({
     id: skill.id,
-    exists: fs.existsSync(path.join(runtime.baseDir, skill.entry)),
+    exists: fs.existsSync(path.join(runtime.assetDir || runtime.baseDir, skill.entry)),
   }));
 
   const probes = [];

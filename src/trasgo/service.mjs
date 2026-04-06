@@ -25,6 +25,16 @@ import {
 import { getDemoWorkflow, listDemoWorkflows, runDemoWorkflow } from './demo-workflows.mjs';
 import { runOptimizeReport, runTokenReport } from './token-science.mjs';
 
+
+function roots(baseDir) {
+  if (baseDir && typeof baseDir === 'object') {
+    const assetDir = baseDir.assetDir || baseDir.baseDir || baseDir.stateDir || process.cwd();
+    const stateDir = baseDir.stateDir || baseDir.baseDir || assetDir;
+    return { assetDir, stateDir };
+  }
+  return { assetDir: baseDir, stateDir: baseDir };
+}
+
 const packageVersion = (() => {
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
   const pkgPath = path.resolve(moduleDir, '..', '..', 'package.json');
@@ -162,6 +172,7 @@ function registryStatus(baseDir, registry, activeSession) {
     note: 'Trasgo local bridge is reachable.',
     registry: {
       path: registry.path,
+      state_dir: roots(baseDir).stateDir,
       runtimes: getCollection(registry, 'runtimes').length,
       tools: getCollection(registry, 'tools').length,
       machines: getCollection(registry, 'machines').length,

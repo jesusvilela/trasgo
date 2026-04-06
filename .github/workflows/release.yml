@@ -45,6 +45,9 @@ jobs:
       - name: Run npm smoke tests
         run: npm test
 
+      - name: Run packaged install smoke tests
+        run: npm run test:package
+
       - name: Run Rust tests
         run: cargo test --manifest-path rust/trasgo/Cargo.toml -j 1
 
@@ -163,6 +166,9 @@ EOF
 
       - name: Run npm smoke tests
         run: npm test
+
+      - name: Run packaged install smoke tests
+        run: npm run test:package
 
       - name: Publish trasgo to npm
         run: npm publish --access public

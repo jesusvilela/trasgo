@@ -10,6 +10,36 @@ export function headersForRuntime(runtimeEntry) {
   return headers;
 }
 
+function timeoutMs(runtimeEntry, kind = 'chat') {
+  const specificKey = kind === 'discover'
+    ? 'TRASGO_MODEL_DISCOVERY_TIMEOUT_MS'
+    : 'TRASGO_REQUEST_TIMEOUT_MS';
+  const raw = process.env[specificKey] || process.env.TRASGO_FETCH_TIMEOUT_MS || runtimeEntry.timeout_ms;
+  const parsed = Number.parseInt(String(raw ?? ''), 10);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return parsed;
+  }
+  return kind === 'discover' ? 4000 : 12000;
+}
+
+async function fetchWithTimeout(runtimeEntry, pathName, options = {}, kind = 'chat') {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs(runtimeEntry, kind));
+  try {
+    return await fetch(endpointForRuntime(runtimeEntry, pathName), {
+      ...options,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`${runtimeEntry.id} ${kind} timed out after ${timeoutMs(runtimeEntry, kind)}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function endpointForRuntime(runtimeEntry, pathName) {
   const baseUrl = runtimeEntry.resolved_base_url || runtimeEntry.base_url;
   if (!baseUrl) {
@@ -24,10 +54,10 @@ export async function discoverModel(runtimeEntry) {
     return runtimeEntry.model;
   }
 
-  const response = await fetch(endpointForRuntime(runtimeEntry, '/models'), {
+  const response = await fetchWithTimeout(runtimeEntry, '/models', {
     method: 'GET',
     headers: headersForRuntime(runtimeEntry),
-  });
+  }, 'discover');
 
   if (!response.ok) {
     throw new Error(`model discovery failed for ${runtimeEntry.id}: HTTP ${response.status}`);
@@ -52,11 +82,11 @@ export async function chatCompletion(runtimeEntry, messages, options = {}) {
     max_tokens: options.maxTokens ?? 1500,
   };
 
-  const response = await fetch(endpointForRuntime(runtimeEntry, '/chat/completions'), {
+  const response = await fetchWithTimeout(runtimeEntry, '/chat/completions', {
     method: 'POST',
     headers: headersForRuntime(runtimeEntry),
     body: JSON.stringify(payload),
-  });
+  }, 'chat');
 
   const latencyMs = Date.now() - start;
 

@@ -170,9 +170,14 @@
 trasgo --help
 
 npm ci
-./bin/trasgo --help
+node scripts/trasgo-launch.cjs --help
+.\\trasgo.cmd --help   # Windows
+./bin/trasgo --help    # macOS/Linux
 
-cargo build --manifest-path rust/trasgo/Cargo.toml --release</pre>
+cargo build --manifest-path rust/trasgo/Cargo.toml --release
+rust/trasgo/target/release/trasgo.exe --help   # Windows
+rust/trasgo/target/release/trasgo --help       # macOS/Linux</pre>
+          <p class="label">State lives in <code class="inline">./.trasgo-runtime</code> by default. Set <code class="inline">TRASGO_HOME</code> to relocate sessions, packs, and traces.</p>
           <p class="label">The npm package, installed command, and Rust crate all use <code class="inline">trasgo</code>.</p>
         </article>
         <article class="card">
@@ -218,8 +223,8 @@ trasgo calibrate</pre>
       <section>
         <h2>Recorded demos</h2>
         <div class="two-up">
-          <img class="demo" src="assets/trasgo-s1-codec-demo.gif" alt="Trasgo codec demo" />
-          <img class="demo" src="assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" />
+          <img class="demo" src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo codec demo" />
+          <img class="demo" src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" />
         </div>
       </section>
     </main>

@@ -1,8 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+function roots(baseDir) {
+  if (baseDir && typeof baseDir === 'object') {
+    const assetDir = baseDir.assetDir || baseDir.baseDir || baseDir.stateDir || process.cwd();
+    const stateDir = baseDir.stateDir || baseDir.baseDir || assetDir;
+    return { assetDir, stateDir };
+  }
+  return { assetDir: baseDir, stateDir: baseDir };
+}
+
 function latestBenchSummaries(baseDir) {
-  const testsDir = path.join(baseDir, 'tests');
+  const testsDir = path.join(roots(baseDir).assetDir, 'tests');
   if (!fs.existsSync(testsDir)) {
     return [];
   }

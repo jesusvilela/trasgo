@@ -135,9 +135,9 @@ function buildNative(manifestPath) {
   }
 }
 
-function launch(command, args) {
+function launch(command, args, options = {}) {
   const result = spawnSync(command, args, {
-    cwd: repoRoot,
+    cwd: options.cwd || process.cwd(),
     stdio: 'inherit',
     shell: false,
   });
@@ -219,13 +219,17 @@ function main() {
   }
 
   if (nativeBinary && needsNative) {
-    const nativeRun = launch(nativeBinary, ['--repo-root', repoRoot, ...forwarded]);
+    const nativeRun = launch(nativeBinary, ['--repo-root', repoRoot, ...forwarded], {
+      cwd: process.cwd(),
+    });
     if (nativeRun.ok) {
       return nativeRun.status;
     }
   }
 
-  const nodeRun = launch(process.execPath, [nodeCli, ...forwarded]);
+  const nodeRun = launch(process.execPath, [nodeCli, ...forwarded], {
+    cwd: process.cwd(),
+  });
   if (!nodeRun.ok) {
     console.error(nodeRun.error.message);
     return 1;

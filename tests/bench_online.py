@@ -4,13 +4,14 @@ Unified benchmark runner for API and local (LM Studio) models.
 Outputs tests/bench_<model>.json with standardized 6-test scoring.
 
 Usage:
-  python tests/bench_online.py <provider> [model_override] [--json] [--validate] [--correct]
+  python tests/bench_online.py <provider> [model_override] [--json] [--validate] [--correct] [--timeout SECONDS]
 
 Providers: deepseek, glm, lmstudio, medgemma
 Flags:
   --json      Enable response_format json_schema for structured output comparison
   --validate  Run §P validate checks on each response (detection only)
   --correct   Run validation + 1 correction re-prompt round on failures
+  --timeout   Per-request timeout in seconds (default: TRASGO_BENCH_TIMEOUT or 45)
 """
 
 import json, urllib.request, urllib.error, sys, io, time, re, os
@@ -231,7 +232,7 @@ S1_JSON_SCHEMA = {
 }
 
 
-def call_api(base_url, model, messages, api_key=None, timeout=300, json_mode=False):
+def call_api(base_url, model, messages, api_key=None, timeout=45, json_mode=False):
     payload = {
         "model": model,
         "messages": messages,
@@ -273,7 +274,7 @@ def session_messages(user_msg):
 
 
 def run_suite(model, base_url, api_key=None, provider="custom", json_mode=False,
-              validate=False, correct=False):
+              validate=False, correct=False, timeout=45):
     mode_label = " [JSON MODE]" if json_mode else ""
     val_label = " [VALIDATE]" if validate else ""
     cor_label = " [CORRECT]" if correct else ""
@@ -310,7 +311,14 @@ def run_suite(model, base_url, api_key=None, provider="custom", json_mode=False,
                      for m in msgs]
 
         t0 = time.time()
-        resp, usage = call_api(base_url, model, msgs, api_key=api_key, json_mode=json_mode)
+        resp, usage = call_api(
+            base_url,
+            model,
+            msgs,
+            api_key=api_key,
+            timeout=timeout,
+            json_mode=json_mode,
+        )
         elapsed = time.time() - t0
 
         print(f"  Time: {elapsed:.1f}s")
@@ -364,7 +372,12 @@ def run_suite(model, base_url, api_key=None, provider="custom", json_mode=False,
 
                     t1 = time.time()
                     cor_resp, cor_usage = call_api(
-                        base_url, model, cor_msgs, api_key=api_key, json_mode=json_mode
+                        base_url,
+                        model,
+                        cor_msgs,
+                        api_key=api_key,
+                        timeout=timeout,
+                        json_mode=json_mode,
                     )
                     cor_elapsed = time.time() - t1
 
@@ -471,14 +484,34 @@ def main():
         print(f"Providers: {', '.join(PROVIDERS.keys())}")
         sys.exit(1)
 
-    # Parse args: provider [model] [--json] [--validate] [--correct]
+    # Parse args: provider [model] [--json] [--validate] [--correct] [--timeout SECONDS]
     args = sys.argv[1:]
     json_mode = "--json" in args
     validate_mode = "--validate" in args
     correct_mode = "--correct" in args
+    timeout = int(os.environ.get("TRASGO_BENCH_TIMEOUT", "45"))
+    if "--timeout" in args:
+        timeout_index = args.index("--timeout")
+        try:
+            timeout = int(args[timeout_index + 1])
+        except (IndexError, ValueError):
+            print("Invalid --timeout value. Expected an integer number of seconds.")
+            sys.exit(1)
     if correct_mode:
         validate_mode = True  # --correct implies --validate
-    args = [a for a in args if not a.startswith("--")]
+    cleaned = []
+    skip_next = False
+    for arg in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if arg == "--timeout":
+            skip_next = True
+            continue
+        if arg.startswith("--"):
+            continue
+        cleaned.append(arg)
+    args = cleaned
 
     prov_name = args[0] if args else None
     if not prov_name or prov_name not in PROVIDERS:
@@ -509,8 +542,10 @@ def main():
             print(f"Cannot reach LM Studio: {e}")
             sys.exit(1)
 
+    print(f"Per-request timeout: {timeout}s")
+
     run_suite(model, base_url, api_key=api_key, provider=cfg["provider"],
-              json_mode=json_mode, validate=validate_mode, correct=correct_mode)
+              json_mode=json_mode, validate=validate_mode, correct=correct_mode, timeout=timeout)
 
 
 if __name__ == "__main__":

@@ -52,11 +52,19 @@ import { runOptimizeReport, runTokenReport } from './token-science.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
+const stateDir = path.resolve(process.env.TRASGO_HOME || process.cwd());
+const runtimeHome = {
+  assetDir: repoDir,
+  stateDir,
+};
 const runtime = {
   baseDir: repoDir,
+  assetDir: repoDir,
+  stateDir,
   nodeBin: process.execPath,
   pythonBin: process.env.TRASGO_PYTHON || 'python',
 };
+const activeSessionFile = path.join(runtime.stateDir, '.trasgo-runtime', 'active-session.json');
 
 const rawRegistry = loadRegistry(repoDir);
 const registry = {
@@ -101,7 +109,7 @@ const HELP_TOPICS = {
   ],
   install: [
     'Published npm: npm install -g trasgo',
-    'CLI launcher: npm ci && npm run cli -- --help',
+    'CLI launcher: npm ci && node scripts/trasgo-launch.cjs --help',
     'Native Rust: cargo build --manifest-path rust/trasgo/Cargo.toml --release',
     'Windows launcher: .\\trasgo.cmd',
     'Unix launcher: ./bin/trasgo',
@@ -266,11 +274,41 @@ function printBanner() {
 
 function currentSession(context) {
   if (!context.activeSessionId) return null;
-  return loadSession(runtime.baseDir, context.activeSessionId, registry);
+  try {
+    return loadSession(runtimeHome, context.activeSessionId, registry);
+  } catch {
+    clearActiveSession(context);
+    return null;
+  }
+}
+
+function loadPersistedActiveSessionId() {
+  try {
+    const payload = JSON.parse(fs.readFileSync(activeSessionFile, 'utf8'));
+    return typeof payload?.session_id === 'string' ? payload.session_id : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistActiveSessionId(sessionId) {
+  fs.mkdirSync(path.dirname(activeSessionFile), { recursive: true });
+  fs.writeFileSync(activeSessionFile, JSON.stringify({
+    session_id: sessionId,
+    updated_at: new Date().toISOString(),
+  }, null, 2));
+}
+
+function clearActiveSession(context) {
+  context.activeSessionId = null;
+  if (fs.existsSync(activeSessionFile)) {
+    fs.rmSync(activeSessionFile, { force: true });
+  }
 }
 
 function setActiveSession(context, session) {
   context.activeSessionId = session.id;
+  persistActiveSessionId(session.id);
 }
 
 function printStatus() {
@@ -280,21 +318,53 @@ function printStatus() {
   console.log(`  ${mint('registry')} ${dim(registry.path)}`);
   console.log(`  ${mint('node')}     ${dim(runtime.nodeBin)}`);
   console.log(`  ${mint('python')}   ${dim(runtime.pythonBin)}`);
-  console.log(`  ${mint('sessions')} ${gold(String(listSessions(runtime.baseDir).length))}`);
+  console.log(`  ${mint('state')}    ${dim(runtime.stateDir)}`);
+  console.log(`  ${mint('sessions')} ${gold(String(listSessions(runtimeHome).length))}`);
   console.log();
   console.log(accent('Plane'));
   console.log(`  ${gold('runtimes')} ${summary.runtimes}  ${gold('tools')} ${summary.tools}  ${gold('machines')} ${summary.machines}  ${gold('mcp')} ${summary.mcp}  ${gold('skills')} ${summary.skills}`);
   console.log();
 }
 
-function listRuntimes() {
-  const rows = getCollection(registry, 'runtimes').map(entry => ({
+function statusSnapshot() {
+  const summary = summarizeRegistry(registry);
+  return {
+    kind: 'trasgo-status',
+    registry: registry.path,
+    state_dir: runtime.stateDir,
+    node: runtime.nodeBin,
+    python: runtime.pythonBin,
+    sessions: listSessions(runtimeHome).length,
+    plane: summary,
+  };
+}
+
+function sessionRows() {
+  return listSessions(runtimeHome);
+}
+
+function balanceSnapshot(session) {
+  return {
+    kind: 'trasgo-balance',
+    session: sessionState(session),
+    decision: brokerDecision(session, registry),
+  };
+}
+
+
+function runtimeRows() {
+  return getCollection(registry, 'runtimes').map(entry => ({
     id: entry.id,
     kind: entry.kind,
     model: entry.model || 'auto',
     base: entry.resolved_base_url || '-',
     caps: (entry.capabilities || []).join(','),
   }));
+
+}
+
+function listRuntimes() {
+  const rows = runtimeRows();
 
   printTable('Runtimes', [
     { key: 'id', label: 'ID', width: 12 },
@@ -305,14 +375,19 @@ function listRuntimes() {
   ], rows, line => console.log(line));
 }
 
-function listTools() {
-  const rows = getCollection(registry, 'tools').map(entry => ({
+function toolRows() {
+  return getCollection(registry, 'tools').map(entry => ({
     id: entry.id,
     layer: entry.layer,
     runner: entry.runner,
     entry: entry.entry,
     desc: entry.description,
   }));
+
+}
+
+function listTools() {
+  const rows = toolRows();
 
   printTable('Tools', [
     { key: 'id', label: 'ID', width: 16 },
@@ -323,13 +398,18 @@ function listTools() {
   ], rows, line => console.log(line));
 }
 
-function listMachines() {
-  const rows = getCollection(registry, 'machines').map(entry => ({
+function machineRows() {
+  return getCollection(registry, 'machines').map(entry => ({
     id: entry.id,
     type: entry.type,
     steps: (entry.steps || []).map(step => step.tool).join(' -> '),
     desc: entry.description,
   }));
+
+}
+
+function listMachines() {
+  const rows = machineRows();
 
   printTable('Machines', [
     { key: 'id', label: 'ID', width: 18 },
@@ -339,13 +419,18 @@ function listMachines() {
   ], rows, line => console.log(line));
 }
 
-function listMcp() {
-  const rows = getCollection(registry, 'mcp').map(entry => ({
+function mcpRows() {
+  return getCollection(registry, 'mcp').map(entry => ({
     id: entry.id,
     transport: entry.transport,
     root: entry.root,
     resources: (entry.resources || []).join(','),
   }));
+
+}
+
+function listMcp() {
+  const rows = mcpRows();
 
   printTable('MCP', [
     { key: 'id', label: 'ID', width: 18 },
@@ -355,13 +440,18 @@ function listMcp() {
   ], rows, line => console.log(line));
 }
 
-function listSkills() {
-  const rows = getCollection(registry, 'skills').map(entry => ({
+function skillRows() {
+  return getCollection(registry, 'skills').map(entry => ({
     id: entry.id,
     kind: entry.kind,
     entry: entry.entry,
     desc: entry.description,
   }));
+
+}
+
+function listSkills() {
+  const rows = skillRows();
 
   printTable('Skills', [
     { key: 'id', label: 'ID', width: 16 },
@@ -371,13 +461,18 @@ function listSkills() {
   ], rows, line => console.log(line));
 }
 
-function listDemos() {
-  const rows = listDemoWorkflows().map(entry => ({
+function demoRows() {
+  return listDemoWorkflows().map(entry => ({
     id: entry.id,
     lane: entry.lane,
     title: entry.title,
     desc: entry.summary,
   }));
+
+}
+
+function listDemos() {
+  const rows = demoRows();
 
   printTable('Demo Workflows', [
     { key: 'id', label: 'ID', width: 20 },
@@ -401,12 +496,12 @@ function outputValue(context, value, printer) {
 }
 
 function launcherScript() {
-  return path.join(runtime.baseDir, 'scripts', 'trasgo-launch.cjs');
+  return path.join(runtime.assetDir, 'scripts', 'trasgo-launch.cjs');
 }
 
 function nativeStatusSnapshot() {
   const result = spawnSync(runtime.nodeBin, [launcherScript(), '--native-status'], {
-    cwd: runtime.baseDir,
+    cwd: runtime.assetDir,
     encoding: 'utf8',
     shell: false,
   });
@@ -542,7 +637,7 @@ function explainValue(value) {
 }
 
 function explainGenericInput(rawInput) {
-  const candidatePath = path.resolve(runtime.baseDir, rawInput);
+  const candidatePath = path.resolve(process.cwd(), rawInput);
   let value;
 
   if (fs.existsSync(candidatePath)) {
@@ -830,13 +925,15 @@ function interpretNaturalCommand(argv, context) {
   return null;
 }
 
-function showEntry(collectionName, id) {
+function showEntry(collectionName, id, context = { outputJson: true }) {
   const entry = getEntry(registry, collectionName, id);
   if (!entry) {
     console.error(coral(`unknown ${collectionName} entry: ${id}`));
     return 1;
   }
-  printJson(entry);
+  outputValue(context, entry, () => {
+    printJson(entry);
+  });
   return 0;
 }
 
@@ -846,7 +943,7 @@ function emitSkill(id) {
     console.error(coral(`unknown skill: ${id}`));
     return 1;
   }
-  console.log(fs.readFileSync(path.join(runtime.baseDir, skill.entry), 'utf-8'));
+  console.log(fs.readFileSync(path.join(runtime.assetDir, skill.entry), 'utf-8'));
   return 0;
 }
 
@@ -872,7 +969,7 @@ async function printDoctor(options = {}) {
 }
 
 function printSessionList() {
-  const sessions = listSessions(runtime.baseDir);
+  const sessions = sessionRows();
   if (sessions.length === 0) {
     console.log(dim('no saved sessions'));
     console.log();
@@ -1039,7 +1136,7 @@ function printResponse(result) {
 function ensureSession(context) {
   let session = currentSession(context);
   if (!session) {
-    session = createSession(runtime.baseDir, registry, {});
+    session = createSession(runtimeHome, registry, {});
     setActiveSession(context, session);
   }
   return session;
@@ -1122,7 +1219,7 @@ async function handleCot(rest, context) {
   if (action === 'boot') {
     const result = {
       kind: 'trasgo-cot-boot',
-      boot: loadCotBoot(runtime.baseDir),
+      boot: loadCotBoot(runtime.assetDir),
     };
     outputValue(context, result, () => {
       console.log(result.boot);
@@ -1206,7 +1303,7 @@ async function handleCot(rest, context) {
       console.error(coral('usage: trasgo cot expand --codec <text>'));
       return 1;
     }
-    const codecPath = path.resolve(runtime.baseDir, codecInput);
+    const codecPath = path.resolve(process.cwd(), codecInput);
     const codec = fs.existsSync(codecPath)
       ? fs.readFileSync(codecPath, 'utf8')
       : codecInput;
@@ -1284,7 +1381,7 @@ async function handleTrace(rest, context) {
   const [action = 'list', runId] = rest;
 
   if (action === 'list') {
-    const runs = listRunTraces(runtime.baseDir);
+    const runs = listRunTraces(runtimeHome);
     outputValue(context, { kind: 'trasgo-run-list', runs }, () => {
       if (runs.length === 0) {
         console.log(dim('no persisted run traces'));
@@ -1302,7 +1399,7 @@ async function handleTrace(rest, context) {
   }
 
   if (action === 'show' && runId) {
-    const trace = loadRunTrace(runtime.baseDir, runId);
+    const trace = loadRunTrace(runtimeHome, runId);
     outputValue(context, trace, () => {
       console.log(accent(`Trace · ${trace.machine.id}`));
       console.log();
@@ -1335,28 +1432,36 @@ async function handleSession(rest, context) {
 
   if (!action || action === 'new') {
     const title = args.join(' ').trim() || 'trasgo-session';
-    const session = createSession(runtime.baseDir, registry, { title });
+    const session = createSession(runtimeHome, registry, { title });
     setActiveSession(context, session);
-    printSessionState(session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
   if (action === 'list') {
-    printSessionList();
+    outputValue(context, { kind: 'trasgo-session-list', sessions: sessionRows() }, () => {
+      printSessionList();
+    });
     return 0;
   }
 
   if (action === 'resume' || action === 'use') {
     const sessionId = args[0];
-    const session = loadSession(runtime.baseDir, sessionId, registry);
+    const session = loadSession(runtimeHome, sessionId, registry);
     setActiveSession(context, session);
-    printSessionState(session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
   if (action === 'state') {
     const session = ensureSession(context);
-    printSessionState(session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
@@ -1366,7 +1471,7 @@ async function handleSession(rest, context) {
 
 async function handleInit(rest, context) {
   const options = parseWorkflowOptions(rest);
-  const session = initSessionContract(runtime.baseDir, registry, {
+  const session = initSessionContract(runtimeHome, registry, {
     ...options,
     sessionId: context.activeSessionId,
   });
@@ -1384,11 +1489,11 @@ async function handleInit(rest, context) {
 
 async function handlePack(rest, context) {
   const options = parseWorkflowOptions(rest);
-  const session = initSessionContract(runtime.baseDir, registry, {
+  const session = initSessionContract(runtimeHome, registry, {
     ...options,
     sessionId: context.activeSessionId,
   });
-  const result = packSession(runtime.baseDir, registry, session, options);
+  const result = packSession(runtimeHome, registry, session, options);
   setActiveSession(context, result.session);
   outputValue(context, {
     session: sessionState(result.session),
@@ -1402,7 +1507,7 @@ async function handlePack(rest, context) {
 
 async function handleBoot(rest, context) {
   const options = parseWorkflowOptions(rest);
-  const result = bootSession(runtime.baseDir, registry, {
+  const result = bootSession(runtimeHome, registry, {
     ...options,
     sessionId: context.activeSessionId,
   });
@@ -1422,7 +1527,9 @@ async function handleBalance(rest, context) {
   const session = ensureSession(context);
 
   if (!action || action === 'show') {
-    printBalanceState(session);
+    outputValue(context, balanceSnapshot(session), () => {
+      printBalanceState(session);
+    });
     return 0;
   }
 
@@ -1430,16 +1537,20 @@ async function handleBalance(rest, context) {
     const [field, ...valueParts] = args;
     const value = valueParts.join(' ');
     setBalanceValue(session, field, value);
-    saveSession(runtime.baseDir, session);
-    printBalanceState(session);
+    saveSession(runtimeHome, session);
+    outputValue(context, balanceSnapshot(session), () => {
+      printBalanceState(session);
+    });
     return 0;
   }
 
   if (action === 'packet') {
     const packet = JSON.parse(args.join(' '));
     applyBalancePacket(session, packet);
-    saveSession(runtime.baseDir, session);
-    printBalanceState(session);
+    saveSession(runtimeHome, session);
+    outputValue(context, balanceSnapshot(session), () => {
+      printBalanceState(session);
+    });
     return 0;
   }
 
@@ -1451,12 +1562,14 @@ async function handleSkills(rest, context) {
   const [action, ...args] = rest;
 
   if (!action || action === 'list') {
-    listSkills();
+    outputValue(context, { kind: 'trasgo-skill-list', skills: skillRows() }, () => {
+      listSkills();
+    });
     return 0;
   }
 
   if (action === 'show' && args[0]) {
-    return showEntry('skills', args[0]);
+    return showEntry('skills', args[0], context);
   }
 
   if (action === 'emit' && args[0]) {
@@ -1467,15 +1580,19 @@ async function handleSkills(rest, context) {
 
   if (action === 'attach' && args[0]) {
     attachSkill(session, args[0]);
-    saveSession(runtime.baseDir, session);
-    printSessionState(session);
+    saveSession(runtimeHome, session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
   if (action === 'detach' && args[0]) {
     detachSkill(session, args[0]);
-    saveSession(runtime.baseDir, session);
-    printSessionState(session);
+    saveSession(runtimeHome, session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
@@ -1487,27 +1604,33 @@ async function handleMcp(rest, context) {
   const [action, ...args] = rest;
 
   if (!action || action === 'list') {
-    listMcp();
+    outputValue(context, { kind: 'trasgo-mcp-list', mcp: mcpRows() }, () => {
+      listMcp();
+    });
     return 0;
   }
 
   if (action === 'show' && args[0]) {
-    return showEntry('mcp', args[0]);
+    return showEntry('mcp', args[0], context);
   }
 
   const session = ensureSession(context);
 
   if (action === 'mount' && args[0]) {
     mountMcp(session, args[0]);
-    saveSession(runtime.baseDir, session);
-    printSessionState(session);
+    saveSession(runtimeHome, session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
   if (action === 'unmount' && args[0]) {
     unmountMcp(session, args[0]);
-    saveSession(runtime.baseDir, session);
-    printSessionState(session);
+    saveSession(runtimeHome, session);
+    outputValue(context, sessionState(session), () => {
+      printSessionState(session);
+    });
     return 0;
   }
 
@@ -1519,7 +1642,9 @@ async function handleDemo(rest, context) {
   const [action = 'list', ...args] = rest;
 
   if (action === 'list') {
-    listDemos();
+    outputValue(context, { kind: 'trasgo-demo-list', demos: demoRows() }, () => {
+      listDemos();
+    });
     return 0;
   }
 
@@ -1563,9 +1688,11 @@ async function handleSend(rest, context) {
   }
 
   const session = ensureSession(context);
-  const result = await executeInput(runtime.baseDir, registry, session, input);
+  const result = await executeInput(runtimeHome, registry, session, input);
   setActiveSession(context, result.session);
-  printResponse(result);
+  outputValue(context, result, () => {
+    printResponse(result);
+  });
   return 0;
 }
 
@@ -1652,7 +1779,9 @@ async function executeCommand(argv, context) {
   }
 
   if (command === 'status') {
-    printStatus();
+    outputValue(context, statusSnapshot(), () => {
+      printStatus();
+    });
     return 0;
   }
 
@@ -1680,10 +1809,10 @@ async function executeCommand(argv, context) {
       return 1;
     }
     if (options.stdio) {
-      await serveStdio(runtime.baseDir, registry);
+      await serveStdio(runtimeHome, registry);
       return 0;
     }
-    await serveHttp(runtime.baseDir, registry, runtime, { port: options.port });
+    await serveHttp(runtimeHome, registry, runtime, { port: options.port });
     return 0;
   }
 
@@ -1695,12 +1824,16 @@ async function executeCommand(argv, context) {
   if (command === 'send' || command === 'packet') return handleSend(rest, context);
 
   if (command === 'providers' || command === 'runtimes') {
-    listRuntimes();
+    outputValue(context, { kind: 'trasgo-runtime-list', runtimes: runtimeRows() }, () => {
+      listRuntimes();
+    });
     return 0;
   }
 
   if (command === 'tools') {
-    listTools();
+    outputValue(context, { kind: 'trasgo-tool-list', tools: toolRows() }, () => {
+      listTools();
+    });
     return 0;
   }
 
@@ -1717,7 +1850,9 @@ async function executeCommand(argv, context) {
       });
       return trace.exit_code;
     }
-    listMachines();
+    outputValue(context, { kind: 'trasgo-machine-list', machines: machineRows() }, () => {
+      listMachines();
+    });
     return 0;
   }
 
@@ -1728,7 +1863,7 @@ async function executeCommand(argv, context) {
       console.error(coral('usage: trasgo show <runtimes|tools|machines|mcp|skills> <id>'));
       return 1;
     }
-    return showEntry(collectionName, id);
+    return showEntry(collectionName, id, context);
   }
 
   if (command === 'advise') return handleAdvise(rest, context);
@@ -1820,7 +1955,7 @@ async function startShell() {
     return 0;
   }
 
-  const context = { activeSessionId: null };
+  const context = { activeSessionId: loadPersistedActiveSessionId() };
 
   printBanner();
   printShellHint(context);
@@ -1869,8 +2004,17 @@ bannerOptions = {
     ? parsed.options.logo
     : 'auto',
 };
-const exitCode = await executeCommand(parsed.argv, {
-  activeSessionId: parsed.options.sessionId,
-  outputJson: parsed.options.outputJson,
-});
+let exitCode = 1;
+try {
+  exitCode = await executeCommand(parsed.argv, {
+    activeSessionId: parsed.options.sessionId || loadPersistedActiveSessionId(),
+    outputJson: parsed.options.outputJson,
+  });
+} catch (error) {
+  if (parsed.options.outputJson) {
+    console.log(JSON.stringify({ ok: false, error: error.message }, null, 2));
+  } else {
+    console.error(coral(error.message));
+  }
+}
 process.exitCode = exitCode;

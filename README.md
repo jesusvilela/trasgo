@@ -105,6 +105,8 @@ trasgo bench deepseek --json --validate
 trasgo calibrate
 ```
 
+Legacy bench adapters accept `--timeout <seconds>` and also honor `TRASGO_BENCH_TIMEOUT` for slow local models.
+
 Repo-local launchers are included:
 - macOS / Linux: `./bin/trasgo`
 - Windows: `.\trasgo.cmd`
@@ -120,11 +122,18 @@ trasgo --help
 
 # local repo
 npm ci
-./bin/trasgo --help
+node scripts/trasgo-launch.cjs --help
+# Windows launcher: .\trasgo.cmd --help
+# Unix launcher: ./bin/trasgo --help
 
 # native Rust
 cargo build --manifest-path rust/trasgo/Cargo.toml --release
+rust/trasgo/target/release/trasgo.exe --help   # Windows
+rust/trasgo/target/release/trasgo --help       # macOS/Linux
 ```
+
+Runtime state is written to `./.trasgo-runtime` in the current working directory by default.
+Set `TRASGO_HOME` to relocate session state, packs, and traces.
 
 Natural-language shell surface:
 - `trasgo "show me the runtimes"`
