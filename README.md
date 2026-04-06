@@ -44,7 +44,6 @@ The context window **is** the compiler.
 > **Trasgo** — In Spanish folklore, a mischievous household spirit that rearranges  
 > things while you're not looking. This one rearranges your context.
 
----
 
 
 ## GitHub Pages
