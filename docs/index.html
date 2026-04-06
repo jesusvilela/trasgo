@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trasgo · Context Codec Runtime for Frontier LLMs</title>
+    <meta
+      name="description"
+      content="Trasgo is a context codec and protocol runtime for modern LLM systems."
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070916;
+        --bg-soft: #101739;
+        --text: #e7ebff;
+        --text-dim: #b8c2ea;
+        --brand: #8f9bff;
+        --brand-2: #4de3cc;
+        --accent: #f8b4ff;
+        --border: #2a376d;
+        --good: #53e7a2;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 600px at 20% 0%, #1b2455 0%, rgba(7, 9, 22, 0) 70%),
+          radial-gradient(900px 500px at 90% 0%, #0e594f 0%, rgba(7, 9, 22, 0) 55%),
+          var(--bg);
+      }
+      a { color: var(--brand-2); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .container { width: min(1100px, 92vw); margin: 0 auto; }
+      .hero { padding: 4.5rem 0 3.5rem; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid var(--border);
+        background: rgba(16, 23, 57, .8);
+        border-radius: 999px;
+        padding: .35rem .85rem;
+        font-size: .85rem;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 4rem);
+        line-height: 1.05;
+        margin: 1rem 0;
+        letter-spacing: -.02em;
+      }
+      .gradient {
+        background: linear-gradient(92deg, var(--brand) 0%, var(--brand-2) 45%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .lead { max-width: 70ch; color: var(--text-dim); font-size: 1.1rem; }
+      .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.3rem; }
+      .btn {
+        padding: .75rem 1rem;
+        border-radius: .8rem;
+        border: 1px solid var(--border);
+        background: rgba(16, 23, 57, .85);
+        color: var(--text);
+        font-weight: 600;
+      }
+      .btn.primary {
+        border-color: #5a68cc;
+        background: linear-gradient(120deg, #4f5bcc, #2f8d85);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 1rem;
+      }
+      .card {
+        background: rgba(16, 23, 57, .78);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1rem;
+      }
+      .kpi { font-size: 1.8rem; font-weight: 800; }
+      .label { color: var(--text-dim); font-size: .92rem; }
+      section { padding: 1.5rem 0 2rem; }
+      h2 { font-size: clamp(1.4rem, 2vw, 2rem); margin: 0 0 .8rem; }
+      .list { margin: .5rem 0 0; padding-left: 1rem; color: var(--text-dim); }
+      .chipset { display: flex; flex-wrap: wrap; gap: .5rem; }
+      .chip {
+        border: 1px solid var(--border);
+        background: rgba(16, 23, 57, .6);
+        border-radius: .7rem;
+        padding: .35rem .65rem;
+      }
+      .contributors { display: flex; flex-wrap: wrap; gap: .5rem; }
+      .contrib {
+        border: 1px solid var(--border);
+        background: rgba(16, 23, 57, .6);
+        border-radius: .65rem;
+        padding: .45rem .6rem;
+        font-size: .9rem;
+      }
+      footer {
+        border-top: 1px solid var(--border);
+        margin-top: 2rem;
+        padding: 1.2rem 0 2rem;
+        color: var(--text-dim);
+      }
+      code.inline {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        padding: .15rem .35rem;
+        border-radius: .4rem;
+        border: 1px solid var(--border);
+        background: rgba(7, 9, 22, .8);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero container">
+      <span class="pill">⚡ Codec-first runtime · Open protocol · 2026-ready</span>
+      <h1>
+        Trasgo turns LLM context into
+        <span class="gradient">composable runtime code</span>.
+      </h1>
+      <p class="lead">
+        A codec-first runtime for AI engineers who want tighter prompts, structured context, and
+        composable protocol operations without model retraining.
+      </p>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/jesusvilela/trasgo">Explore the repo</a>
+        <a class="btn" href="https://github.com/jesusvilela/trasgo/blob/main/CONTRIBUTING.md">Contribute</a>
+        <a class="btn" href="https://github.com/jesusvilela/trasgo/issues/new/choose">Open an issue</a>
+      </div>
+    </header>
+
+    <main class="container">
+      <section>
+        <div class="grid" id="stats-grid">
+          <article class="card"><div class="kpi" id="stars">—</div><div class="label">GitHub Stars</div></article>
+          <article class="card"><div class="kpi" id="forks">—</div><div class="label">Forks</div></article>
+          <article class="card"><div class="kpi" id="issues">—</div><div class="label">Open Issues</div></article>
+          <article class="card"><div class="kpi" id="contributors-count">—</div><div class="label">Contributors</div></article>
+        </div>
+      </section>
+
+      <section>
+        <h2>What Trasgo gives you</h2>
+        <ul class="list">
+          <li>§1 packets that compress long narrative context into machine-readable axes.</li>
+          <li>§P protocol atoms to route, validate, merge, checkpoint, and balance sessions.</li>
+          <li>A CLI-first workflow to run demos, benchmark runtimes, and ship reproducible flows.</li>
+        </ul>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Get started in minutes</h2>
+          <p class="label">Install and run your first workflow:</p>
+          <p><code class="inline">npm i -g incontextcompilation && trasgo quickstart</code></p>
+          <p class="label">Then open the dashboard and iterate with your own §1 packets.</p>
+        </article>
+        <article class="card">
+          <h2>2026 dev stack alignment</h2>
+          <div class="chipset">
+            <span class="chip">Protocol-native AI</span>
+            <span class="chip">Session runtime contracts</span>
+            <span class="chip">MCP + skills surfaces</span>
+            <span class="chip">Zero-training adaptation</span>
+            <span class="chip">Human + agent co-piloting</span>
+          </div>
+        </article>
+      </section>
+
+      <section>
+        <h2>Builders shipping with Trasgo</h2>
+        <div class="contributors" id="contributors">
+          <span class="contrib">Loading contributors…</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="container">
+      Built for runtime engineers, protocol designers, and AI product teams.
+      <span id="updated"></span>
+    </footer>
+
+    <script>
+      const REPO = "jesusvilela/trasgo";
+      const format = new Intl.NumberFormat("en-US");
+
+      async function fetchJson(url) {
+        const response = await fetch(url, {
+          headers: {
+            Accept: "application/vnd.github+json"
+          }
+        });
+        if (!response.ok) throw new Error(`Request failed: ${url}`);
+        return response.json();
+      }
+
+      async function loadRepoStats() {
+        try {
+          const repo = await fetchJson(`https://api.github.com/repos/${REPO}`);
+          document.getElementById("stars").textContent = format.format(repo.stargazers_count ?? 0);
+          document.getElementById("forks").textContent = format.format(repo.forks_count ?? 0);
+          document.getElementById("issues").textContent = format.format(repo.open_issues_count ?? 0);
+        } catch {
+          document.getElementById("stats-grid").insertAdjacentHTML(
+            "beforeend",
+            '<article class="card"><div class="label">⚠️ Could not load live stats.</div></article>'
+          );
+        }
+      }
+
+      async function loadContributors() {
+        const wrap = document.getElementById("contributors");
+        try {
+          const contributors = await fetchJson(`https://api.github.com/repos/${REPO}/contributors?per_page=12`);
+          document.getElementById("contributors-count").textContent = format.format(contributors.length);
+          wrap.innerHTML = contributors
+            .slice(0, 12)
+            .map(
+              c => `<a class="contrib" href="${c.html_url}" target="_blank" rel="noreferrer">${c.login} · ${format.format(c.contributions)}</a>`
+            )
+            .join("");
+        } catch {
+          document.getElementById("contributors-count").textContent = "N/A";
+          wrap.innerHTML = '<span class="contrib">⚠️ Contributor feed unavailable.</span>';
+        }
+      }
+
+      document.getElementById("updated").textContent = `Last refreshed ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}.`;
+      loadRepoStats();
+      loadContributors();
+    </script>
+  </body>
+</html>
