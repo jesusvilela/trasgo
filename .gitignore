@@ -19,6 +19,8 @@ dist/
 target/
 rust/trasgo/target/
 .trasgo-runtime/
+.omx/
+mobile/trasgo-mobile/android/
 
 # Python (if Python tooling is added later)
 __pycache__/

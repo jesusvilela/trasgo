@@ -250,7 +250,7 @@
       "id": "codec-docs",
       "transport": "filesystem",
       "root": "src",
-      "resources": ["boot.md", "hyperprotocol.md", "mode-lock.md", "validate.md"],
+      "resources": ["boot.md", "cot.md", "hyperprotocol.md", "mode-lock.md", "validate.md"],
       "description": "Core codec and hyperprotocol source documents surfaced as runtime context."
     },
     {
@@ -267,6 +267,12 @@
       "kind": "prompt",
       "entry": "src/boot.md",
       "description": "Three-example §1 boot seed for grammar induction."
+    },
+    {
+      "id": "cot-boot",
+      "kind": "prompt",
+      "entry": "src/cot.md",
+      "description": "§CoT compressed reasoning seed for compact intermediate traces."
     },
     {
       "id": "hyperprotocol",

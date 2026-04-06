@@ -37,6 +37,9 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      - name: Check npm release surface
+        run: npm run release:check
+
       - name: Run Rust tests
         run: cargo test --manifest-path rust/trasgo/Cargo.toml -j 1
 

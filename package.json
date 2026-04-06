@@ -8,18 +8,33 @@
   },
   "files": [
     "LICENSE",
+    "CONTRIBUTING.md",
     "README.md",
     "assets",
     "bin",
-    "demos",
-    "docs",
+    "demos/*.md",
+    "demos/*.gif",
+    "demos/showcase.html",
+    "demos/generated/*.json",
+    "docs/*.md",
+    "docs/index.html",
+    "examples/*.md",
     "rust/trasgo/assets",
     "rust/trasgo/Cargo.lock",
     "rust/trasgo/Cargo.toml",
     "rust/trasgo/src",
+    "scripts/release-check.mjs",
     "scripts",
-    "src",
-    "tests",
+    "src/*.md",
+    "src/trasgo",
+    "tests/bench_online.py",
+    "tests/run_calibration.py",
+    "tests/research_runner.py",
+    "tests/quick_research.py",
+    "tests/run_structured.py",
+    "tests/validator.py",
+    "tests/calibration-suite.md",
+    "tests/scale-threshold.md",
     "trasgo.cmd"
   ],
   "directories": {
@@ -50,10 +65,12 @@
     "calibrate": "node scripts/trasgo-launch.cjs calibrate",
     "research": "node scripts/trasgo-launch.cjs research",
     "validate": "node scripts/trasgo-launch.cjs validate",
+    "release:check": "node scripts/release-check.mjs",
     "pack:check": "npm pack --dry-run",
     "mobile:dev": "cd mobile/trasgo-mobile && npx expo start",
     "mobile:ios": "cd mobile/trasgo-mobile && npx expo run:ios",
-    "mobile:android": "cd mobile/trasgo-mobile && npx expo run:android"
+    "mobile:android": "cd mobile/trasgo-mobile && npx expo run:android",
+    "prepublishOnly": "npm run release:check && npm test"
   },
   "repository": {
     "type": "git",
@@ -72,6 +89,9 @@
   "author": "",
   "license": "MIT",
   "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
   "bugs": {
     "url": "https://github.com/jesusvilela/trasgo/issues"
   },

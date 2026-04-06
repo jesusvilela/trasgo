@@ -47,6 +47,7 @@ import {
   listDemoWorkflows,
   runDemoWorkflow,
 } from './demo-workflows.mjs';
+import { compileCot, expandCot, loadCotBoot } from './cot.mjs';
 import { runOptimizeReport, runTokenReport } from './token-science.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
@@ -99,6 +100,7 @@ const HELP_TOPICS = {
     '5. trasgo serve --http --port 8787',
   ],
   install: [
+    'Published npm: npm install -g trasgo',
     'CLI launcher: npm ci && npm run cli -- --help',
     'Native Rust: cargo build --manifest-path rust/trasgo/Cargo.toml --release',
     'Windows launcher: .\\trasgo.cmd',
@@ -113,6 +115,12 @@ const HELP_TOPICS = {
     'Mobile wrappers consume the local HTTP bridge rather than emulating the terminal.',
     'Start the bridge with trasgo serve --http --port 8787.',
     'Wrapper app scaffold lives under mobile/trasgo-mobile.',
+  ],
+  cot: [
+    'trasgo cot boot',
+    'trasgo cot compile --natural "First add 7 and 5 to get 12. Therefore the answer is 12."',
+    'trasgo cot advise --natural "First add 7 and 5 to get 12. Therefore the answer is 12."',
+    'trasgo cot expand --codec "§CoT[1:OBSERVE|operands:7,5 2:APPLY|add(7,5)->12 3:EMIT|answer:12]"',
   ],
 };
 
@@ -565,6 +573,19 @@ function explainGenericInput(rawInput) {
   return explainValue(value);
 }
 
+function consumeOptionValue(args, startIndex) {
+  const collected = [];
+  let index = startIndex;
+  while (index < args.length && !args[index].startsWith('--')) {
+    collected.push(args[index]);
+    index += 1;
+  }
+  return {
+    value: collected.join(' ').trim(),
+    nextIndex: index - 1,
+  };
+}
+
 function parseCodecArgs(rest) {
   const options = {
     codec: null,
@@ -575,13 +596,15 @@ function parseCodecArgs(rest) {
   for (let i = 0; i < rest.length; i += 1) {
     const arg = rest[i];
     if (arg === '--codec' && rest[i + 1]) {
-      options.codec = rest[i + 1];
-      i += 1;
+      const consumed = consumeOptionValue(rest, i + 1);
+      options.codec = consumed.value;
+      i = consumed.nextIndex;
       continue;
     }
     if (arg === '--natural' && rest[i + 1]) {
-      options.natural = rest[i + 1];
-      i += 1;
+      const consumed = consumeOptionValue(rest, i + 1);
+      options.natural = consumed.value;
+      i = consumed.nextIndex;
       continue;
     }
     if (arg === '--models' && rest[i + 1]) {
@@ -591,6 +614,46 @@ function parseCodecArgs(rest) {
   }
 
   return options;
+}
+
+function parseCotArgs(rest) {
+  const options = {
+    natural: null,
+    codec: null,
+    answer: null,
+    models: 'all',
+  };
+  const positional = [];
+
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (arg === '--natural' && rest[i + 1]) {
+      const consumed = consumeOptionValue(rest, i + 1);
+      options.natural = consumed.value;
+      i = consumed.nextIndex;
+      continue;
+    }
+    if (arg === '--codec' && rest[i + 1]) {
+      const consumed = consumeOptionValue(rest, i + 1);
+      options.codec = consumed.value;
+      i = consumed.nextIndex;
+      continue;
+    }
+    if (arg === '--answer' && rest[i + 1]) {
+      const consumed = consumeOptionValue(rest, i + 1);
+      options.answer = consumed.value;
+      i = consumed.nextIndex;
+      continue;
+    }
+    if (arg === '--models' && rest[i + 1]) {
+      options.models = rest[i + 1];
+      i += 1;
+      continue;
+    }
+    positional.push(arg);
+  }
+
+  return { options, positional };
 }
 
 function printQuickstart(result) {
@@ -677,7 +740,7 @@ const EXACT_COMMANDS = new Set([
   'providers', 'runtimes', 'tools', 'machines', 'orchestrations', 'orchestrate',
   'show', 'dashboard', 'live', 'watch', 'monitor', 'bench', 'calibrate',
   'research', 'validate', 'run', 'demo', 'quickstart', 'advise', 'explain', 'trace',
-  'tokens', 'optimize',
+  'cot', 'tokens', 'optimize',
 ]);
 
 const NATURAL_STOPWORDS = new Set([
@@ -1050,6 +1113,115 @@ async function handleAdvise(rest, context) {
     printAdvisory(result);
   });
   return 0;
+}
+
+async function handleCot(rest, context) {
+  const [action = 'boot', ...args] = rest;
+  const { options, positional } = parseCotArgs(args);
+
+  if (action === 'boot') {
+    const result = {
+      kind: 'trasgo-cot-boot',
+      boot: loadCotBoot(runtime.baseDir),
+    };
+    outputValue(context, result, () => {
+      console.log(result.boot);
+      console.log();
+    });
+    return 0;
+  }
+
+  if (action === 'compile') {
+    const natural = options.natural || positional.join(' ').trim();
+    if (!natural) {
+      console.error(coral('usage: trasgo cot compile --natural <text> [--answer <value>] [--models all]'));
+      return 1;
+    }
+    const compiled = compileCot(natural, { answer: options.answer });
+    const tokenReport = runTokenReport({ codec: compiled.codec, natural, models: options.models });
+    const advisory = advisoryFromReport(tokenReport);
+    const result = {
+      ...compiled,
+      verdict: advisory.verdict,
+      recommendation: advisory.recommendation,
+      break_even_delta_tokens: advisory.delta,
+      token_report: tokenReport,
+    };
+    outputValue(context, result, () => {
+      console.log(accent('§CoT Compile'));
+      console.log();
+      console.log(result.codec);
+      console.log();
+      console.log(`  ${mint('answer')}      ${dim(result.answer || 'n/a')}`);
+      console.log(`  ${mint('steps')}       ${gold(String(result.step_count))}`);
+      console.log(`  ${mint('verdict')}     ${gold(result.verdict)}`);
+      console.log(`  ${mint('advice')}      ${dim(result.recommendation)}`);
+      if (result.break_even_delta_tokens !== null) {
+        console.log(`  ${mint('delta')}       ${dim(`${result.break_even_delta_tokens} tok (codec - natural)`)}`);
+      }
+      console.log();
+    });
+    return 0;
+  }
+
+  if (action === 'advise') {
+    const natural = options.natural || positional.join(' ').trim();
+    if (!natural) {
+      console.error(coral('usage: trasgo cot advise --natural <text> [--answer <value>] [--models all]'));
+      return 1;
+    }
+    const compiled = compileCot(natural, { answer: options.answer });
+    const tokenReport = runTokenReport({ codec: compiled.codec, natural, models: options.models });
+    const advisory = advisoryFromReport(tokenReport);
+    const result = {
+      kind: 'trasgo-cot-advise',
+      natural,
+      codec: compiled.codec,
+      answer: compiled.answer,
+      step_count: compiled.step_count,
+      verdict: advisory.verdict,
+      recommendation: advisory.recommendation,
+      break_even_delta_tokens: advisory.delta,
+      token_report: tokenReport,
+    };
+    outputValue(context, result, () => {
+      console.log(accent('§CoT Advice'));
+      console.log();
+      console.log(`  ${mint('verdict')}     ${gold(result.verdict)}`);
+      console.log(`  ${mint('advice')}      ${dim(result.recommendation)}`);
+      console.log(`  ${mint('steps')}       ${gold(String(result.step_count))}`);
+      if (result.break_even_delta_tokens !== null) {
+        console.log(`  ${mint('delta')}       ${dim(`${result.break_even_delta_tokens} tok (codec - natural)`)}`);
+      }
+      console.log();
+      console.log(result.codec);
+      console.log();
+    });
+    return 0;
+  }
+
+  if (action === 'expand') {
+    const codecInput = options.codec || positional.join(' ').trim();
+    if (!codecInput) {
+      console.error(coral('usage: trasgo cot expand --codec <text>'));
+      return 1;
+    }
+    const codecPath = path.resolve(runtime.baseDir, codecInput);
+    const codec = fs.existsSync(codecPath)
+      ? fs.readFileSync(codecPath, 'utf8')
+      : codecInput;
+    const result = expandCot(codec);
+    outputValue(context, result, () => {
+      console.log(accent('§CoT Expand'));
+      console.log();
+      console.log(result.natural);
+      console.log();
+    });
+    return 0;
+  }
+
+  console.error(coral(`unknown cot action: ${action}`));
+  return 1;
 }
 
 async function handleExplain(rest, context) {
@@ -1445,12 +1617,13 @@ function printHelp() {
   console.log(`  ${mint('trasgo dashboard | live')}           ${dim('observatory views')}`);
   console.log(`  ${mint('trasgo tokens --codec <json> [--natural <text>]')} ${dim('exact multi-family token counts and compression')}`);
   console.log(`  ${mint('trasgo optimize --codec <json>')}    ${dim('ASCII alias search scored across the token battery')}`);
+  console.log(`  ${mint('trasgo cot <boot|compile|advise|expand>')} ${dim('§CoT compressed reasoning preview layer')}`);
   console.log(`  ${mint('trasgo bench | calibrate | research | validate')} ${dim('legacy orchestration adapters')}`);
   console.log();
   console.log(accent('Global'));
   console.log(`  ${mint('--logo <auto|image|ascii|none>')}    ${dim('launch banner mode; image uses chafa when the terminal supports it')}`);
   console.log(`  ${mint('--json')}                            ${dim('machine-readable workflow output')}`);
-  console.log(`  ${mint('trasgo help <quickstart|install|native|mobile>')} ${dim('topic help without scanning the whole shell')}`);
+  console.log(`  ${mint('trasgo help <quickstart|install|native|mobile|cot>')} ${dim('topic help without scanning the whole shell')}`);
   console.log();
 }
 
@@ -1559,6 +1732,7 @@ async function executeCommand(argv, context) {
   }
 
   if (command === 'advise') return handleAdvise(rest, context);
+  if (command === 'cot') return handleCot(rest, context);
   if (command === 'explain') return handleExplain(rest, context);
   if (command === 'trace') return handleTrace(rest, context);
 

@@ -172,6 +172,14 @@ Recorded animated demos:
   <img src="assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" width="900"/>
 </p>
 
+§CoT preview layer:
+- `trasgo cot boot`
+- `trasgo cot compile --natural "First add 7 and 5 to get 12. Therefore the answer is 12."`
+- `trasgo cot advise --natural "First add 7 and 5 to get 12. Therefore the answer is 12."`
+- `trasgo cot expand --codec "§CoT[1:OBSERVE|operands:7,5 2:APPLY|add(7,5)->12 3:EMIT|answer:12]"`
+
+See [`src/cot.md`](src/cot.md) for the compressed reasoning seed.
+
 Exact scientific surfaces:
 - `trasgo tokens` measures exact token counts across `openai-o200k`, `openai-cl100k`, `llama3`, `gemma`, `deepseek`, and `glm`.
 - `trasgo optimize` scores ASCII alias variants and reports the lowest-median token form without rewriting files.

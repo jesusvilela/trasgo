@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
@@ -251,6 +252,30 @@ async function main() {
   ]);
   assert.equal(advice.kind, 'trasgo-advise');
   assert.ok(typeof advice.verdict === 'string' && advice.verdict.length > 0);
+
+  const cotCompile = parseJsonCommand([
+    'cot',
+    'compile',
+    '--natural',
+    'First add 7 and 5 to get 12. Therefore the answer is 12.',
+    '--json',
+  ]);
+  assert.equal(cotCompile.kind, 'trasgo-cot-compile');
+  assert.match(cotCompile.codec, /§CoT\[/u);
+  assert.equal(cotCompile.answer, '12');
+
+  const cotDir = fs.mkdtempSync(path.join(os.tmpdir(), 'trasgo-cot-'));
+  const cotPath = path.join(cotDir, 'trace.txt');
+  fs.writeFileSync(cotPath, '§CoT[1:OBSERVE|operands:7,5 2:APPLY|add(7,5)->12 3:EMIT|answer:12]', 'utf8');
+  const cotExpand = parseJsonCommand([
+    'cot',
+    'expand',
+    '--codec',
+    cotPath,
+    '--json',
+  ]);
+  assert.equal(cotExpand.kind, 'trasgo-cot-expand');
+  assert.match(cotExpand.natural, /final answer 12/u);
 
   const demos = runLauncher(['demo', 'list']);
   assert.match(demos.stdout, /factory-copilot/u);
