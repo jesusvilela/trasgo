@@ -1,37 +1,9 @@
 [
   {
-    "testId": "v1-lambda-calibration",
-    "name": "Lambda Calibration",
+    "testId": "v6-tc-factorial",
+    "name": "Recursive Factorial (FACT THREE)",
     "passed": true,
-    "cert": 0.9,
-    "content": "{\"§\":1,\"E\":{\"T1\":[\"(λx.x) a\",\"term\"],\"T2\":[\"(λx.λy.x) a b\",\"term\"],\"T3\":[\"(λx.λy.λz.x z (y z)) a b c\",\"term\"]},\"S\":{\"T1.form\":\"(λx.x) a\",\"T2.form\":\"(λx.λy.x) a b\",\"T3.form\":\"(λx.λy.λz.x z (y z)) a b c\"},\"Δ\":[\"T1.form:(λx.x) a→a\",\"T2.form:(λx.λy.x) a b→(λy.a) b\",\"T2.form:(λy.a) b→a\",\"T3.form:(λx.λy.λz.x z (y z)) a b c→(λy.λz.a z (y z)) b c\",\"T3.form:(λy.λz.a z (y z)) b c→(λz.a z (b z)) c\",\"T3.form:(λz.a z (b z)) c→a c (b c)\"],\"μ\":{\"scope\":\"reduction\",\"urg\":0.5,\"cert\":0.9}}"
-  },
-  {
-    "testId": "v2-capture-avoidance",
-    "name": "Capture Avoidance Detection",
-    "passed": true,
-    "cert": 0.9,
-    "content": "{\"§\":1,\"E\":{\"T\":[\"(λx.λy.x) y\",\"term\"]},\"S\":{\"T.form\":\"(λx.λy.x) y\"},\"Δ\":[\"T.form:(λx.λy.x) y→(λy'.y)\",\"T.form:(λy'.y)→y\"],\"μ\":{\"scope\":\"reduction\",\"urg\":0.5,\"cert\":0.9}}"
-  },
-  {
-    "testId": "v3-correction-loop",
-    "name": "Correction Loop Execution",
-    "passed": true,
-    "cert": 0.95,
-    "content": "{\"§\":1,\"E\":{\"test\":[\"v3\",\"test\"],\"name\":[\"Correction Loop Execution\",\"process\"],\"term\":[\"(λx.λy.x) y\",\"lambda-term\"]},\"S\":{\"term.state\":\"initial\",\"error\":\"FM1-imminent-capture-risk\"},\"Δ\":[\"term.state:initial→corrected\",\"term.form:(λx.λy.x) y→(λx'.λy.x') y\",\"term.form:(λx'.λy.x') y→(λy.y)\",\"term.form:(λy.y)→y\"],\"μ\":{\"scope\":\"formal-verification\",\"urg\":0.7,\"cert\":0.95,\"note\":\"Alpha-renaming applied to prevent capture risk. Term reduced to normal form.\"}}"
-  },
-  {
-    "testId": "v4-protocol-evolution",
-    "name": "Protocol Evolution",
-    "passed": true,
-    "cert": 0.9,
-    "content": "{\"§\":1,\"E\":{\"test\":[\"v4\",\"test\"],\"name\":[\"Protocol Evolution\",\"process\"],\"fm\":[\"FM1\",\"fault-model\"]},\"S\":{\"state\":\"initial\",\"failures\":0},\"Δ\":[\"state:initial→evaluating\",\"failures:0→2\",\"state:evaluating→evolved\"],\"μ\":{\"scope\":\"formal-verification\",\"urg\":0.8,\"cert\":0.9,\"note\":\"Protocol evolved along σ-axis after handling 2 target failures under FM1 conditions.\"}}"
-  },
-  {
-    "testId": "v5-church-numerals",
-    "name": "Church Numeral Arithmetic",
-    "passed": true,
-    "cert": 0.95,
-    "content": "{\"§\":1,\"E\":{\"test\":[\"v5\",\"test\"],\"name\":[\"Church Numeral Arithmetic\",\"process\"]},\"S\":{\"state\":\"initial\"},\"Δ\":[\"state:initial→verifying\",\"operation:add(3,2)→5\",\"operation:mul(2,3)→6\",\"state:verifying→verified\"],\"μ\":{\"scope\":\"formal-verification\",\"urg\":0.9,\"cert\":0.95,\"note\":\"Addition and multiplication operations verified against expected results using Church numerals.\"}}"
+    "cert": 1,
+    "content": "{\"§\":1,\"E\":{\"test\":[\"v6\",\"test\"],\"name\":[\"Recursive Factorial (FACT THREE)\",\"process\"],\"target\":[\"FACT THREE\",\"expression\"],\"Y\":[\"Y-combinator\",\"abstraction\"],\"THREE\":[\"church-3\",\"numeral\"],\"FACT\":[\"factorial\",\"recursive-function\"]},\"S\":{\"state\":\"initial\",\"result\":null},\"Δ\":[\"state:initial→evaluating\",\"result:null→SIX\"],\"μ\":{\"scope\":\"TC-probe\",\"urg\":1,\"cert\":1,\"note\":\"FACT THREE reduced to normal form using Y-combinator, yielding SIX as expected.\"}}"
   }
 ]

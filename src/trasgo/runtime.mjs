@@ -170,7 +170,7 @@ export function createSession(baseDir, registry, options = {}) {
       injected: [],
     },
     mcp_mounts: ['runtime-registry'],
-    footprints: seededFootprints(registry),
+    footprints: {},
     contract: defaultContract(registry),
     history: [],
     workflow: defaultWorkflowState(),

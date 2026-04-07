@@ -8,8 +8,9 @@ export async function runCorrectionLoop(session, initialResult, executeInputFn, 
   let iterations = 0;
   let parsed = parsePacketStream(result.content || '');
 
-  while (parsed.hasError && parsed.certDrop < certThreshold && iterations < maxIterations) {
-    console.error(`\n[Harness] Detected low cert error (${parsed.certDrop}): ${parsed.errBlock.err}. Injecting Correction Turn...`);
+  while (parsed.hasError && (parsed.certDrop < certThreshold || parsed.errBlock.err === 'FM3-imminent') && iterations < maxIterations) {
+    const reason = parsed.errBlock.err === 'FM3-imminent' ? 'FM3 Imminent (Depth/Step Threshold)' : `low cert error (${parsed.certDrop})`;
+    console.error(`\n[Harness] Detected ${reason}: ${parsed.errBlock.err}. Injecting Correction Turn...`);
     
     const instruction = createCorrectionInstruction(parsed.lastPacket, parsed.errBlock, parsed.stepRef);
     result = await executeInputFn(context.runtimeHome, context.registry, session, instruction);

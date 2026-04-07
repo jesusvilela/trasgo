@@ -212,11 +212,11 @@
             <span class="title">trasgo — semantic-runtime-shell</span>
           </div>
           <div class="terminal-body" id="term-body">
-            <div class="term-line">Trasgo v0.1.1 (Web Sandbox)</div>
+            <div class="term-line">Trasgo v0.2.0-verified (Web Sandbox)</div>
             <div class="term-line">Type <code class="inline">trasgo --help</code> to see commands, or try the <b>demo loop</b>:</div>
             <div class="term-line dim">1. trasgo init "demo"</div>
             <div class="term-line dim">2. trasgo boot</div>
-            <div class="term-line dim">3. trasgo verify</div>
+            <div class="term-line dim">3. trasgo verify --all</div>
             <div class="term-line dim">4. trasgo send "Reduce (λx.λy.x) y"</div>
             <div class="term-line">&nbsp;</div>
           </div>
@@ -361,7 +361,7 @@
 
                 try {
                   const messages = [
-                    { role: "system", content: "You are the Trasgo §1 codec runtime. Compress the user's intent into a JSON packet containing '§', 'E', 'S', 'Δ', 'μ'. Output ONLY valid JSON." },
+                    { role: "system", content: "§1|BOOT\n\nEX1:\n{\"§\":1,\n \"E\":{\"A\":[\"climate-sci\",\"domain\"],\"B\":[\"coastal-policy\",\"domain\"],\"C\":[\"climate-council\",\"institution\"]},\n \"S\":{\"A.temp\":\"+1.5°C threshold\",\"B.status\":\"adaptation-plan active\"},\n \"R\":[\"A→B:constrains\",\"C→B:governs\"],\n \"Δ\":[\"A.temp:+1.2→+1.5@2025-Q3\",\"B.status:draft→active@2024-01\"],\n \"μ\":{\"scope\":\"geopolitical\",\"urg\":0.6,\"cert\":0.85}}\n\nEX4:\n{\"§\":1,\n \"E\":{\"op\":[\"substitution\",\"operation\"]},\n \"S\":{\"op.safe\":false},\n \"R\":[],\n \"Δ\":[\"op.status:attempting→blocked@step-1\"],\n \"ERR\":{\"cert\":0.4,\"err\":\"FM1-capture-risk\",\"flag\":\"REQUEST_VERIFICATION\",\n        \"delta_confidence\":\"[-0.6,step-1]\"},\n \"μ\":{\"scope\":\"error-signal\",\"urg\":1.0,\"cert\":0.4,\n      \"note\":\"substitution halted — correction turn required\"}}\n\nYou are the Trasgo §1 codec runtime. Use the §1|BOOT grammar. Compress the user's intent into a §1 JSON packet. Output ONLY valid JSON." },
                     { role: "user", content: query }
                   ];
                   
@@ -405,7 +405,7 @@
           } else if (val.startsWith("trasgo pack")) {
             appendLine("Packing session...\n[OK] Wrote .trasgo-runtime/packs/browser.json");
           } else if (val.startsWith("trasgo verify")) {
-            appendLine("Running Formal Verification (V1-V5)...\nPASS v1-lambda-calibration\nPASS v2-capture-avoidance\nPASS v3-correction-loop\nPASS v4-protocol-evolution\nPASS v5-church-numerals\n[OK] 100% PASS rate recorded.");
+            appendLine("Running Formal Verification (V1-V6)...\nPASS v1-lambda-calibration\nPASS v2-capture-avoidance\nPASS v3-correction-loop\nPASS v4-protocol-evolution\nPASS v5-church-numerals\nPASS v6-tc-factorial\n[OK] 100% PASS rate recorded (T8 Verified).");
           } else if (val.startsWith("trasgo evolve")) {
             appendLine("Checking for systematic failure patterns...\nNo pending proposals. Current axes: E, S, R, Δ, μ.");
           } else if (termCommands[val]) {

@@ -1,6 +1,6 @@
 {
   "name": "trasgo",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and formal verification.",
   "main": "scripts/trasgo-launch.cjs",
   "bin": {
@@ -10,6 +10,7 @@
     "LICENSE",
     "CONTRIBUTING.md",
     "README.md",
+    "dashboard.mjs",
     "assets",
     "bin",
     "demos/*.md",

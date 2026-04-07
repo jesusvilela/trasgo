@@ -251,6 +251,30 @@ async function main() {
   const explainRoute = parseJsonCommand(['--session', sessionId, 'explain', 'route', '--json']);
   assert.equal(explainRoute.kind, 'trasgo-explain-route');
 
+  const init = parseJsonCommand(['init', 'smoke-test-session', '--json']);
+  assert.equal(init.title, 'smoke-test-session');
+  assert.ok(init.id, 'init should create a session id');
+
+  const pack = parseJsonCommand(['--session', init.id, 'pack', '--json']);
+  assert.equal(pack.session.id, init.id);
+  assert.ok(pack.pack_path, 'pack should record a pack path');
+
+  const boot = parseJsonCommand(['--session', init.id, 'boot', '--from', pack.pack_path, '--json']);
+  assert.equal(boot.session.id, init.id);
+  assert.equal(boot.session.boot.status, 'booted');
+  assert.equal(boot.session.boot.active_pack, pack.pack_path);
+
+  const verifyReport = parseJsonCommand(['verify', '--report', '--json']);
+  assert.equal(verifyReport.kind, 'trasgo-verify-report');
+  assert.ok(Array.isArray(verifyReport.results) && verifyReport.results.length >= 5);
+
+  const verifyTc = parseJsonCommand(['verify', '--tc', '--dry-run', '--json']);
+  assert.equal(verifyTc.kind, 'trasgo-verify-run');
+  assert.equal(verifyTc.results[0].testId, 'v6-tc-factorial');
+
+  const evolveReview = parseJsonCommand(['evolve', '--review', '--json']);
+  assert.equal(evolveReview.kind, 'trasgo-evolve-list');
+
   const advice = parseJsonCommand([
     'advise',
     '--codec',

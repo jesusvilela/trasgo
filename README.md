@@ -27,6 +27,10 @@
 
 ## What is Trasgo?
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo §1 Codec Demo" width="800"/>
+</p>
+
 Trasgo is a self-initializing context compression codec and in-context reasoning protocol that treats the LLM context window as an active computational substrate. By factoring verbose natural language into a compact, multidimensional JSON representation (§1), it enables frontier models to induce a dense logic grammar from just three examples, effectively turning the forward pass of the transformer into a self-calibrating semantic runtime.
 
 ---
@@ -117,6 +121,10 @@ Unlike traditional frameworks, Trasgo does not "process" strings for the model. 
 ---
 
 ## CLI: The Orchestration Surface
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-live-demo.gif" alt="Trasgo CLI Demo" width="800"/>
+</p>
 
 The `trasgo` CLI acts as the host operating system for the semantic runtime. It manages session persistence, tracks certainty trajectories, and brokers between local and cloud runtimes.
 

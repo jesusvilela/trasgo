@@ -89,6 +89,17 @@ export function parsePacketStream(output) {
         flag = obj.ERR.flag || null;
         stepRef = Array.isArray(obj.ERR.delta_confidence) ? obj.ERR.delta_confidence[1] : null;
       }
+
+      // FM3 Detection: check for recursion depth in delta_confidence or step count
+      const dc = obj.ERR?.delta_confidence || obj.μ?.delta_confidence;
+      if (Array.isArray(dc)) {
+        const ref = String(dc[1] || '');
+        if (ref.includes('depth-2') || ref.includes('step-15')) {
+          hasError = true;
+          errBlock = errBlock || { err: 'FM3-imminent', cert: cert || 0.5 };
+          flag = flag || 'REQUEST_CHECKPOINT';
+        }
+      }
     }
   }
 

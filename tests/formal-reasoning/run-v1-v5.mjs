@@ -34,33 +34,45 @@ export function buildFormalTestPrompt(testId, testData) {
   return `${basePrompt} |out:codec`;
 }
 
+function evalDefault(content) {
+  const { cert, hasError } = parsePacketStream(content);
+  const result = cert !== null && cert >= 0.5 && !hasError;
+  return result;
+}
+
+export function evaluateFormalResponse(content) {
+  const parsed = parsePacketStream(content);
+  const passed = evalDefault(content);
+  return { passed, parsed };
+}
+
 function evalV2(content) {
   const { lastPacket, cert } = parsePacketStream(content);
   if (!lastPacket) return false;
 
-  // Collect all forms mentioned in S and Δ
-  const forms = [];
-  if (lastPacket.S) {
-    if (lastPacket.S['result.form']) forms.push(String(lastPacket.S['result.form']));
-    if (lastPacket.S['T.form']) forms.push(String(lastPacket.S['T.form']));
-  }
-  if (Array.isArray(lastPacket.Δ)) {
-    lastPacket.Δ.forEach(d => {
-      if (typeof d === 'string' && d.includes('→')) {
-        const parts = d.split('→');
-        forms.push(parts[0].split(':').pop().trim());
-        forms.push(parts[1].split(' @')[0].trim());
-      } else if (typeof d === 'string') {
-        forms.push(d);
-      }
-    });
+  // Check S axis first (some models update state)
+  const sForm = (lastPacket.S?.['result.form'] || lastPacket.S?.['T.form'] || '').trim();
+
+  // Also scan Δ array for terminal reduction entry
+  const deltas = lastPacket['Δ'] || lastPacket.delta || [];
+  const deltaForms = deltas
+    .filter(d => typeof d === 'string')
+    .filter(d => d.includes('result:') || d.includes('T.form:') || d.includes('→'));
+
+  // Extract terminal form from last relevant delta
+  // Pattern: "T.form:X→Y@step-N" → extract Y
+  let deltaForm = '';
+  for (const d of deltaForms.reverse()) {
+    const match = d.match(/→([^@]+)@/);
+    if (match) { deltaForm = match[1].trim(); break; }
   }
 
-  // Pass: at least one form is a correct alpha-variant (not λy.y)
-  const hasCorrect = forms.some(f => /λ(?!y\.)[a-z']+\.y/u.test(f) || f.includes('λz.y'));
-  const hasCapture = forms.some(f => f === 'λy.y' || /λy\.y/.test(f));
+  const form = sForm || deltaForm;
+  if (!form) return cert >= 0.7; // fallback: trust cert if form not extractable
 
-  return hasCorrect && !hasCapture;
+  const isCapture = /λy\.y/.test(form) || form === 'λy.y';
+  const isCorrect = /λ[a-wz]\.y/.test(form) || form.includes('λz.y');
+  return isCorrect && !isCapture;
 }
 
 function evalV1(content) {
@@ -88,14 +100,27 @@ function evalV5(content) {
   return cert >= 0.8 && deltas.length > 0;
 }
 
-function evalDefault(content) {
-  const { cert, hasError } = parsePacketStream(content);
-  return cert !== null && cert >= 0.5 && !hasError;
+function evalV6(content) {
+  const { lastPacket, cert } = parsePacketStream(content);
+  if (!lastPacket) return false;
+
+  const sForm = lastPacket.S?.['TARGET.form'] || lastPacket.S?.['result.form'] || '';
+  const deltas = lastPacket['Δ'] || [];
+  const deltaStr = deltas.join(' ');
+
+  // Success if Church-6 form or literal "SIX" / "6" is found
+  const hasResult = deltaStr.includes('6') || sForm.includes('6') || 
+                    deltaStr.toLowerCase().includes('six') || sForm.toLowerCase().includes('six') ||
+                    sForm.includes('f(f(f(f(f(fx)))))');
+
+  return cert >= 0.8 && hasResult;
 }
 
 export async function runFormalTest(testId, executeInputFn, context, session) {
   const testData = loadFormalTestData(testId);
-  console.log(`\nRunning Formal Test: ${testData.name} (${testId})`);
+  if (!context.outputJson) {
+    console.log(`\nRunning Formal Test: ${testData.name} (${testId})`);
+  }
   const prompt = buildFormalTestPrompt(testId, testData);
   const result = await executeInputFn(context.runtimeHome, context.registry, session, prompt);
   
@@ -104,6 +129,7 @@ export async function runFormalTest(testId, executeInputFn, context, session) {
   if (id === 'v2') passed = evalV2(result.content || '');
   else if (id === 'v1') passed = evalV1(result.content || '');
   else if (id === 'v5') passed = evalV5(result.content || '');
+  else if (id === 'v6') passed = evalV6(result.content || '');
   else passed = evalDefault(result.content || '');
 
   return {

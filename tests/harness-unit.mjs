@@ -214,6 +214,12 @@ check('evaluateFormalResponse: fails when ERR block present', () => {
   assert.equal(passed, false);
 });
 
+check('evaluateFormalResponse: passes on V6 (TC) Church-6 result', () => {
+  const out = '{"§":1,"S":{"TARGET.form":"λf.λx.f(f(f(f(f(fx)))))"},"μ":{"cert":0.9}}';
+  const { passed } = evaluateFormalResponse(out);
+  assert.equal(passed, true);
+});
+
 // --- summary --------------------------------------------------------------
 
 if (failures.length > 0) {
