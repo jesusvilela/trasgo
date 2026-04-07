@@ -82,7 +82,6 @@
         border-radius: 1rem;
         padding: 1rem;
       }
-      .kpi { font-size: 1.8rem; font-weight: 800; }
       .label { color: var(--text-dim); font-size: .92rem; }
       section { padding: 1.5rem 0 2rem; }
       h2 { font-size: clamp(1.4rem, 2vw, 2rem); margin: 0 0 .8rem; }
@@ -93,14 +92,6 @@
         background: rgba(16, 23, 57, .6);
         border-radius: .7rem;
         padding: .35rem .65rem;
-      }
-      .contributors { display: flex; flex-wrap: wrap; gap: .5rem; }
-      .contrib {
-        border: 1px solid var(--border);
-        background: rgba(16, 23, 57, .6);
-        border-radius: .65rem;
-        padding: .45rem .6rem;
-        font-size: .9rem;
       }
       .two-up {
         display: grid;
@@ -211,15 +202,6 @@
 
     <main class="container">
       <section>
-        <div class="grid" id="stats-grid">
-          <article class="card"><div class="kpi" id="stars">—</div><div class="label">GitHub Stars</div></article>
-          <article class="card"><div class="kpi" id="forks">—</div><div class="label">Forks</div></article>
-          <article class="card"><div class="kpi" id="issues">—</div><div class="label">Open Issues</div></article>
-          <article class="card"><div class="kpi" id="contributors-count">—</div><div class="label">Contributors</div></article>
-        </div>
-      </section>
-
-      <section>
         <h2>Live Sandbox</h2>
         <p class="lead">Try the trasgo CLI right in your browser. (Running a Hybrid Engine via Hugging Face Router: <code class="inline">EssentialAI/rnj-1-instruct:fastest</code>)</p>
         <div class="terminal-sandbox" onclick="document.getElementById('term-input').focus()">
@@ -246,15 +228,6 @@
         <p class="label">Installation instructions and advanced CLI usage are available in the <a href="https://github.com/jesusvilela/trasgo/blob/main/README.md">README.md</a>.</p>
       </section>
 
-      <section>
-        <h2>Why this site is community-first</h2>
-        <ul class="list">
-          <li>Live repository metrics keep the project pulse transparent.</li>
-          <li>Contributor wall updates from GitHub so new builders are visible immediately.</li>
-          <li>Recorded demos render directly here and in the README.</li>
-        </ul>
-      </section>
-
       <section class="grid">
         <article class="card">
           <h2>2026 dev stack alignment</h2>
@@ -267,19 +240,12 @@
           </div>
         </article>
         <article class="card">
-          <h2>Top contributors</h2>
-          <div class="contributors" id="contributors">
-            <span class="contrib">Loading contributors…</span>
+          <h2>Recorded demos</h2>
+          <div class="two-up">
+            <img class="demo" src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo codec demo" />
+            <img class="demo" src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" />
           </div>
         </article>
-      </section>
-
-      <section>
-        <h2>Recorded demos</h2>
-        <div class="two-up">
-          <img class="demo" src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo codec demo" />
-          <img class="demo" src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-live-demo.gif" alt="Trasgo runtime shell demo" />
-        </div>
       </section>
     </main>
 
@@ -292,50 +258,7 @@
       const REPO = "jesusvilela/trasgo";
       const format = new Intl.NumberFormat("en-US");
 
-      async function fetchJson(url) {
-        const response = await fetch(url, {
-          headers: {
-            Accept: "application/vnd.github+json"
-          }
-        });
-        if (!response.ok) throw new Error(`Request failed: ${url}`);
-        return response.json();
-      }
-
-      async function loadRepoStats() {
-        try {
-          const repo = await fetchJson(`https://api.github.com/repos/${REPO}`);
-          document.getElementById("stars").textContent = format.format(repo.stargazers_count ?? 0);
-          document.getElementById("forks").textContent = format.format(repo.forks_count ?? 0);
-          document.getElementById("issues").textContent = format.format(repo.open_issues_count ?? 0);
-        } catch {
-          document.getElementById("stats-grid").insertAdjacentHTML(
-            "beforeend",
-            '<article class="card"><div class="label">⚠️ Could not load live stats.</div></article>'
-          );
-        }
-      }
-
-      async function loadContributors() {
-        const wrap = document.getElementById("contributors");
-        try {
-          const contributors = await fetchJson(`https://api.github.com/repos/${REPO}/contributors?per_page=12`);
-          document.getElementById("contributors-count").textContent = format.format(contributors.length);
-          wrap.innerHTML = contributors
-            .slice(0, 12)
-            .map(
-              c => `<a class="contrib" href="${c.html_url}" target="_blank" rel="noreferrer">${c.login} · ${format.format(c.contributions)}</a>`
-            )
-            .join("");
-        } catch {
-          document.getElementById("contributors-count").textContent = "N/A";
-          wrap.innerHTML = '<span class="contrib">⚠️ Contributor feed unavailable.</span>';
-        }
-      }
-
       document.getElementById("updated").textContent = `Last refreshed ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}.`;
-      loadRepoStats();
-      loadContributors();
 
       // Sandbox Logic using Hugging Face Router (Hybrid Engine)
       const termBody = document.getElementById("term-body");
