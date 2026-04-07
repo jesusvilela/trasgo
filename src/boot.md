@@ -35,6 +35,18 @@ EX3:
  "Δ":["I.mode:LRM→SAR@2026-02","V.power:nominal→eco@2026-03"],
  "μ":{"scope":"earth-observation","urg":0.3,"cert":0.95}}
 = "Sentinel-6 satellite in LEO at 1336km, 66° inclination, 112-min period. Poseidon-4 altimeter switched from low-res to SAR mode in Feb 2026. Spacecraft power shifted to eco mode in March. Global ocean coverage, low urgency, very high certainty."
+
+EX4:
+{"§":1,
+ "E":{"op":["substitution","operation"]},
+ "S":{"op.safe":false},
+ "R":[],
+ "Δ":["op.status:attempting→blocked@step-1"],
+ "ERR":{"cert":0.4,"err":"FM1-capture-risk","flag":"REQUEST_VERIFICATION",
+        "delta_confidence":"[-0.6,step-1]"},
+ "μ":{"scope":"error-signal","urg":1.0,"cert":0.4,
+      "note":"substitution halted — correction turn required"}}
+= "Substitution attempt detected variable capture risk. Operation blocked. Certainty dropped to 0.4. Requesting verification before proceeding."
 ```
 
 ---
