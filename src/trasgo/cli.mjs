@@ -49,6 +49,8 @@ import {
 } from './demo-workflows.mjs';
 import { compileCot, expandCot, loadCotBoot } from './cot.mjs';
 import { runOptimizeReport, runTokenReport } from './token-science.mjs';
+import { parsePacketStream } from '../harness/err-watcher.mjs';
+import { createCorrectionInstruction } from '../harness/correction-injector.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
@@ -1681,14 +1683,36 @@ async function handleDemo(rest, context) {
 }
 
 async function handleSend(rest, context) {
-  const input = rest.join(' ').trim();
+  let maxCorrections = 1;
+  const args = [];
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === '--max-corrections' && rest[i + 1]) {
+      maxCorrections = parseInt(rest[++i], 10);
+    } else {
+      args.push(rest[i]);
+    }
+  }
+
+  const input = args.join(' ').trim();
   if (!input) {
     console.error(coral('send requires input text or a §P|BALANCE packet'));
     return 1;
   }
 
   const session = ensureSession(context);
-  const result = await executeInput(runtimeHome, registry, session, input);
+  let result = await executeInput(runtimeHome, registry, session, input);
+  
+  let parsed = parsePacketStream(result.content || '');
+  let corrections = 0;
+
+  while (parsed.hasError && parsed.certDrop < 0.5 && corrections < maxCorrections) {
+    console.error(coral(`\n[ERR Watcher] Detected low cert error (${parsed.certDrop}): ${parsed.errBlock.err}. Injecting Correction Turn...`));
+    const instruction = createCorrectionInstruction(parsed.lastPacket, parsed.errBlock, parsed.stepRef);
+    result = await executeInput(runtimeHome, registry, session, instruction);
+    parsed = parsePacketStream(result.content || '');
+    corrections++;
+  }
+
   setActiveSession(context, result.session);
   outputValue(context, result, () => {
     printResponse(result);
