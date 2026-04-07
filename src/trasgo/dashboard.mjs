@@ -16,10 +16,10 @@ import path from 'path';
 import process from 'node:process';
 import readline from 'node:readline';
 import { fileURLToPath } from 'url';
-import { buildScientificContext, runTokenReport } from './src/trasgo/token-science.mjs';
+import { buildScientificContext, runTokenReport } from './token-science.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TESTS_DIR = path.join(__dirname, 'tests');
+const TESTS_DIR = path.resolve(__dirname, '..', '..', 'tests');
 const ARGS = new Set(process.argv.slice(2));
 let scientificCache = null;
 
@@ -440,7 +440,7 @@ function loadScientificFixtures() {
     return scientificCache;
   }
 
-  const bootSeed = fs.readFileSync(path.join(__dirname, 'src', 'boot.md'), 'utf8');
+  const bootSeed = fs.readFileSync(path.join(__dirname, '..', 'boot.md'), 'utf8');
   const calibrationSeed = [
     'Dual-query calibration fixture.',
     'Question one asks the runtime to answer in codec form.',
@@ -448,8 +448,8 @@ function loadScientificFixtures() {
     'The calibration seed is intentionally short and repeatable so context budget claims stay measurable.',
   ].join(' ');
   const protocolSeed = [
-    fs.readFileSync(path.join(__dirname, 'src', 'mode-lock.md'), 'utf8'),
-    fs.readFileSync(path.join(__dirname, 'src', 'validate.md'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '..', 'mode-lock.md'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '..', 'validate.md'), 'utf8'),
   ].join('\n\n');
 
   const budgetReports = {

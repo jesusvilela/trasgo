@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2026-04-07
+### Fixed
+- **Dashboard Packaging**: Fixed `MODULE_NOT_FOUND` error when running `dashboard` from a global install by moving `dashboard.mjs` to `src/trasgo/` and correcting its internal relative paths.
+- **Smoke Tests**: Added explicit verification for the `dashboard` command in `packaged-smoke.mjs`.
+
 ## [0.2.0] - 2026-04-07
 ### Added
 - **Turing Completeness Probe**: Added `trasgo verify --tc` to execute recursive Factorial 3 computation (T8).

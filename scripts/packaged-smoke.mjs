@@ -110,6 +110,10 @@ function main() {
     assert.equal(cot.kind, 'trasgo-cot-advise');
     assert.equal(cot.answer, '12');
 
+    // Verify dashboard (doesn't support --json but should run without error)
+    const dashboard = runInstalled(launcherPath, ['dashboard'], workspaceDir, env);
+    assert.match(dashboard, /§1 Codec Observatory/i);
+
     process.stdout.write('packaged smoke ok\n');
   } finally {
     if (tarballPath && fs.existsSync(tarballPath)) {
