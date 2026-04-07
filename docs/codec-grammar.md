@@ -102,6 +102,25 @@ Format: `entity.attribute:from→to@when`
 
 All μ fields are optional.
 
+### `ERR` — Error Signaling & Correction Turn (CT)
+
+When operating as a semantic runtime, the codec encodes anomaly detection directly into the packet using the `ERR` block, usually accompanied by a drop in `μ.cert`.
+
+```json
+"ERR": {
+  "cert": 0.4,
+  "err": "FM1-imminent-capture-risk",
+  "flag": "REQUEST_VERIFICATION",
+  "delta_confidence": "[-0.6,step-1]"
+}
+```
+
+- **err:** A typed failure mode (e.g., `FM1-capture-avoidance`, `FM3-depth-collapse`).
+- **flag:** Directives for the runtime (e.g., `REQUEST_VERIFICATION`, `RESOLVED`).
+- **delta_confidence:** The magnitude of certainty drop and the step it occurred on.
+
+This triggers a **Correction Turn (CT)**, where the model can issue `§1|EVOLVE` or `§P|CHECKPOINT` rollbacks to revise its prior delta before proceeding.
+
 ---
 
 ## Custom axes

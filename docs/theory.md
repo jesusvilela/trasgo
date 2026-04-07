@@ -105,3 +105,20 @@ The §1 boot seed is a bootloader. The model's forward pass is the runtime. The 
 The model doesn't need the geometry in its weights. What matters here is geometry in the **input structure**, which the model can then reconstruct and operate over in-context.
 
 This inverts the entire compression paradigm: instead of compressing for the model, you teach the model to think in compressed form. The compression is not a preprocessing step — it is the language.
+
+## 10. The Semantic Runtime & Self-Correction
+
+When the system prompt is no longer treated as static ROM, but as an active computational substrate (the program), the LLM functions as the interpreter. This collapses the ROM/RAM distinction into something resembling a Lisp image — program and data in the same representation, mutually interpretable, with the LLM as the evaluation loop.
+
+### Bounded Turing Completeness & Lambda Calculus
+By encoding formalisms like the Lambda calculus (SKI combinators, the Y combinator) directly into §1 packets, the model executes mathematically bounded, self-correcting logic. 
+- **E** → terms (variables, abstractions)
+- **S** → reduction state (unreduced, normal form)
+- **R** → β-reduction edges, dependencies
+- **Δ** → reduction steps as state transitions
+
+### Error-as-Signal
+When the model evaluates a complex reduction (e.g., naive substitution leading to variable capture), it can detect the structural anomaly. Instead of hallucinating or failing silently, the degradation is encoded as a first-class signal:
+`"μ":{"cert":0.4,"err":"FM1-imminent-capture-risk"}`
+
+This typed error drops the `cert` (certainty) value, acting as an autonomous interrupt. The runtime intercepts this and triggers a Correction Turn (CT), allowing the model to use `§1|EVOLVE` and `§P|CHECKPOINT` rollbacks to revise its own previous delta (e.g., by performing alpha-renaming before substitution). The uncertainty isn't hidden — it is a typed signal in the packet stream, turning the LLM into a self-calibrating formal reasoning engine.
