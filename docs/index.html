@@ -313,7 +313,11 @@ trasgo calibrate</pre>
       <span id="updated"></span>
     </footer>
 
-    <script>
+    <script type="module">
+      import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.3";
+      
+      env.allowLocalModels = false;
+
       const REPO = "jesusvilela/trasgo";
       const format = new Intl.NumberFormat("en-US");
 
@@ -362,16 +366,20 @@ trasgo calibrate</pre>
       loadRepoStats();
       loadContributors();
 
-      // Sandbox Logic
+      // Sandbox Logic using actual WebAssembly LLM (Transformers.js)
       const termBody = document.getElementById("term-body");
       const termInput = document.getElementById("term-input");
       
+      let generator = null;
+      let isBooting = false;
+      let isProcessing = false;
+
       const termCommands = {
-        "trasgo --help": "Trasgo runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  boot       Boot the active session\n  pack       Pack session state\n  send       Send a packet or message\n  status     Show current routing status",
-        "trasgo status": "Session: sess-browser-101\nMode: initialized\nActive Runtime: Web Sandbox (Simulated rnj-1-instruct)",
+        "trasgo --help": "Trasgo runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  boot       Boot the active session (lazy-loads WASM engine)\n  pack       Pack session state\n  send       Send a packet or message\n  status     Show current routing status",
+        "trasgo status": "Session: sess-browser-101\nMode: initialized\nActive Runtime: WebAssembly Local Engine (Qwen2.5-0.5B)",
       };
 
-      termInput.addEventListener("keydown", function(e) {
+      termInput.addEventListener("keydown", async function(e) {
         if (e.key === "Enter") {
           const val = termInput.value.trim();
           termInput.value = "";
@@ -384,33 +392,100 @@ trasgo calibrate</pre>
             return;
           }
 
-          let response = "";
-          if (val.startsWith("trasgo init")) {
-            response = "Initializing new session...\nSession created: sess-browser-101";
-          } else if (val.startsWith("trasgo boot")) {
-            response = "Booting session...\n[OK] Codec grammar loaded.\n[OK] Broker active.\n[OK] Protocol layer initialized.";
-          } else if (val.startsWith("trasgo send")) {
-            response = 'Sending payload...\nReceived compressed response:\n<div class="term-line json">{"§":1,"Δ":["Q.status:answered"],"μ":{"cert":0.95}}</div>';
-          } else if (val.startsWith("trasgo pack")) {
-            response = "Packing session...\n[OK] Wrote .trasgo-runtime/packs/browser.json";
-          } else if (termCommands[val]) {
-            response = termCommands[val];
-          } else if (val.startsWith("trasgo")) {
-            response = `Unknown command or args: ${val}\nTry 'trasgo --help'`;
-          } else {
-            response = `bash: ${val.split(' ')[0]}: command not found`;
+          if (isProcessing) {
+             appendLine("System is busy. Please wait.", "err");
+             return;
           }
-          
-          if (response) {
-            response.split("\n").forEach(line => {
-              if (line.includes('<div')) {
-                const div = document.createElement("div");
-                div.innerHTML = line;
-                termBody.appendChild(div.firstChild);
-              } else {
-                appendLine(line);
+
+          if (val.startsWith("trasgo init")) {
+            appendLine("Initializing new session...\nSession created: sess-browser-101");
+          } else if (val.startsWith("trasgo boot")) {
+            if (generator) {
+              appendLine("Engine is already booted and active.", "green");
+            } else if (isBooting) {
+              appendLine("Engine is currently booting...", "yellow");
+            } else {
+              isBooting = true;
+              isProcessing = true;
+              appendLine("Booting session... allocating WebAssembly local engine.", "dim");
+              appendLine("Lazy-loading quantized weights (~350MB) via HTTP range requests.", "dim");
+              
+              const progressEl = document.createElement("div");
+              progressEl.className = "term-line yellow";
+              termBody.appendChild(progressEl);
+
+              try {
+                generator = await pipeline("text-generation", "onnx-community/Qwen2.5-0.5B-Instruct", {
+                  dtype: "q4",
+                  device: navigator.gpu ? "webgpu" : "wasm",
+                  progress_callback: (info) => {
+                    if (info.status === "progress") {
+                        progressEl.textContent = `[Boot] Downloading ${info.file}... ${Math.round(info.progress)}%`;
+                    } else if (info.status === "done") {
+                        progressEl.textContent = `[Boot] Loaded ${info.file}`;
+                    } else {
+                        progressEl.textContent = `[Boot] Loading model graph...`;
+                    }
+                    termBody.scrollTop = termBody.scrollHeight;
+                  }
+                });
+                progressEl.textContent = "[Boot] Engine successfully loaded into local memory.";
+                progressEl.className = "term-line green";
+                appendLine("[OK] Codec grammar loaded.\n[OK] Broker active.\n[OK] Protocol layer initialized.");
+              } catch (err) {
+                progressEl.textContent = `[Error] Failed to boot engine: ${err.message}`;
+                progressEl.className = "term-line err";
+                generator = null;
               }
-            });
+              isBooting = false;
+              isProcessing = false;
+            }
+          } else if (val.startsWith("trasgo send")) {
+            if (!generator) {
+              appendLine("Error: No active engine. Run 'trasgo boot' first to initialize the local WebAssembly LLM.", "err");
+            } else {
+              const query = val.replace("trasgo send", "").trim();
+              if (!query) {
+                appendLine("Error: No payload provided.", "err");
+              } else {
+                isProcessing = true;
+                appendLine("Sending payload... awaiting neural compression response:", "dim");
+                const loadingEl = document.createElement("div");
+                loadingEl.className = "term-line yellow";
+                loadingEl.textContent = "Processing...";
+                termBody.appendChild(loadingEl);
+
+                try {
+                  const messages = [
+                    { role: "system", content: "You are the Trasgo §1 codec runtime. Compress the user's intent into a JSON packet containing '§', 'E', 'S', 'Δ', 'μ'. Output ONLY JSON." },
+                    { role: "user", content: query }
+                  ];
+                  const prompt = generator.tokenizer.apply_chat_template(messages, { tokenize: false, add_generation_prompt: true });
+
+                  const output = await generator(prompt, {
+                    max_new_tokens: 150,
+                    temperature: 0.3,
+                    do_sample: true
+                  });
+                  
+                  const generated = output[0].generated_text.substring(prompt.length);
+                  loadingEl.textContent = generated;
+                  loadingEl.className = "term-line json";
+                } catch (err) {
+                  loadingEl.textContent = `Error during generation: ${err.message}`;
+                  loadingEl.className = "term-line err";
+                }
+                isProcessing = false;
+              }
+            }
+          } else if (val.startsWith("trasgo pack")) {
+            appendLine("Packing session...\n[OK] Wrote .trasgo-runtime/packs/browser.json");
+          } else if (termCommands[val]) {
+            appendLine(termCommands[val]);
+          } else if (val.startsWith("trasgo")) {
+            appendLine(`Unknown command or args: ${val}\nTry 'trasgo --help'`);
+          } else {
+            appendLine(`bash: ${val.split(' ')[0]}: command not found`);
           }
           
           termBody.scrollTop = termBody.scrollHeight;
@@ -418,10 +493,12 @@ trasgo calibrate</pre>
       });
 
       function appendLine(text, className) {
-        const el = document.createElement("div");
-        el.className = "term-line" + (className ? " " + className : "");
-        el.textContent = text;
-        termBody.appendChild(el);
+        text.split("\n").forEach(line => {
+           const el = document.createElement("div");
+           el.className = "term-line" + (className ? " " + className : "");
+           el.textContent = line;
+           termBody.appendChild(el);
+        });
       }
     </script>
   </body>
