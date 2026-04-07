@@ -51,6 +51,9 @@ import { compileCot, expandCot, loadCotBoot } from './cot.mjs';
 import { runOptimizeReport, runTokenReport } from './token-science.mjs';
 import { parsePacketStream } from '../harness/err-watcher.mjs';
 import { createCorrectionInstruction } from '../harness/correction-injector.mjs';
+import { writeCheckpoint, logCertTrajectory, logError } from '../harness/checkpoint.mjs';
+import { analyzeErrorHistory } from '../harness/pattern-detector.mjs';
+import { proposeEvolution, saveProposal, listProposals } from '../harness/evolution-proposer.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
@@ -1703,6 +1706,11 @@ async function handleSend(rest, context) {
   let result = await executeInput(runtimeHome, registry, session, input);
   
   let parsed = parsePacketStream(result.content || '');
+  
+  if (parsed.cert !== null) logCertTrajectory(session, parsed.cert, parsed.stepRef);
+  if (parsed.hasCheckpoint && parsed.lastPacket) writeCheckpoint(session, parsed.lastPacket);
+  if (parsed.hasError) logError(session, parsed.errBlock);
+
   let corrections = 0;
 
   while (parsed.hasError && parsed.certDrop < 0.5 && corrections < maxCorrections) {
@@ -1710,14 +1718,66 @@ async function handleSend(rest, context) {
     const instruction = createCorrectionInstruction(parsed.lastPacket, parsed.errBlock, parsed.stepRef);
     result = await executeInput(runtimeHome, registry, session, instruction);
     parsed = parsePacketStream(result.content || '');
+    
+    if (parsed.cert !== null) logCertTrajectory(session, parsed.cert, parsed.stepRef);
+    if (parsed.hasCheckpoint && parsed.lastPacket) writeCheckpoint(session, parsed.lastPacket);
+    if (parsed.hasError) logError(session, parsed.errBlock);
+
     corrections++;
   }
+
+  const pattern = analyzeErrorHistory(session.error_history || []);
+  if (pattern.systematic && !(session.evolved_fms || []).includes(pattern.dominantFM)) {
+    const proposal = proposeEvolution(pattern.dominantFM, session);
+    if (proposal) {
+      session.evolved_fms = session.evolved_fms || [];
+      session.evolved_fms.push(pattern.dominantFM);
+      const filename = saveProposal(runtimeHome.stateDir, proposal);
+      console.log(gold(`\n[Harness] Systematic failure pattern detected (${pattern.dominantFM}).`));
+      console.log(gold(`Proposed §1|EVOLVE to mitigate this pattern. Saved as ${filename}.`));
+      console.log(gold(`Run 'trasgo evolve --review' to inspect or 'trasgo evolve --apply ${filename}' to integrate.`));
+    }
+  }
+
+  saveSession(runtimeHome.stateDir, session);
 
   setActiveSession(context, result.session);
   outputValue(context, result, () => {
     printResponse(result);
   });
   return 0;
+}
+
+async function handleEvolve(rest, context) {
+  if (rest[0] === '--review') {
+    const proposals = listProposals(runtimeHome.stateDir);
+    if (proposals.length === 0) {
+      console.log('No pending proposals.');
+      return 0;
+    }
+    for (const p of proposals) {
+      console.log(accent(`\n--- Proposal: ${p.id} ---`));
+      console.log(p.content);
+    }
+    return 0;
+  }
+  if (rest[0] === '--apply' && rest[1]) {
+    const session = ensureSession(context);
+    const proposals = listProposals(runtimeHome.stateDir);
+    const target = proposals.find(p => p.id === rest[1]);
+    if (!target) {
+      console.error(coral(`Proposal not found: ${rest[1]}`));
+      return 1;
+    }
+    const propJson = JSON.parse(target.content);
+    session.evolved_axes = session.evolved_axes || [];
+    session.evolved_axes.push(propJson);
+    saveSession(runtimeHome.stateDir, session);
+    console.log(mint(`[OK] Applied proposal ${rest[1]} to session ${session.id}`));
+    return 0;
+  }
+  console.error(coral('usage: trasgo evolve <--review | --apply [id]>'));
+  return 1;
 }
 
 function printHelp() {
@@ -1846,6 +1906,7 @@ async function executeCommand(argv, context) {
   if (command === 'mcp') return handleMcp(rest, context);
   if (command === 'demo') return handleDemo(rest, context);
   if (command === 'send' || command === 'packet') return handleSend(rest, context);
+  if (command === 'evolve') return handleEvolve(rest, context);
 
   if (command === 'providers' || command === 'runtimes') {
     outputValue(context, { kind: 'trasgo-runtime-list', runtimes: runtimeRows() }, () => {
