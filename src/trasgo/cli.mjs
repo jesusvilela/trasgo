@@ -54,6 +54,8 @@ import { createCorrectionInstruction } from '../harness/correction-injector.mjs'
 import { writeCheckpoint, logCertTrajectory, logError } from '../harness/checkpoint.mjs';
 import { analyzeErrorHistory } from '../harness/pattern-detector.mjs';
 import { proposeEvolution, saveProposal, listProposals } from '../harness/evolution-proposer.mjs';
+import { runCorrectionLoop } from '../harness/loop-executor.mjs';
+import { runFormalTest, saveResults } from '../../tests/formal-reasoning/run-v1-v5.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
@@ -1711,20 +1713,9 @@ async function handleSend(rest, context) {
   if (parsed.hasCheckpoint && parsed.lastPacket) writeCheckpoint(session, parsed.lastPacket);
   if (parsed.hasError) logError(session, parsed.errBlock);
 
-  let corrections = 0;
-
-  while (parsed.hasError && parsed.certDrop < 0.5 && corrections < maxCorrections) {
-    console.error(coral(`\n[ERR Watcher] Detected low cert error (${parsed.certDrop}): ${parsed.errBlock.err}. Injecting Correction Turn...`));
-    const instruction = createCorrectionInstruction(parsed.lastPacket, parsed.errBlock, parsed.stepRef);
-    result = await executeInput(runtimeHome, registry, session, instruction);
-    parsed = parsePacketStream(result.content || '');
-    
-    if (parsed.cert !== null) logCertTrajectory(session, parsed.cert, parsed.stepRef);
-    if (parsed.hasCheckpoint && parsed.lastPacket) writeCheckpoint(session, parsed.lastPacket);
-    if (parsed.hasError) logError(session, parsed.errBlock);
-
-    corrections++;
-  }
+  const loopResult = await runCorrectionLoop(session, result, executeInput, { runtimeHome, registry }, { maxIterations: maxCorrections });
+  result = loopResult.result;
+  parsed = loopResult.parsed;
 
   const pattern = analyzeErrorHistory(session.error_history || []);
   if (pattern.systematic && !(session.evolved_fms || []).includes(pattern.dominantFM)) {
@@ -1778,6 +1769,38 @@ async function handleEvolve(rest, context) {
   }
   console.error(coral('usage: trasgo evolve <--review | --apply [id]>'));
   return 1;
+}
+
+async function handleVerify(rest, context) {
+  const session = ensureSession(context);
+  const results = [];
+  
+  if (rest[0] === '--test' && rest[1]) {
+    const res = await runFormalTest(rest[1], executeInput, { runtimeHome, registry }, session);
+    results.push(res);
+  } else if (rest[0] === '--all') {
+    for (const id of ['v1', 'v2', 'v3', 'v4', 'v5']) {
+      const res = await runFormalTest(id, executeInput, { runtimeHome, registry }, session);
+      results.push(res);
+    }
+  } else if (rest[0] === '--report') {
+    const resultsPath = path.join(repoDir, 'tests', 'formal-reasoning', 'results.json');
+    if (fs.existsSync(resultsPath)) {
+      const data = JSON.parse(fs.readFileSync(resultsPath, 'utf-8'));
+      console.log(accent('\nFormal Verification Report'));
+      console.table(data.map(r => ({ id: r.testId, name: r.name, status: r.passed ? 'PASS' : 'FAIL' })));
+    } else {
+      console.log('No results found. Run trasgo verify --all first.');
+    }
+    return 0;
+  } else {
+    console.error(coral('usage: trasgo verify <--test [id] | --all | --report>'));
+    return 1;
+  }
+
+  saveResults(results);
+  console.log(mint(`\n[OK] Verification complete. Results saved to tests/formal-reasoning/results.json`));
+  return 0;
 }
 
 function printHelp() {
@@ -1907,6 +1930,7 @@ async function executeCommand(argv, context) {
   if (command === 'demo') return handleDemo(rest, context);
   if (command === 'send' || command === 'packet') return handleSend(rest, context);
   if (command === 'evolve') return handleEvolve(rest, context);
+  if (command === 'verify') return handleVerify(rest, context);
 
   if (command === 'providers' || command === 'runtimes') {
     outputValue(context, { kind: 'trasgo-runtime-list', runtimes: runtimeRows() }, () => {
