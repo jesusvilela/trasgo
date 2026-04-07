@@ -251,7 +251,7 @@ trasgo calibrate</pre>
 
       <section>
         <h2>Live Sandbox</h2>
-        <p class="lead">Try the trasgo CLI right in your browser. (Running a local WebAssembly <code class="inline">Qwen2.5-0.5B</code> instance)</p>
+        <p class="lead">Try the trasgo CLI right in your browser. (Running a Hybrid Engine via Together AI: <code class="inline">essentialai/rnj-1-instruct</code>)</p>
         <div class="terminal-sandbox" onclick="document.getElementById('term-input').focus()">
           <div class="terminal-header">
             <span class="dot red"></span>
@@ -313,11 +313,7 @@ trasgo calibrate</pre>
       <span id="updated"></span>
     </footer>
 
-    <script type="module">
-      import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.3";
-      
-      env.allowLocalModels = false;
-
+    <script>
       const REPO = "jesusvilela/trasgo";
       const format = new Intl.NumberFormat("en-US");
 
@@ -366,17 +362,20 @@ trasgo calibrate</pre>
       loadRepoStats();
       loadContributors();
 
-      // Sandbox Logic using actual WebAssembly LLM (Transformers.js)
+      // Sandbox Logic using Together AI API (Hybrid Engine)
       const termBody = document.getElementById("term-body");
       const termInput = document.getElementById("term-input");
       
-      let generator = null;
-      let isBooting = false;
+      let apiKey = localStorage.getItem("trasgo_together_key") || "";
+      let isBooted = false;
       let isProcessing = false;
 
+      function getStatus() {
+        return `Session: sess-browser-101\nMode: ${isBooted ? 'booted' : 'initialized'}\nActive Runtime: Hybrid Engine (essentialai/rnj-1-instruct via Together AI)\nAPI Key: ${apiKey ? '[SET - HIDDEN]' : '[NOT SET]'}`;
+      }
+
       const termCommands = {
-        "trasgo --help": "Trasgo runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  boot       Boot the active session (lazy-loads WASM engine)\n  pack       Pack session state\n  send       Send a packet or message\n  status     Show current routing status",
-        "trasgo status": "Session: sess-browser-101\nMode: initialized\nActive Runtime: WebAssembly Local Engine (Qwen2.5-0.5B)",
+        "trasgo --help": "Trasgo runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  login      Set Together AI API key (trasgo login <key>)\n  boot       Boot the active session\n  pack       Pack session state\n  send       Send a packet or message\n  status     Show current routing status",
       };
 
       termInput.addEventListener("keydown", async function(e) {
@@ -385,7 +384,11 @@ trasgo calibrate</pre>
           termInput.value = "";
           if (!val) return;
           
-          appendLine(`$ ${val}`, "cmd");
+          if (val.startsWith("trasgo login ")) {
+             appendLine(`$ trasgo login [HIDDEN]`, "cmd");
+          } else {
+             appendLine(`$ ${val}`, "cmd");
+          }
           
           if (val === "clear") {
             termBody.innerHTML = "";
@@ -397,52 +400,47 @@ trasgo calibrate</pre>
              return;
           }
 
-          if (val.startsWith("trasgo init")) {
+          if (val.startsWith("trasgo login")) {
+            const parts = val.split(" ");
+            if (parts.length > 2 && parts[2].trim() !== "") {
+              apiKey = parts[2].trim();
+              localStorage.setItem("trasgo_together_key", apiKey);
+              appendLine("[OK] Together AI API key securely stored in local browser storage.", "green");
+            } else {
+              appendLine("Error: Missing API key. Usage: trasgo login <your-key>", "err");
+            }
+          } else if (val.startsWith("trasgo init")) {
             appendLine("Initializing new session...\nSession created: sess-browser-101");
           } else if (val.startsWith("trasgo boot")) {
-            if (generator) {
+            if (isBooted) {
               appendLine("Engine is already booted and active.", "green");
-            } else if (isBooting) {
-              appendLine("Engine is currently booting...", "yellow");
+            } else if (!apiKey) {
+              appendLine("Error: No API key found. Please run 'trasgo login <key>' first.", "err");
             } else {
-              isBooting = true;
               isProcessing = true;
-              appendLine("Booting session... allocating WebAssembly local engine.", "dim");
-              appendLine("Lazy-loading quantized weights (~350MB) via HTTP range requests.", "dim");
+              appendLine("Booting session... connecting to Hybrid Engine.", "dim");
+              appendLine("Verifying Together AI authentication...", "dim");
               
-              const progressEl = document.createElement("div");
-              progressEl.className = "term-line yellow";
-              termBody.appendChild(progressEl);
-
               try {
-                generator = await pipeline("text-generation", "onnx-community/Qwen2.5-0.5B-Instruct", {
-                  dtype: "q4",
-                  device: navigator.gpu ? "webgpu" : "wasm",
-                  progress_callback: (info) => {
-                    if (info.status === "progress") {
-                        progressEl.textContent = `[Boot] Downloading ${info.file}... ${Math.round(info.progress)}%`;
-                    } else if (info.status === "done") {
-                        progressEl.textContent = `[Boot] Loaded ${info.file}`;
-                    } else {
-                        progressEl.textContent = `[Boot] Loading model graph...`;
-                    }
-                    termBody.scrollTop = termBody.scrollHeight;
-                  }
+                // Check auth lightly
+                const check = await fetch("https://api.together.xyz/v1/models", {
+                  headers: { "Authorization": `Bearer ${apiKey}` }
                 });
-                progressEl.textContent = "[Boot] Engine successfully loaded into local memory.";
-                progressEl.className = "term-line green";
+                if (!check.ok) throw new Error("Authentication failed or API rejected request.");
+                
+                isBooted = true;
+                appendLine("[Boot] Hybrid engine successfully connected to essentialai/rnj-1-instruct.", "green");
                 appendLine("[OK] Codec grammar loaded.\n[OK] Broker active.\n[OK] Protocol layer initialized.");
               } catch (err) {
-                progressEl.textContent = `[Error] Failed to boot engine: ${err.message}`;
-                progressEl.className = "term-line err";
-                generator = null;
+                appendLine(`[Error] Failed to connect: ${err.message}`, "err");
               }
-              isBooting = false;
               isProcessing = false;
             }
+          } else if (val.startsWith("trasgo status")) {
+            appendLine(getStatus());
           } else if (val.startsWith("trasgo send")) {
-            if (!generator) {
-              appendLine("Error: No active engine. Run 'trasgo boot' first to initialize the local WebAssembly LLM.", "err");
+            if (!isBooted) {
+              appendLine("Error: Hybrid engine not booted. Run 'trasgo boot' first.", "err");
             } else {
               const query = val.replace("trasgo send", "").trim();
               if (!query) {
@@ -452,23 +450,43 @@ trasgo calibrate</pre>
                 appendLine("Sending payload... awaiting neural compression response:", "dim");
                 const loadingEl = document.createElement("div");
                 loadingEl.className = "term-line yellow";
-                loadingEl.textContent = "Processing...";
+                loadingEl.textContent = "Processing request on rnj-1-instruct cluster...";
                 termBody.appendChild(loadingEl);
 
                 try {
                   const messages = [
-                    { role: "system", content: "You are the Trasgo §1 codec runtime. Compress the user's intent into a JSON packet containing '§', 'E', 'S', 'Δ', 'μ'. Output ONLY JSON." },
+                    { role: "system", content: "You are the Trasgo §1 codec runtime. Compress the user's intent into a JSON packet containing '§', 'E', 'S', 'Δ', 'μ'. Output ONLY valid JSON." },
                     { role: "user", content: query }
                   ];
-                  const prompt = generator.tokenizer.apply_chat_template(messages, { tokenize: false, add_generation_prompt: true });
-
-                  const output = await generator(prompt, {
-                    max_new_tokens: 150,
-                    temperature: 0.3,
-                    do_sample: true
-                  });
                   
-                  const generated = output[0].generated_text.substring(prompt.length);
+                  const response = await fetch("https://api.together.xyz/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                      model: "essentialai/rnj-1-instruct",
+                      messages: messages,
+                      temperature: 0.3,
+                      max_tokens: 250,
+                      stream: false
+                    })
+                  });
+
+                  if (!response.ok) {
+                     const errorData = await response.json();
+                     throw new Error(errorData.error?.message || "Unknown API Error");
+                  }
+                  
+                  const data = await response.json();
+                  let generated = data.choices[0].message.content;
+                  
+                  // Strip markdown formatting if the model wrapped the JSON
+                  if (generated.startsWith("```json")) {
+                    generated = generated.replace(/^```json\n/, "").replace(/\n```$/, "");
+                  }
+
                   loadingEl.textContent = generated;
                   loadingEl.className = "term-line json";
                 } catch (err) {
