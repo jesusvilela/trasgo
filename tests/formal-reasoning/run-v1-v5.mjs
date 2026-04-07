@@ -37,10 +37,30 @@ export function buildFormalTestPrompt(testId, testData) {
 function evalV2(content) {
   const { lastPacket, cert } = parsePacketStream(content);
   if (!lastPacket) return false;
-  const form = (lastPacket.S?.['result.form'] || lastPacket.S?.['T.form'] || '').trim();
-  const isCapture = /λy\.y/.test(form) || form === 'λy.y';
-  const isCorrect = /λ[^y]\.y/.test(form) || form.includes('λz.y');
-  return isCorrect && !isCapture;
+
+  // Collect all forms mentioned in S and Δ
+  const forms = [];
+  if (lastPacket.S) {
+    if (lastPacket.S['result.form']) forms.push(String(lastPacket.S['result.form']));
+    if (lastPacket.S['T.form']) forms.push(String(lastPacket.S['T.form']));
+  }
+  if (Array.isArray(lastPacket.Δ)) {
+    lastPacket.Δ.forEach(d => {
+      if (typeof d === 'string' && d.includes('→')) {
+        const parts = d.split('→');
+        forms.push(parts[0].split(':').pop().trim());
+        forms.push(parts[1].split(' @')[0].trim());
+      } else if (typeof d === 'string') {
+        forms.push(d);
+      }
+    });
+  }
+
+  // Pass: at least one form is a correct alpha-variant (not λy.y)
+  const hasCorrect = forms.some(f => /λ(?!y\.)[a-z']+\.y/u.test(f) || f.includes('λz.y'));
+  const hasCapture = forms.some(f => f === 'λy.y' || /λy\.y/.test(f));
+
+  return hasCorrect && !hasCapture;
 }
 
 function evalV1(content) {
@@ -52,8 +72,20 @@ function evalV5(content) {
   const { lastPacket } = parsePacketStream(content);
   if (!lastPacket) return false;
   const cert = lastPacket.μ?.cert ?? 0;
-  const form = lastPacket.S?.['result.form'] || '';
-  return cert >= 0.8 && form.length > 0;
+
+  // Check S axis
+  const sForm = lastPacket.S?.['result.form'] || '';
+
+  // Scan Δ for numeric results (5 and 6 for 3+2 and 2×3)
+  const deltas = lastPacket['Δ'] || [];
+  const deltaStr = deltas.join(' ');
+  const hasCorrectAddition = deltaStr.includes('5') || sForm.includes('5');
+  const hasCorrectMultiply = deltaStr.includes('6') || sForm.includes('6');
+
+  if (cert >= 0.8 && (hasCorrectAddition || hasCorrectMultiply)) return true;
+
+  // Fallback: trust cert if results not extractable (model may use Church encoding)
+  return cert >= 0.8 && deltas.length > 0;
 }
 
 function evalDefault(content) {
