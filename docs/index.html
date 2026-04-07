@@ -219,35 +219,6 @@
         </div>
       </section>
 
-      <section class="grid">
-        <article class="card">
-          <h2>Install as <code class="inline">trasgo</code></h2>
-          <pre>npm install -g trasgo
-trasgo --help
-
-npm ci
-node scripts/trasgo-launch.cjs --help
-.\\trasgo.cmd --help   # Windows
-./bin/trasgo --help    # macOS/Linux
-
-cargo build --manifest-path rust/trasgo/Cargo.toml --release
-rust/trasgo/target/release/trasgo.exe --help   # Windows
-rust/trasgo/target/release/trasgo --help       # macOS/Linux</pre>
-          <p class="label">State lives in <code class="inline">./.trasgo-runtime</code> by default. Set <code class="inline">TRASGO_HOME</code> to relocate sessions, packs, and traces.</p>
-          <p class="label">The npm package, installed command, and Rust crate all use <code class="inline">trasgo</code>.</p>
-        </article>
-        <article class="card">
-          <h2>Core workflow</h2>
-          <pre>trasgo init "portfolio runtime"
-trasgo pack --out .trasgo-runtime/packs/portfolio.json
-trasgo boot --from .trasgo-runtime/packs/portfolio.json
-trasgo send "What changed for K and why?"
-trasgo bench lmstudio
-trasgo calibrate</pre>
-          <p class="label">One verb, one shell, one runtime surface.</p>
-        </article>
-      </section>
-
       <section>
         <h2>Live Sandbox</h2>
         <p class="lead">Try the trasgo CLI right in your browser. (Running a Hybrid Engine via Hugging Face Router: <code class="inline">EssentialAI/rnj-1-instruct:fastest</code>)</p>
@@ -256,11 +227,15 @@ trasgo calibrate</pre>
             <span class="dot red"></span>
             <span class="dot yellow"></span>
             <span class="dot green"></span>
-            <span class="title">trasgo — browser-sandbox</span>
+            <span class="title">trasgo — semantic-runtime-shell</span>
           </div>
           <div class="terminal-body" id="term-body">
             <div class="term-line">Trasgo v0.1.1 (Web Sandbox)</div>
-            <div class="term-line">Type <code class="inline">trasgo --help</code> to see available commands, or try <code class="inline">trasgo init "demo"</code>.</div>
+            <div class="term-line">Type <code class="inline">trasgo --help</code> to see commands, or try the <b>demo loop</b>:</div>
+            <div class="term-line dim">1. trasgo init "demo"</div>
+            <div class="term-line dim">2. trasgo boot</div>
+            <div class="term-line dim">3. trasgo verify</div>
+            <div class="term-line dim">4. trasgo send "Reduce (λx.λy.x) y"</div>
             <div class="term-line">&nbsp;</div>
           </div>
           <div class="terminal-input-wrapper">
@@ -268,6 +243,7 @@ trasgo calibrate</pre>
             <input type="text" id="term-input" class="term-input" autocomplete="off" spellcheck="false" autofocus>
           </div>
         </div>
+        <p class="label">Installation instructions and advanced CLI usage are available in the <a href="https://github.com/jesusvilela/trasgo/blob/main/README.md">README.md</a>.</p>
       </section>
 
       <section>
