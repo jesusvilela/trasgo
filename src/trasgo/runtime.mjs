@@ -104,6 +104,11 @@ function normalizeSession(session, registry) {
   session.skill_state.injected ||= [];
   session.mcp_mounts ||= ['runtime-registry'];
   session.history ||= [];
+  session.checkpoints ||= [];
+  session.error_history ||= [];
+  session.cert_trajectory ||= [];
+  session.evolved_axes ||= [];
+  session.evolved_fms ||= [];
   session.footprints ||= seededFootprints(registry);
   session.contract ||= defaultContract(registry);
   session.workflow ||= defaultWorkflowState();

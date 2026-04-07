@@ -9,6 +9,8 @@ export function parsePacketStream(output) {
   let flag = null;
   let stepRef = null;
   let lastPacket = null;
+  let cert = null;
+  let hasCheckpoint = false;
 
   // Extract JSON blocks
   const jsonRegex = /\{[\s\S]*?\}/g;
@@ -16,8 +18,14 @@ export function parsePacketStream(output) {
   while ((match = jsonRegex.exec(output)) !== null) {
     try {
       const obj = JSON.parse(match[0]);
+      if (obj['§P'] === 'checkpoint') {
+        hasCheckpoint = true;
+      }
       if (obj['§'] === 1) {
         lastPacket = obj;
+        if (obj.μ && obj.μ.cert !== undefined) {
+          cert = obj.μ.cert;
+        }
         if (obj.ERR) {
           hasError = true;
           errBlock = obj.ERR;
@@ -31,7 +39,7 @@ export function parsePacketStream(output) {
     }
   }
 
-  return { hasError, errBlock, certDrop, flag, stepRef, lastPacket };
+  return { hasError, errBlock, certDrop, flag, stepRef, lastPacket, cert, hasCheckpoint };
 }
 
 export function buildCorrectionTurn(packetState, errBlock) {

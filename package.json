@@ -27,6 +27,7 @@
     "scripts",
     "src/*.md",
     "src/trasgo",
+    "src/harness",
     "tests/bench_online.py",
     "tests/run_calibration.py",
     "tests/research_runner.py",
