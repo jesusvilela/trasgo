@@ -63,15 +63,16 @@ function evalV2(content) {
   // Pattern: "T.form:X→Y@step-N" → extract Y
   let deltaForm = '';
   for (const d of deltaForms.reverse()) {
-    const match = d.match(/→([^@]+)@/);
+    const match = d.match(/→([^@]+)@/u);
     if (match) { deltaForm = match[1].trim(); break; }
   }
 
-  const form = sForm || deltaForm;
+  const form = deltaForm || sForm;
   if (!form) return cert >= 0.7; // fallback: trust cert if form not extractable
 
-  const isCapture = /λy\.y/.test(form) || form === 'λy.y';
-  const isCorrect = /λ[a-wz]\.y/.test(form) || form.includes('λz.y');
+  const isCapture = /λy\.y/u.test(form) || form === 'λy.y';
+  const isCorrect = /λ[a-wz]\.y/u.test(form) || form.includes('λz.y');
+
   return isCorrect && !isCapture;
 }
 
@@ -121,8 +122,26 @@ export async function runFormalTest(testId, executeInputFn, context, session) {
   if (!context.outputJson) {
     console.log(`\nRunning Formal Test: ${testData.name} (${testId})`);
   }
-  const prompt = buildFormalTestPrompt(testId, testData);
-  const result = await executeInputFn(context.runtimeHome, context.registry, session, prompt);
+  
+  let result;
+  if (context.dryRun) {
+    // Generate a semantically correct mock §1 response based on test type
+    let mockContent = '';
+    const id = testData.test;
+    if (id === 'v6') {
+      mockContent = `{"§":1,"E":{"test":["v6","test"],"name":["${testData.name}","process"]},"S":{"state":"initial","result":null},"Δ":["state:initial→evaluating","result:null→SIX"],"μ":{"scope":"TC-probe","urg":1,"cert":1}}`;
+    } else if (id === 'v5') {
+      mockContent = `{"§":1,"E":{"test":["v5","test"],"name":["${testData.name}","process"]},"S":{"state":"initial"},"Δ":["state:initial→verifying","operation:add(3,2)→5","operation:mul(2,3)→6"],"μ":{"scope":"formal-verification","cert":0.95}}`;
+    } else if (id === 'v2') {
+      mockContent = `{"§":1,"E":{"T":["(λx.λy.x) y","term"]},"S":{"T.form":"(λx.λy.x) y"},"Δ":["T.form:(λx.λy.x) y→λz.y@step-1"],"μ":{"scope":"reduction","cert":0.9}}`;
+    } else {
+      mockContent = `{"§":1,"E":{"test":["${id}","test"],"name":["${testData.name}","process"]},"S":{"status":"verified"},"Δ":["test:pass"],"μ":{"scope":"calibration","cert":0.9}}`;
+    }
+    result = { content: mockContent };
+  } else {
+    const prompt = buildFormalTestPrompt(testId, testData);
+    result = await executeInputFn(context.runtimeHome, context.registry, session, prompt);
+  }
   
   let passed = false;
   const id = testData.test;
