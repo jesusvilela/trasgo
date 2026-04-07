@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.3] - 2026-04-07
+### Fixed
+- **Logo Visibility**: Added `symbols` as a fallback image backend for `chafa`, ensuring the Trasgo logo is visible in standard terminals (Mac Terminal.app, generic zsh/bash) even without advanced image protocol support.
+- **Package Assets**: Explicitly included `trasgo.png` in the NPM package root to ensure the CLI can find it for rendering.
+- **Dashboard Resolution**: Refined the `dashboard.mjs` root proxy to improve module resolution across different Node.js environments.
+
 ## [0.2.2] - 2026-04-07
 ### Fixed
 - **Dashboard Availability**: Implemented a root proxy script `dashboard.mjs` that redirects to the core implementation in `src/trasgo/`. This ensures the `dashboard` command works reliably in global NPM installations regardless of how Node.js resolves modules.

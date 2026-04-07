@@ -205,7 +205,8 @@ function detectImageBackend() {
   if (process.env.WT_SESSION) return 'sixels';
   if (process.env.TERM_PROGRAM === 'iTerm.app') return 'iterm';
   if (process.env.TERM?.includes('kitty') || process.env.KITTY_WINDOW_ID) return 'kitty';
-  return null;
+  // Fallback to symbols (ASCII/Unicode) which works everywhere if chafa is present
+  return 'symbols';
 }
 
 function renderInlineLogo(width) {
