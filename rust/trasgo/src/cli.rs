@@ -41,6 +41,8 @@ enum Commands {
     Tokens(TokenArgs),
     Optimize(OptimizeArgs),
     Passthrough(PassthroughArgs),
+    #[command(external_subcommand)]
+    External(Vec<String>),
 }
 
 #[derive(Args, Debug, Default)]
@@ -137,7 +139,7 @@ pub fn run() -> Result<()> {
         backend: cli.backend.clone(),
     };
     let base_dir = match cli.repo_root {
-        Some(path) => path,
+        Some(ref path) => path.clone(),
         None => storage::discover_repo_root()?,
     };
     let registry = storage::load_registry(&base_dir)?;
@@ -152,7 +154,41 @@ pub fn run() -> Result<()> {
         Commands::Tokens(args) => run_tokens(&base_dir, &flags, args),
         Commands::Optimize(args) => run_optimize(&base_dir, &flags, args),
         Commands::Passthrough(args) => {
-            let code = legacy::passthrough(&base_dir, &args.args)?;
+            let mut full_args = Vec::new();
+            if flags.json { full_args.push("--json".to_string()); }
+            if let Some(session) = &flags.session {
+                full_args.push("--session".to_string());
+                full_args.push(session.clone());
+            }
+            if let Some(repo) = &cli.repo_root {
+                full_args.push("--repo-root".to_string());
+                full_args.push(repo.to_string_lossy().into_owned());
+            }
+            if cli.backend != "native" {
+                full_args.push("--backend".to_string());
+                full_args.push(cli.backend.clone());
+            }
+            full_args.extend(args.args.clone());
+            let code = legacy::passthrough(&base_dir, &full_args)?;
+            std::process::exit(code);
+        }
+        Commands::External(args) => {
+            let mut full_args = Vec::new();
+            if flags.json { full_args.push("--json".to_string()); }
+            if let Some(session) = &flags.session {
+                full_args.push("--session".to_string());
+                full_args.push(session.clone());
+            }
+            if let Some(repo) = &cli.repo_root {
+                full_args.push("--repo-root".to_string());
+                full_args.push(repo.to_string_lossy().into_owned());
+            }
+            if cli.backend != "native" {
+                full_args.push("--backend".to_string());
+                full_args.push(cli.backend.clone());
+            }
+            full_args.extend(args.clone());
+            let code = legacy::passthrough(&base_dir, &full_args)?;
             std::process::exit(code);
         }
     }
