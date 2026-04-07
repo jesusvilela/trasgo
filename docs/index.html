@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trasgo · Community Runtime for Context Codecs</title>
+    <title>Trasgo · Semantic Runtime for In-Context Reasoning</title>
     <meta
       name="description"
-      content="Trasgo is a community-driven context codec and protocol runtime for modern LLM systems."
+      content="Self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and formal verification."
     />
     <style>
       :root {
@@ -193,15 +193,14 @@
   </head>
   <body>
     <header class="hero container">
-      <span class="pill">🌍 Community-driven · Open protocol · 2026-ready</span>
+      <span class="pill">🌍 Semantic Runtime · Open Protocol · 2026-Ready</span>
       <h1>
-        Trasgo turns LLM context into
-        <span class="gradient">composable runtime code</span>.
+        Trasgo turns LLM context into a
+        <span class="gradient">self-correcting virtual machine</span>.
       </h1>
       <p class="lead">
-        A shared playground for codec-first AI systems: bring your workflows, publish your
-        protocol patterns, and evolve the runtime with the community. The verb is
-        <strong>trasgo</strong> across the shell, npm package, and native crate.
+        A self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and
+        formal verification. Execute, verify, and evolve logic natively in the context window.
       </p>
       <div class="actions">
         <a class="btn primary" href="https://github.com/jesusvilela/trasgo">Explore the repo</a>
@@ -284,11 +283,11 @@ trasgo calibrate</pre>
         <article class="card">
           <h2>2026 dev stack alignment</h2>
           <div class="chipset">
-            <span class="chip">Protocol-native AI</span>
-            <span class="chip">Session runtime contracts</span>
-            <span class="chip">MCP + skills surfaces</span>
-            <span class="chip">Zero-training adaptation</span>
-            <span class="chip">Human + agent co-piloting</span>
+            <span class="chip">Semantic Runtime (LLM-as-VM)</span>
+            <span class="chip">Agentic Harness (ERR/CT)</span>
+            <span class="chip">Formal Verification (V1-V5)</span>
+            <span class="chip">Protocol Evolution (σ-axis)</span>
+            <span class="chip">Instruction Set Architecture (§1)</span>
           </div>
         </article>
         <article class="card">
@@ -379,11 +378,11 @@ trasgo calibrate</pre>
       let isProcessing = false;
 
       function getStatus() {
-        return `Session: sess-browser-101\nMode: ${isBooted ? 'booted' : 'initialized'}\nActive Runtime: Hybrid Engine (EssentialAI/rnj-1-instruct:fastest via HF Router)\nAPI Key: [ACTIVE - DEMO POOL]`;
+        return `Session: sess-browser-101\nMode: semantic-runtime\nStatus: ${isBooted ? 'booted' : 'initialized'}\nActive Runtime: Hybrid Engine (EssentialAI/rnj-1-instruct:fastest via HF Router)\nAPI Key: [ACTIVE - DEMO POOL]`;
       }
 
       const termCommands = {
-        "trasgo --help": "Trasgo runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  login      Set custom API key (trasgo login <key>)\n  boot       Boot the active session\n  pack       Pack session state\n  send       Send a packet or message\n  status     Show current routing status",
+        "trasgo --help": "Trasgo semantic runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  boot       Boot the active session\n  send       Send a packet or message\n  verify     Run formal reasoning benchmarks (V1-V5)\n  evolve     Manage protocol evolution proposals\n  status     Show current routing status",
       };
 
       termInput.addEventListener("keydown", async function(e) {
@@ -506,6 +505,10 @@ trasgo calibrate</pre>
             }
           } else if (val.startsWith("trasgo pack")) {
             appendLine("Packing session...\n[OK] Wrote .trasgo-runtime/packs/browser.json");
+          } else if (val.startsWith("trasgo verify")) {
+            appendLine("Running Formal Verification (V1-V5)...\nPASS v1-lambda-calibration\nPASS v2-capture-avoidance\nPASS v3-correction-loop\nPASS v4-protocol-evolution\nPASS v5-church-numerals\n[OK] 100% PASS rate recorded.");
+          } else if (val.startsWith("trasgo evolve")) {
+            appendLine("Checking for systematic failure patterns...\nNo pending proposals. Current axes: E, S, R, Δ, μ.");
           } else if (termCommands[val]) {
             appendLine(termCommands[val]);
           } else if (val.startsWith("trasgo")) {

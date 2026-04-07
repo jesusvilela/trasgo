@@ -1,7 +1,7 @@
 {
   "name": "trasgo",
   "version": "0.1.1",
-  "description": "Trasgo runtime shell and self-initializing context codec for local/cloud LLM workflows.",
+  "description": "Self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and formal verification.",
   "main": "scripts/trasgo-launch.cjs",
   "bin": {
     "trasgo": "./scripts/trasgo-launch.cjs"
@@ -68,11 +68,10 @@
     "calibrate": "node scripts/trasgo-launch.cjs calibrate",
     "research": "node scripts/trasgo-launch.cjs research",
     "validate": "node scripts/trasgo-launch.cjs validate",
+    "verify": "node scripts/trasgo-launch.cjs verify --report",
+    "evolve": "node scripts/trasgo-launch.cjs evolve --review",
     "release:check": "node scripts/release-check.mjs",
     "pack:check": "npm pack --dry-run",
-    "mobile:dev": "cd mobile/trasgo-mobile && npx expo start",
-    "mobile:ios": "cd mobile/trasgo-mobile && npx expo run:ios",
-    "mobile:android": "cd mobile/trasgo-mobile && npx expo run:android",
     "prepublishOnly": "npm run release:check && npm run test:all",
     "test:package": "node scripts/packaged-smoke.mjs",
     "test:all": "npm test && npm run test:package"
@@ -89,7 +88,11 @@
     "cli",
     "compression",
     "runtime",
-    "json"
+    "json",
+    "agentic-harness",
+    "formal-reasoning",
+    "self-correction",
+    "semantic-runtime"
   ],
   "author": "",
   "license": "MIT",

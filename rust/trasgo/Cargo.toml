@@ -2,12 +2,14 @@
 name = "trasgo"
 version = "0.1.1"
 edition = "2021"
-description = "Trasgo native CLI for codec-native token science and routing."
+description = "Native orchestrator for the Trasgo semantic runtime and §1 context codec."
 license = "MIT"
 repository = "https://github.com/jesusvilela/trasgo"
 homepage = "https://jesusvilela.github.io/trasgo/"
 readme = "../../README.md"
 exclude = ["assets/tokenizers/*"]
+keywords = ["llm", "codec", "agentic", "formal-reasoning", "semantic-runtime"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 anyhow = "1"
