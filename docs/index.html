@@ -132,6 +132,63 @@
         overflow: auto;
         color: var(--text);
       }
+
+      /* Terminal Sandbox */
+      .terminal-sandbox {
+        background: #0d1126;
+        border: 1px solid var(--border);
+        border-radius: .8rem;
+        overflow: hidden;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: .9rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        margin: 2rem 0;
+        cursor: text;
+      }
+      .terminal-header {
+        background: #151b3b;
+        padding: .5rem 1rem;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        cursor: default;
+      }
+      .terminal-header .dot {
+        width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;
+      }
+      .dot.red { background: #ff5f56; }
+      .dot.yellow { background: #ffbd2e; }
+      .dot.green { background: #27c93f; }
+      .terminal-header .title {
+        margin-left: auto; margin-right: auto;
+        color: var(--text-dim); font-size: .8rem; padding-right: 54px;
+      }
+      .terminal-body {
+        padding: 1rem;
+        height: 280px;
+        overflow-y: auto;
+        color: #e7ebff;
+      }
+      .term-line { margin-bottom: .2rem; line-height: 1.4; word-wrap: break-word; }
+      .term-line.cmd { color: var(--brand-2); }
+      .term-line.err { color: #ff5f56; }
+      .term-line.dim { color: var(--text-dim); }
+      .term-line.json { color: var(--accent); white-space: pre-wrap; }
+      .terminal-input-wrapper {
+        display: flex;
+        padding: 0 1rem 1rem;
+        background: #0d1126;
+      }
+      .prompt { color: var(--brand-2); margin-right: .5rem; font-weight: bold; }
+      .term-input {
+        background: transparent;
+        border: none;
+        color: #e7ebff;
+        font-family: inherit;
+        font-size: inherit;
+        width: 100%;
+        outline: none;
+      }
     </style>
   </head>
   <body>
@@ -190,6 +247,28 @@ trasgo bench lmstudio
 trasgo calibrate</pre>
           <p class="label">One verb, one shell, one runtime surface.</p>
         </article>
+      </section>
+
+      <section>
+        <h2>Live Sandbox (Simulated)</h2>
+        <p class="lead">Try the trasgo CLI right in your browser. (Simulating a local <code class="inline">rnj-1-instruct</code> instance)</p>
+        <div class="terminal-sandbox" onclick="document.getElementById('term-input').focus()">
+          <div class="terminal-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="title">trasgo — browser-sandbox</span>
+          </div>
+          <div class="terminal-body" id="term-body">
+            <div class="term-line">Trasgo v0.1.1 (Web Sandbox)</div>
+            <div class="term-line">Type <code class="inline">trasgo --help</code> to see available commands, or try <code class="inline">trasgo init "demo"</code>.</div>
+            <div class="term-line">&nbsp;</div>
+          </div>
+          <div class="terminal-input-wrapper">
+            <span class="prompt">$</span>
+            <input type="text" id="term-input" class="term-input" autocomplete="off" spellcheck="false" autofocus>
+          </div>
+        </div>
       </section>
 
       <section>
@@ -282,6 +361,68 @@ trasgo calibrate</pre>
       document.getElementById("updated").textContent = `Last refreshed ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}.`;
       loadRepoStats();
       loadContributors();
+
+      // Sandbox Logic
+      const termBody = document.getElementById("term-body");
+      const termInput = document.getElementById("term-input");
+      
+      const termCommands = {
+        "trasgo --help": "Trasgo runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  boot       Boot the active session\n  pack       Pack session state\n  send       Send a packet or message\n  status     Show current routing status",
+        "trasgo status": "Session: sess-browser-101\nMode: initialized\nActive Runtime: Web Sandbox (Simulated rnj-1-instruct)",
+      };
+
+      termInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          const val = termInput.value.trim();
+          termInput.value = "";
+          if (!val) return;
+          
+          appendLine(`$ ${val}`, "cmd");
+          
+          if (val === "clear") {
+            termBody.innerHTML = "";
+            return;
+          }
+
+          let response = "";
+          if (val.startsWith("trasgo init")) {
+            response = "Initializing new session...\nSession created: sess-browser-101";
+          } else if (val.startsWith("trasgo boot")) {
+            response = "Booting session...\n[OK] Codec grammar loaded.\n[OK] Broker active.\n[OK] Protocol layer initialized.";
+          } else if (val.startsWith("trasgo send")) {
+            response = 'Sending payload...\nReceived compressed response:\n<div class="term-line json">{"§":1,"Δ":["Q.status:answered"],"μ":{"cert":0.95}}</div>';
+          } else if (val.startsWith("trasgo pack")) {
+            response = "Packing session...\n[OK] Wrote .trasgo-runtime/packs/browser.json";
+          } else if (termCommands[val]) {
+            response = termCommands[val];
+          } else if (val.startsWith("trasgo")) {
+            response = `Unknown command or args: ${val}\nTry 'trasgo --help'`;
+          } else {
+            response = `bash: ${val.split(' ')[0]}: command not found`;
+          }
+          
+          if (response) {
+            response.split("\n").forEach(line => {
+              if (line.includes('<div')) {
+                const div = document.createElement("div");
+                div.innerHTML = line;
+                termBody.appendChild(div.firstChild);
+              } else {
+                appendLine(line);
+              }
+            });
+          }
+          
+          termBody.scrollTop = termBody.scrollHeight;
+        }
+      });
+
+      function appendLine(text, className) {
+        const el = document.createElement("div");
+        el.className = "term-line" + (className ? " " + className : "");
+        el.textContent = text;
+        termBody.appendChild(el);
+      }
     </script>
   </body>
 </html>
