@@ -718,6 +718,7 @@ export async function executeInput(baseDir, registry, session, input) {
     decision,
     attempts,
     response: primary,
+    content: primary.content,
   };
 }
 
