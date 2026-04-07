@@ -38,7 +38,7 @@ function main() {
   assert.equal(pkg.bin?.trasgo, './scripts/trasgo-launch.cjs', 'bin.trasgo must point to ./scripts/trasgo-launch.cjs');
   assert.equal(packageLock.packages?.['']?.bin?.trasgo, 'scripts/trasgo-launch.cjs', 'package-lock bin.trasgo must match scripts/trasgo-launch.cjs');
   assert.equal(pkg.publishConfig?.access, 'public', 'publishConfig.access must be public');
-  assert.match(pkg.homepage || '', /github\.com\/jesusvilela\/trasgo#readme/i, 'homepage must target the GitHub README');
+  assert.match(pkg.homepage || '', /jesusvilela\.github\.io\/trasgo/i, 'homepage must target the GitHub pages site');
   assert.ok(Array.isArray(pkg.files) && pkg.files.length > 0, 'files whitelist must be present');
 
   const requiredMedia = [

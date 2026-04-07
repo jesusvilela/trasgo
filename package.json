@@ -97,7 +97,7 @@
   "bugs": {
     "url": "https://github.com/jesusvilela/trasgo/issues"
   },
-  "homepage": "https://github.com/jesusvilela/trasgo#readme",
+  "homepage": "https://jesusvilela.github.io/trasgo/",
   "publishConfig": {
     "access": "public"
   },

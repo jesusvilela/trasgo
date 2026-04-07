@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/jesusvilela/trasgo"
 homepage = "https://jesusvilela.github.io/trasgo/"
 readme = "../../README.md"
-publish = false
+exclude = ["assets/tokenizers/*"]
 
 [dependencies]
 anyhow = "1"
