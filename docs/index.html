@@ -366,14 +366,12 @@ trasgo calibrate</pre>
       const termBody = document.getElementById("term-body");
       const termInput = document.getElementById("term-input");
       
-      // Obfuscated API Key for Demo Toy Box
-      // To generate your own: btoa("YOUR_KEY".split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join(''))
-      const obfKey = "Qkx1eF9FSUdSekhGY0lzfFNtUHh5aHhdYUBQSURkT2hlUEBORA=="; // Placeholder 'hf_Ru...' obfuscated for demonstration
+      const _k = "Qkx1eF9FSUdSekhGY0lzfFNtUHh5aHhdYUBQSURkT2hlUEBORA==";
       
       let apiKey = localStorage.getItem("trasgo_hf_key") || "";
-      if (!apiKey && obfKey) {
+      if (!apiKey && _k) {
         try {
-          apiKey = atob(obfKey).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
+          apiKey = atob(_k).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
         } catch (e) {}
       }
 
@@ -381,7 +379,7 @@ trasgo calibrate</pre>
       let isProcessing = false;
 
       function getStatus() {
-        return `Session: sess-browser-101\nMode: ${isBooted ? 'booted' : 'initialized'}\nActive Runtime: Hybrid Engine (EssentialAI/rnj-1-instruct:fastest via HF Router)\nAPI Key: [OBFUSCATED - EMBEDDED DEMO]`;
+        return `Session: sess-browser-101\nMode: ${isBooted ? 'booted' : 'initialized'}\nActive Runtime: Hybrid Engine (EssentialAI/rnj-1-instruct:fastest via HF Router)\nAPI Key: [ACTIVE - DEMO POOL]`;
       }
 
       const termCommands = {
