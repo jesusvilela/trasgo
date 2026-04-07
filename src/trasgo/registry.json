@@ -115,14 +115,14 @@
       "id": "dashboard",
       "layer": "admin",
       "runner": "node",
-      "entry": "src/trasgo/dashboard.mjs",
+      "entry": "dashboard.mjs",
       "description": "Render the Trasgo observatory dashboard once."
     },
     {
       "id": "live-dashboard",
       "layer": "admin",
       "runner": "node",
-      "entry": "src/trasgo/dashboard.mjs",
+      "entry": "dashboard.mjs",
       "args": ["--live"],
       "description": "Launch the live observatory watcher."
     },

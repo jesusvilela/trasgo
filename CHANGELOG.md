@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.2] - 2026-04-07
+### Fixed
+- **Dashboard Availability**: Implemented a root proxy script `dashboard.mjs` that redirects to the core implementation in `src/trasgo/`. This ensures the `dashboard` command works reliably in global NPM installations regardless of how Node.js resolves modules.
+
 ## [0.2.1] - 2026-04-07
 ### Fixed
 - **Dashboard Packaging**: Fixed `MODULE_NOT_FOUND` error when running `dashboard` from a global install by moving `dashboard.mjs` to `src/trasgo/` and correcting its internal relative paths.
