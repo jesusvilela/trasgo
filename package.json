@@ -28,6 +28,8 @@
     "src/*.md",
     "src/trasgo",
     "src/harness",
+    "src/machines",
+    "tests/formal-reasoning",
     "tests/bench_online.py",
     "tests/run_calibration.py",
     "tests/research_runner.py",
