@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.4] - 2026-04-07
+### Changed
+- **Built-in Dashboard**: Refactored the `dashboard` and `live-dashboard` tools into built-in CLI commands. They are now directly imported and executed within the main `trasgo` process, eliminating all `MODULE_NOT_FOUND` and process-spawning issues in global NPM installations.
+
 ## [0.2.3] - 2026-04-07
 ### Fixed
 - **Logo Visibility**: Added `symbols` as a fallback image backend for `chafa`, ensuring the Trasgo logo is visible in standard terminals (Mac Terminal.app, generic zsh/bash) even without advanced image protocol support.

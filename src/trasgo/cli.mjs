@@ -62,6 +62,8 @@ import {
   loadFormalTestData,
 } from '../../tests/formal-reasoning/run-v1-v5.mjs';
 
+import { main as runDashboardOnce, runLiveDashboard } from './dashboard.mjs';
+
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
 const stateDir = path.resolve(process.env.TRASGO_HOME || process.cwd());
@@ -2244,6 +2246,16 @@ async function executeCommand(argv, context) {
     return 0;
   }
 
+  if (command === 'dashboard') {
+    await runDashboardOnce();
+    return 0;
+  }
+
+  if (command === 'live-dashboard') {
+    await runLiveDashboard();
+    return 0;
+  }
+
   if (command === 'tools') {
     outputValue(context, { kind: 'trasgo-tool-list', tools: toolRows() }, () => {
       listTools();
@@ -2287,8 +2299,8 @@ async function executeCommand(argv, context) {
   if (command === 'tokens') return handleTokens(rest, context);
   if (command === 'optimize') return handleOptimize(rest, context);
 
-  if (command === 'dashboard') return runNamed('dashboard', rest);
-  if (command === 'live' || command === 'watch' || command === 'monitor') return runNamed('live-dashboard', rest);
+  if (command === 'live' || command === 'watch' || command === 'monitor') return runLiveDashboard();
+
   if (command === 'bench') return runNamed('bench', rest);
   if (command === 'calibrate') return runNamed('calibrate', rest);
   if (command === 'research') return runNamed('research', rest);

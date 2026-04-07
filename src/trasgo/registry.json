@@ -112,21 +112,6 @@
   ],
   "tools": [
     {
-      "id": "dashboard",
-      "layer": "admin",
-      "runner": "node",
-      "entry": "dashboard.mjs",
-      "description": "Render the Trasgo observatory dashboard once."
-    },
-    {
-      "id": "live-dashboard",
-      "layer": "admin",
-      "runner": "node",
-      "entry": "dashboard.mjs",
-      "args": ["--live"],
-      "description": "Launch the live observatory watcher."
-    },
-    {
       "id": "factory-copilot-demo",
       "layer": "demo",
       "runner": "node",
