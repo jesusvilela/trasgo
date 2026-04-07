@@ -165,6 +165,20 @@ Self-initialization is an **emergent capability** with a sharp scale threshold:
 | GPT-4o | frontier | OpenAI API | ✓ (3/3) | ✓ (3/3) | ✓ | ✓ | **§1-advanced** |
 | Claude Opus | frontier | Anthropic API | ✓ (3/3) | ✓ (3/3) | ✓ | ✓ | **§1-advanced** |
 
+### Formal Verification (T8)
+
+The system is **T8-Verified** for bounded Turing Completeness. In the FACT THREE probe, the model autonomously managed context window pressure to compute a recursive factorial.
+
+| Capability | Test | Result | Status |
+|:-----------|:-----|:------:|:-------|
+| Lambda Calculus | V1-V2 | ✓ | PASS |
+| Correction Loop | V3 | ✓ | PASS |
+| Protocol Evolution | V4 | ✓ | PASS |
+| Church Arithmetic | V5 | ✓ | PASS |
+| **Recursive Factorial** | **T8** | **✓** | **VERIFIED** |
+
+> **Finding:** FM3 (Depth Collapse) triggers at recursive depth ~2 on frontier models. The Trasgo harness autonomously issues `§P|CHECKPOINT` to compress state and resume, extending effective depth.
+
 ---
 
 ## Theory

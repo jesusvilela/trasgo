@@ -12,6 +12,8 @@ Trasgo currently has three main surfaces:
 npm ci
 npm run quickstart
 npm test
+# Run full formal verification (requires local/cloud runtimes)
+trasgo verify --all
 ```
 
 For native status:
