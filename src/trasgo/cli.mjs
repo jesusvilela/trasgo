@@ -55,7 +55,12 @@ import { writeCheckpoint, logCertTrajectory, logError } from '../harness/checkpo
 import { analyzeErrorHistory } from '../harness/pattern-detector.mjs';
 import { proposeEvolution, saveProposal, listProposals } from '../harness/evolution-proposer.mjs';
 import { runCorrectionLoop } from '../harness/loop-executor.mjs';
-import { runFormalTest, saveResults } from '../../tests/formal-reasoning/run-v1-v5.mjs';
+import {
+  runFormalTest,
+  saveResults,
+  listFormalTestIds as listFormalTestIdsFromRunner,
+  loadFormalTestData,
+} from '../../tests/formal-reasoning/run-v1-v5.mjs';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');
@@ -842,7 +847,7 @@ const EXACT_COMMANDS = new Set([
   'providers', 'runtimes', 'tools', 'machines', 'orchestrations', 'orchestrate',
   'show', 'dashboard', 'live', 'watch', 'monitor', 'bench', 'calibrate',
   'research', 'validate', 'run', 'demo', 'quickstart', 'advise', 'explain', 'trace',
-  'cot', 'tokens', 'optimize',
+  'cot', 'tokens', 'optimize', 'verify', 'evolve', 'harness', 'shell',
 ]);
 
 const NATURAL_STOPWORDS = new Set([
@@ -1215,6 +1220,67 @@ async function handleAdvise(rest, context) {
 
   outputValue(context, result, () => {
     printAdvisory(result);
+  });
+  return 0;
+}
+
+function resolveCodecArg(value) {
+  if (!value) return null;
+  const candidate = path.resolve(process.cwd(), value);
+  if (fs.existsSync(candidate)) {
+    return fs.readFileSync(candidate, 'utf8');
+  }
+  return value;
+}
+
+async function handleTokens(rest, context) {
+  const options = parseCodecArgs(rest);
+  if (!options.codec) {
+    console.error(coral('tokens requires --codec <json|text|path>'));
+    return 1;
+  }
+  const report = runTokenReport({
+    codec: resolveCodecArg(options.codec),
+    natural: options.natural ? resolveCodecArg(options.natural) : null,
+    models: options.models,
+  });
+  outputValue(context, report, () => {
+    console.log(accent('Token Report'));
+    console.log(`  ${mint('best')}    ${gold(report.summary.best_codec_family)}`);
+    console.log(`  ${mint('worst')}   ${gold(report.summary.worst_codec_family)}`);
+    console.log(`  ${mint('median')}  ${gold(String(Math.round(report.summary.codec_tokens.median)))} tok codec`);
+    if (report.summary.natural_tokens) {
+      console.log(`  ${mint('natural')} ${gold(String(Math.round(report.summary.natural_tokens.median)))} tok median`);
+    }
+    console.log();
+    for (const entry of report.models) {
+      const natural = entry.natural_tokens ?? '-';
+      console.log(`  ${mint(entry.id.padEnd(14))} ${String(natural).padStart(5)} -> ${String(entry.codec_tokens).padStart(5)} tok`);
+    }
+    console.log();
+  });
+  return 0;
+}
+
+async function handleOptimize(rest, context) {
+  const options = parseCodecArgs(rest);
+  if (!options.codec) {
+    console.error(coral('optimize requires --codec <json|text|path>'));
+    return 1;
+  }
+  const report = runOptimizeReport({
+    codec: resolveCodecArg(options.codec),
+    models: options.models,
+  });
+  outputValue(context, report, () => {
+    console.log(accent('Optimize Report'));
+    console.log(`  ${mint('recommended')}  ${gold(report.recommended?.id || 'n/a')}`);
+    console.log(`  ${mint('description')}  ${dim(report.recommended?.description || '')}`);
+    console.log(`  ${mint('baseline')}     ${gold(String(Math.round(report.baseline.summary.codec_tokens.median)))} tok median`);
+    if (report.recommended?.report?.summary?.codec_tokens?.median !== undefined) {
+      console.log(`  ${mint('candidate')}    ${gold(String(Math.round(report.recommended.report.summary.codec_tokens.median)))} tok median`);
+    }
+    console.log();
   });
   return 0;
 }
@@ -1740,66 +1806,299 @@ async function handleSend(rest, context) {
 }
 
 async function handleEvolve(rest, context) {
-  if (rest[0] === '--review') {
+  if (rest[0] === '--review' || rest[0] === '--list') {
     const proposals = listProposals(runtimeHome.stateDir);
-    if (proposals.length === 0) {
-      console.log('No pending proposals.');
-      return 0;
-    }
-    for (const p of proposals) {
-      console.log(accent(`\n--- Proposal: ${p.id} ---`));
-      console.log(p.content);
-    }
+    const payload = {
+      kind: 'trasgo-evolve-list',
+      proposals: proposals.map(p => ({ id: p.id, content: p.content })),
+    };
+    outputValue(context, payload, () => {
+      if (proposals.length === 0) {
+        console.log(dim('No pending proposals.'));
+        console.log();
+        return;
+      }
+      for (const p of proposals) {
+        console.log(accent(`--- Proposal: ${p.id} ---`));
+        console.log(p.content);
+        console.log();
+      }
+    });
     return 0;
   }
+
   if (rest[0] === '--apply' && rest[1]) {
     const session = ensureSession(context);
     const proposals = listProposals(runtimeHome.stateDir);
     const target = proposals.find(p => p.id === rest[1]);
     if (!target) {
-      console.error(coral(`Proposal not found: ${rest[1]}`));
+      const message = `proposal not found: ${rest[1]}`;
+      if (context.outputJson) {
+        printJson({ kind: 'trasgo-error', error: message });
+      } else {
+        console.error(coral(message));
+      }
       return 1;
     }
-    const propJson = JSON.parse(target.content);
+    let propJson;
+    try {
+      propJson = JSON.parse(target.content);
+    } catch (error) {
+      const message = `proposal payload is not JSON: ${error.message}`;
+      if (context.outputJson) {
+        printJson({ kind: 'trasgo-error', error: message });
+      } else {
+        console.error(coral(message));
+      }
+      return 1;
+    }
     session.evolved_axes = session.evolved_axes || [];
     session.evolved_axes.push(propJson);
-    saveSession(runtimeHome.stateDir, session);
-    console.log(mint(`[OK] Applied proposal ${rest[1]} to session ${session.id}`));
+    saveSession(runtimeHome, session);
+    const payload = {
+      kind: 'trasgo-evolve-apply',
+      applied: rest[1],
+      session_id: session.id,
+      evolved_axes: session.evolved_axes.length,
+    };
+    outputValue(context, payload, () => {
+      console.log(mint(`[OK] Applied proposal ${rest[1]} to session ${session.id}`));
+      console.log();
+    });
     return 0;
   }
-  console.error(coral('usage: trasgo evolve <--review | --apply [id]>'));
+
+  const message = 'usage: trasgo evolve <--review|--list|--apply <id>> [--json]';
+  if (context.outputJson) {
+    printJson({ kind: 'trasgo-error', error: message });
+  } else {
+    console.error(coral(message));
+  }
+  return 1;
+}
+
+function listFormalTestIds() {
+  return listFormalTestIdsFromRunner();
+}
+
+function loadFormalTestInput(testId) {
+  return loadFormalTestData(testId);
+}
+
+function readMaybePathArg(value) {
+  if (value === undefined || value === null) return '';
+  const candidate = path.resolve(process.cwd(), value);
+  if (fs.existsSync(candidate)) {
+    return fs.readFileSync(candidate, 'utf8');
+  }
+  return value;
+}
+
+async function handleHarness(rest, context) {
+  const [action, ...args] = rest;
+
+  if (!action || action === 'help') {
+    const message = 'usage: trasgo harness <parse [--text <packet>|--file <path>]|pattern [--session <id>]|propose <fm-id>> [--json]';
+    if (context.outputJson) {
+      printJson({ kind: 'trasgo-error', error: message });
+    } else {
+      console.error(coral(message));
+    }
+    return action === 'help' ? 0 : 1;
+  }
+
+  if (action === 'parse') {
+    let text = '';
+    for (let i = 0; i < args.length; i += 1) {
+      if ((args[i] === '--text' || args[i] === '--packet') && args[i + 1]) {
+        text = args[i + 1];
+        i += 1;
+      } else if (args[i] === '--file' && args[i + 1]) {
+        text = fs.readFileSync(path.resolve(process.cwd(), args[i + 1]), 'utf8');
+        i += 1;
+      } else if (!args[i].startsWith('--')) {
+        text = readMaybePathArg(args[i]);
+      }
+    }
+    if (!text) {
+      console.error(coral('harness parse requires --text <packet>, --file <path>, or a positional value'));
+      return 1;
+    }
+    const parsed = parsePacketStream(text);
+    const payload = { kind: 'trasgo-harness-parse', parsed };
+    outputValue(context, payload, () => {
+      console.log(accent('Harness · parse'));
+      console.log(`  ${mint('hasError')}     ${gold(String(parsed.hasError))}`);
+      console.log(`  ${mint('hasCheckpoint')} ${gold(String(parsed.hasCheckpoint))}`);
+      console.log(`  ${mint('cert')}         ${gold(String(parsed.cert))}`);
+      console.log(`  ${mint('certDrop')}     ${gold(String(parsed.certDrop))}`);
+      console.log(`  ${mint('flag')}         ${gold(String(parsed.flag))}`);
+      console.log(`  ${mint('stepRef')}      ${gold(String(parsed.stepRef))}`);
+      console.log();
+    });
+    return 0;
+  }
+
+  if (action === 'pattern') {
+    let history = [];
+    let sessionId = context.activeSessionId;
+    for (let i = 0; i < args.length; i += 1) {
+      if (args[i] === '--session' && args[i + 1]) {
+        sessionId = args[i + 1];
+        i += 1;
+      } else if (args[i] === '--errors' && args[i + 1]) {
+        const list = args[i + 1].split(',').map(item => item.trim()).filter(Boolean);
+        history = list.map(err => ({ timestamp: new Date().toISOString(), err: { err } }));
+        i += 1;
+      }
+    }
+    if (history.length === 0 && sessionId) {
+      try {
+        const session = loadSession(runtimeHome, sessionId, registry);
+        history = session.error_history || [];
+      } catch {
+        history = [];
+      }
+    }
+    const result = analyzeErrorHistory(history);
+    const payload = { kind: 'trasgo-harness-pattern', history_size: history.length, ...result };
+    outputValue(context, payload, () => {
+      console.log(accent('Harness · pattern'));
+      console.log(`  ${mint('history')}    ${gold(String(history.length))}`);
+      console.log(`  ${mint('systematic')} ${gold(String(result.systematic))}`);
+      console.log(`  ${mint('dominant')}   ${gold(String(result.dominantFM))}`);
+      console.log(`  ${mint('frequency')}  ${gold(String(result.frequency))}`);
+      console.log();
+    });
+    return 0;
+  }
+
+  if (action === 'propose') {
+    const fm = args[0];
+    if (!fm) {
+      console.error(coral('harness propose requires an FM identifier (e.g. FM1, FM2, FM3, FM4)'));
+      return 1;
+    }
+    const proposal = proposeEvolution(fm, {});
+    const payload = { kind: 'trasgo-harness-propose', dominantFM: fm, proposal };
+    outputValue(context, payload, () => {
+      console.log(accent('Harness · propose'));
+      console.log(`  ${mint('fm')}       ${gold(fm)}`);
+      console.log(proposal || dim('no proposal generated for this FM'));
+      console.log();
+    });
+    return 0;
+  }
+
+  console.error(coral(`unknown harness action: ${action}`));
   return 1;
 }
 
 async function handleVerify(rest, context) {
+  if (rest.length === 0 || rest[0] === '--list') {
+    const tests = listFormalTestIds().map(id => {
+      try {
+        const data = loadFormalTestInput(id);
+        return { id, name: data.name || id, ok: true };
+      } catch (error) {
+        return { id, error: error.message, ok: false };
+      }
+    });
+    const payload = { kind: 'trasgo-verify-list', tests };
+    outputValue(context, payload, () => {
+      console.log(accent('Formal Verification Suite'));
+      for (const test of tests) {
+        const status = test.ok ? gold('OK') : coral('ERR');
+        console.log(`  ${status} ${mint(test.id.padEnd(6))} ${dim(test.name || test.error)}`);
+      }
+      console.log();
+    });
+    return 0;
+  }
+
+  if (rest[0] === '--report') {
+    const resultsPath = path.join(repoDir, 'tests', 'formal-reasoning', 'results.json');
+    if (!fs.existsSync(resultsPath)) {
+      const payload = { kind: 'trasgo-verify-report', results: [], note: 'no results.json yet — run trasgo verify --all first' };
+      outputValue(context, payload, () => {
+        console.log(dim('No results found. Run trasgo verify --all first.'));
+        console.log();
+      });
+      return 0;
+    }
+    const data = JSON.parse(fs.readFileSync(resultsPath, 'utf-8'));
+    const payload = { kind: 'trasgo-verify-report', results: data };
+    outputValue(context, payload, () => {
+      console.log(accent('Formal Verification Report'));
+      console.table(data.map(r => ({
+        id: r.testId,
+        name: r.name,
+        status: r.passed ? 'PASS' : 'FAIL',
+        cert: r.cert !== null && r.cert !== undefined ? r.cert.toFixed(2) : 'n/a'
+      })));
+      console.log();
+    });
+    return 0;
+  }
+
+  if (rest[0] === '--dry-run') {
+    const ids = rest[1] === '--test' && rest[2] ? [rest[2]] : listFormalTestIds();
+    const inspected = ids.map(id => {
+      try {
+        const data = loadFormalTestInput(id);
+        return {
+          testId: id,
+          name: data.name || id,
+          ok: true,
+          fields: Object.keys(data),
+        };
+      } catch (error) {
+        return { testId: id, ok: false, error: error.message };
+      }
+    });
+    const payload = { kind: 'trasgo-verify-dry-run', tests: inspected };
+    outputValue(context, payload, () => {
+      console.log(accent('Verify · dry-run'));
+      for (const t of inspected) {
+        const tag = t.ok ? gold('OK') : coral('ERR');
+        console.log(`  ${tag} ${mint(t.testId.padEnd(6))} ${dim(t.name || t.error)}`);
+      }
+      console.log();
+    });
+    return 0;
+  }
+
   const session = ensureSession(context);
   const results = [];
-  
+
   if (rest[0] === '--test' && rest[1]) {
     const res = await runFormalTest(rest[1], executeInput, { runtimeHome, registry }, session);
     results.push(res);
   } else if (rest[0] === '--all') {
-    for (const id of ['v1', 'v2', 'v3', 'v4', 'v5']) {
+    for (const id of listFormalTestIds()) {
       const res = await runFormalTest(id, executeInput, { runtimeHome, registry }, session);
       results.push(res);
     }
-  } else if (rest[0] === '--report') {
-    const resultsPath = path.join(repoDir, 'tests', 'formal-reasoning', 'results.json');
-    if (fs.existsSync(resultsPath)) {
-      const data = JSON.parse(fs.readFileSync(resultsPath, 'utf-8'));
-      console.log(accent('\nFormal Verification Report'));
-      console.table(data.map(r => ({ id: r.testId, name: r.name, status: r.passed ? 'PASS' : 'FAIL' })));
-    } else {
-      console.log('No results found. Run trasgo verify --all first.');
-    }
-    return 0;
   } else {
-    console.error(coral('usage: trasgo verify <--test [id] | --all | --report>'));
+    const message = 'usage: trasgo verify [--list|--dry-run|--test <id>|--all|--report] [--json]';
+    if (context.outputJson) {
+      printJson({ kind: 'trasgo-error', error: message });
+    } else {
+      console.error(coral(message));
+    }
     return 1;
   }
 
   saveResults(results);
-  console.log(mint(`\n[OK] Verification complete. Results saved to tests/formal-reasoning/results.json`));
+  const payload = {
+    kind: 'trasgo-verify-run',
+    results,
+    results_path: path.join('tests', 'formal-reasoning', 'results.json'),
+  };
+  outputValue(context, payload, () => {
+    console.log(mint('[OK] Verification complete. Results saved to tests/formal-reasoning/results.json'));
+    console.log();
+  });
   return 0;
 }
 
@@ -1931,6 +2230,7 @@ async function executeCommand(argv, context) {
   if (command === 'send' || command === 'packet') return handleSend(rest, context);
   if (command === 'evolve') return handleEvolve(rest, context);
   if (command === 'verify') return handleVerify(rest, context);
+  if (command === 'harness') return handleHarness(rest, context);
 
   if (command === 'providers' || command === 'runtimes') {
     outputValue(context, { kind: 'trasgo-runtime-list', runtimes: runtimeRows() }, () => {
@@ -1979,6 +2279,8 @@ async function executeCommand(argv, context) {
   if (command === 'cot') return handleCot(rest, context);
   if (command === 'explain') return handleExplain(rest, context);
   if (command === 'trace') return handleTrace(rest, context);
+  if (command === 'tokens') return handleTokens(rest, context);
+  if (command === 'optimize') return handleOptimize(rest, context);
 
   if (command === 'dashboard') return runNamed('dashboard', rest);
   if (command === 'live' || command === 'watch' || command === 'monitor') return runNamed('live-dashboard', rest);
@@ -2006,14 +2308,22 @@ async function executeCommand(argv, context) {
     return runNamed(command, rest);
   }
 
+  // Only treat unknown commands as natural-language send when there is an
+  // active session AND the input has enough shape to look like a prompt
+  // (multi-token, or contains spaces). Single-token unknowns like `verify`
+  // or typos used to be silently routed to the LLM (a billing footgun).
   const session = context.activeSessionId ? currentSession(context) : null;
-  if (session) {
+  if (session && rest.length > 0) {
     return handleSend([command, ...rest], context);
   }
 
   console.error(coral(`unknown command: ${command}`));
-  console.log();
-  printHelp();
+  if (context.outputJson) {
+    printJson({ kind: 'trasgo-error', error: `unknown command: ${command}` });
+  } else {
+    console.log();
+    printHelp();
+  }
   return 1;
 }
 

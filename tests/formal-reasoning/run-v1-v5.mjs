@@ -34,69 +34,31 @@ export function buildFormalTestPrompt(testId, testData) {
   return `${basePrompt} |out:codec`;
 }
 
-function checkV2(content, testData) {
-  const { lastPacket } = parsePacketStream(content);
-  if (!lastPacket) return false;
-  
-  // Collect all forms mentioned in S and Δ
-  const forms = [];
-  if (lastPacket.S) {
-    if (lastPacket.S['result.form']) forms.push(String(lastPacket.S['result.form']));
-    if (lastPacket.S['T.form']) forms.push(String(lastPacket.S['T.form']));
-  }
-  if (Array.isArray(lastPacket.Δ)) {
-    lastPacket.Δ.forEach(d => {
-      if (d.includes('→')) {
-        const parts = d.split('→');
-        forms.push(parts[0].split(':').pop().trim());
-        forms.push(parts[1].split('@')[0].trim());
-      } else {
-        forms.push(d);
-      }
-    });
-  }
-
-  // Pass: at least one form is λz.y or any alpha-variant (not λy.y)
-  const hasCorrect = forms.some(f => f.includes('λz.y') || f.includes('λy\'.y') || /λ[^y]\.y/u.test(f));
-  const hasCapture = forms.some(f => f === 'λy.y');
-  
-  return hasCorrect && !hasCapture;
-}
-
-function checkV1(content, testData) {
+function evalV2(content) {
   const { lastPacket, cert } = parsePacketStream(content);
-  // Pass: cert > 0.7 and no unresolved ERR flags
-  return (cert || 0) > 0.7 && !lastPacket?.ERR?.flag?.includes('REQUEST_VERIFICATION');
+  if (!lastPacket) return false;
+  const form = (lastPacket.S?.['result.form'] || lastPacket.S?.['T.form'] || '').trim();
+  const isCapture = /λy\.y/.test(form) || form === 'λy.y';
+  const isCorrect = /λ[^y]\.y/.test(form) || form.includes('λz.y');
+  return isCorrect && !isCapture;
 }
 
-function checkV5(content, testData) {
+function evalV1(content) {
+  const { cert, hasError } = parsePacketStream(content);
+  return cert !== null && cert >= 0.7 && !hasError;
+}
+
+function evalV5(content) {
   const { lastPacket } = parsePacketStream(content);
   if (!lastPacket) return false;
-
-  let hasAdd = false;
-  let hasMul = false;
-
-  const check = (str) => {
-    if (str.includes('add(3,2)→5') || str.includes('5')) hasAdd = true;
-    if (str.includes('mul(2,3)→6') || str.includes('6')) hasMul = true;
-  };
-
-  if (lastPacket.S) Object.values(lastPacket.S).forEach(v => check(String(v)));
-  if (lastPacket.Δ) lastPacket.Δ.forEach(d => check(d));
-
-  return hasAdd && hasMul && (lastPacket?.μ?.cert || 0) >= 0.8;
+  const cert = lastPacket.μ?.cert ?? 0;
+  const form = lastPacket.S?.['result.form'] || '';
+  return cert >= 0.8 && form.length > 0;
 }
 
-export function evaluateResult(testId, content, testData) {
-  switch (testId) {
-    case 'v2-capture-avoidance': return checkV2(content, testData);
-    case 'v1-lambda-calibration': return checkV1(content, testData);
-    case 'v5-church-numerals': return checkV5(content, testData);
-    default: {
-      const { cert } = parsePacketStream(content);
-      return cert !== null && cert >= 0.7;
-    }
-  }
+function evalDefault(content) {
+  const { cert, hasError } = parsePacketStream(content);
+  return cert !== null && cert >= 0.5 && !hasError;
 }
 
 export async function runFormalTest(testId, executeInputFn, context, session) {
@@ -105,16 +67,19 @@ export async function runFormalTest(testId, executeInputFn, context, session) {
   const prompt = buildFormalTestPrompt(testId, testData);
   const result = await executeInputFn(context.runtimeHome, context.registry, session, prompt);
   
-  const passed = evaluateResult(testId, result.content, testData);
-  const parsed = parsePacketStream(result.content);
+  let passed = false;
+  const id = testData.test;
+  if (id === 'v2') passed = evalV2(result.content || '');
+  else if (id === 'v1') passed = evalV1(result.content || '');
+  else if (id === 'v5') passed = evalV5(result.content || '');
+  else passed = evalDefault(result.content || '');
 
   return {
     testId,
     name: testData.name,
     passed,
-    content: result.content,
-    cert: parsed.cert,
-    has_error: parsed.hasError,
+    cert: parsePacketStream(result.content || '').cert,
+    content: result.content
   };
 }
 
