@@ -1,0 +1,124 @@
+{
+  "model": "deepseek-chat",
+  "provider": "deepseek",
+  "base_url": "https://api.deepseek.com/v1",
+  "timestamp": "2026-04-08T17:46:26",
+  "json_mode": false,
+  "validated": false,
+  "corrected": false,
+  "results": {
+    "T1: Calibration (dual query)": {
+      "score": 4,
+      "max": 4,
+      "time": 6.172648191452026,
+      "rlhf": [],
+      "narration": [],
+      "response": "**Q_codec:**  \nFor entity **K** (TSLA equity):  \n- **State change:** `K.weight` reduced from 0.12 to 0.08, effective 2026‑03.  \n- **Reason:** The macro‑overlay strategy **L** hedges **K**, with a defined trigger (`VIX > 28`) that likely prompted the reduction in position weight to manage risk.\n\n**Q_natural:**  \nThe Tesla position is currently long 200 shares at $180, showing a 12% loss. Its portfolio weight is scheduled to drop from 12% to 8% in March 2026. This adjustment is part of a hedging strategy that uses a gold ETC, triggered when the VIX index exceeds 28, to offset macro risks.",
+      "usage": {
+        "prompt_tokens": 683,
+        "completion_tokens": 164,
+        "total_tokens": 847,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 683
+      }
+    },
+    "T2: Cross-domain GDPR": {
+      "score": 3,
+      "max": 3,
+      "time": 7.397272825241089,
+      "rlhf": [],
+      "narration": [],
+      "response": "Based on the provided context, the worst-case scenario for **G (DataCorp)** is a **maximum fine of €84 million (4% of its €2.1B revenue)**.\n\nHere is the breakdown:\n\n*   **The Threat:** GDPR case 2891 targets DataCorp, and the Irish Data Protection Commissioner (DPA) is actively investigating it. The case status has escalated from \"complaint\" to \"under-investigation\" as of January 2026, and the regulator's priority for it has been elevated as of February 2026.\n*   **The Worst-Case Outcome:** The case carries a \"potential-4%-revenue\" fine. Given DataCorp's revenue is €2.1 billion, this translates to a maximum potential fine of **€84 million**.\n*   **Context:** The certainty of this outcome is rated at 0.65 (moderately high), and the urgency is 0.6, indicating a significant and active regulatory risk.",
+      "usage": {
+        "prompt_tokens": 696,
+        "completion_tokens": 207,
+        "total_tokens": 903,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 696
+      }
+    },
+    "T3: Delta integration": {
+      "score": 3,
+      "max": 3,
+      "time": 4.9993016719818115,
+      "rlhf": [],
+      "narration": [],
+      "response": "Based on the context and the update, the situation is now:\n\n**Project X is at risk.** The project, previously on track for its April 15, 2026 deadline, is now flagged as \"at-risk\" as of March 20, 2026. This change in status coincides with a reduction in the executing **Team A**, whose size was cut from 8 members to 5 on the same date.\n\nThe update carries a higher urgency (0.7) than the initial context, indicating a significant and recent development that requires attention.",
+      "usage": {
+        "prompt_tokens": 686,
+        "completion_tokens": 112,
+        "total_tokens": 798,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 686
+      }
+    },
+    "T4: Protocol FILTER": {
+      "score": 2,
+      "max": 3,
+      "time": 5.600068807601929,
+      "rlhf": [],
+      "narration": [],
+      "response": "Based on the filter command `{\"§P\":\"filter\",\"by\":\"mu.urg\",\"order\":\"desc\",\"top_k\":2}`, we select the top 2 packets with the highest urgency (`mu.urg`) values, in descending order.\n\nChecking the urgency values:\n- Packet A: `mu.urg = 0.8`\n- Packet B: `mu.urg = 0.3`\n- Packet C: `mu.urg = 0.5`\n\nOrdered by urgency (descending): Packet A (0.8), Packet C (0.5), Packet B (0.3).\n\nThe top 2 are **Packet A** and **Packet C**.\n\n**Answer:** Packets A and C survive the filter.",
+      "usage": {
+        "prompt_tokens": 779,
+        "completion_tokens": 152,
+        "total_tokens": 931,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 779
+      }
+    },
+    "T5: Triple delta state": {
+      "score": 4,
+      "max": 4,
+      "time": 5.610163688659668,
+      "rlhf": [],
+      "narration": [],
+      "response": "Based on the provided updates, the current state of satellite-X is as follows:\n\n*   **Orbit:** 415 km\n*   **Fuel:** 75 kg\n*   **Power:** 90%\n*   **Payload:** active\n\n**Sequence of Events:**\n1.  **T1:** Orbit raised to 420 km, fuel consumed to 78 kg.\n2.  **T2:** Payload activated, power usage increased (dropping to 85%).\n3.  **T3:** Orbit adjusted down to 415 km, more fuel consumed (75 kg), and power level adjusted to 90%.",
+      "usage": {
+        "prompt_tokens": 774,
+        "completion_tokens": 129,
+        "total_tokens": 903,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 774
+      }
+    },
+    "T6: Spontaneous extension": {
+      "score": 2,
+      "max": 2,
+      "time": 25.218894720077515,
+      "rlhf": [],
+      "narration": [],
+      "response": "Looking at the provided §1 codec, it's a clear and concise representation of a startup's funding situation. However, a few elements could be added to make the model richer and more actionable for decision-making.\n\nHere are three proposals for additions, shown in §1 notation:\n\n**Proposal 1: Add Key Personnel & Stakeholders**\nThe current model lacks the human agents driving the negotiation.\n```json\n{\"§\":1,\"E\":{\"M\":[\"startup-Z\",\"company\"],\"N\":[\"Series-A\",\"funding\"],\"P\":[\"VC-FirmAlpha\",\"investor\"],\"F\":[\"Jane Doe\",\"founder\"]},\"S\":{\"M.runway\":\"6mo\",\"M.burn\":\"400k/mo\",\"N.target\":\"5M\",\"N.status\":\"negotiating\",\"P.lead\":\"Partner Smith\",\"F.equity\":\"60%\"},\"R\":[\"N->M:funds\",\"P->N:provides\",\"F->M:leads\"],\"D\":[\"M.runway:12->6mo@2026-Q1\",\"N.status:prospecting->negotiating@2026-02\"],\"mu\":{\"scope\":\"venture\",\"urg\":0.9,\"cert\":0.5}}\n```\n*Rationale: Identifies the negotiating counterparty (investor) and the founder, clarifying the decision-making structure.*\n\n**Proposal 2: Add Critical Conditions & Milestones**\nThe model states the problem but not the proposed solution or success criteria.\n```json\n{\"§\":1,\"E\":{\"M\":[\"startup-Z\",\"company\"],\"N\":[\"Series-A\",\"funding\"],\"G\":[\"product-launch\",\"milestone\"]},\"S\":{\"M.runway\":\"6mo\",\"M.burn\":\"400k/mo\",\"N.target\":\"5M\",\"N.status\":\"negotiating\",\"N.term-sheet\":\"pending\",\"G.date\":\"2026-Q4\",\"G.metric\":\"10k MAU\"},\"R\":[\"N->M:funds\",\"N->G:enables\"],\"D\":[\"M.runway:12->6mo@2026-Q1\",\"N.status:prospecting->negotiating@2026-02\",\"N.term-sheet:nil->pending@2026-02-15\"],\"mu\":{\"scope\":\"venture\",\"urg\":0.9,\"cert\":0.5}}\n```\n*Rationale: Links the funding to a concrete future milestone, adding purpose. The `term-sheet` status is a critical near-term event.*\n\n**Proposal 3: Add Risk & Contingency Context**\nHigh urgency (0.9) and low certainty (0.5) suggest significant risk, which isn't explicitly modeled.\n```json\n{\"§\":1,\"E\":{\"M\":[\"startup-Z\",\"company\"],\"N\":[\"Series-A\",\"funding\"],\"X\":[\"bridge-loan\",\"contingency\"],\"Y\":[\"down-round\",\"risk\"]},\"S\":{\"M.runway\":\"6mo\",\"M.burn\":\"400k",
+      "usage": {
+        "prompt_tokens": 680,
+        "completion_tokens": 889,
+        "total_tokens": 1569,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 680
+      }
+    }
+  },
+  "total_score": 18,
+  "total_max": 19,
+  "pct": 94.7,
+  "classification": "S1-ADVANCED",
+  "total_tokens": 5951
+}

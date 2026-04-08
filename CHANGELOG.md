@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.15] - 2026-04-08
+### Added
+- **DeepSeek SOTA Benchmark**: Successfully ran and validated `deepseek-chat` against the benchmark suite. DeepSeek tied for the #1 spot on the leaderboard with an `S1-ADVANCED` score of 94.7% (18/19), demonstrating exceptional grammar induction and reduction capabilities natively out of the box.
+
 ## [0.2.14] - 2026-04-08
 ### Changed
 - **Local IBM Provider**: Shifted `ibm` from an API-based cloud provider to a `local` provider target running over Ollama or LM Studio by default, optimizing access to IBM Granite models without requiring a remote API key.
