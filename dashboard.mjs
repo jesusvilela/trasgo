@@ -16,10 +16,10 @@ import path from 'path';
 import process from 'node:process';
 import readline from 'node:readline';
 import { fileURLToPath } from 'url';
-import { buildScientificContext, runTokenReport, runOptimizeReport } from './token-science.mjs';
+import { buildScientificContext, runTokenReport, runOptimizeReport } from './src/trasgo/token-science.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TESTS_DIR = path.resolve(__dirname, '..', '..', 'tests');
+const TESTS_DIR = path.join(__dirname, 'tests');
 const ARGS = new Set(process.argv.slice(2));
 let scientificCache = null;
 
@@ -168,7 +168,7 @@ function renderModelLeaderboard(files) {
 
   const ranked = files
     .map(f => {
-      const tests = f.results || [];
+      const tests = Array.isArray(f.results) ? f.results : [];
       const score = tests.reduce((acc, t) => acc + (t.passed ? 1 : (t.partial ? 0.5 : 0)), 0);
       const total = tests.length || 1;
       const pct = (score / total) * 100;
@@ -183,7 +183,8 @@ function renderModelLeaderboard(files) {
 
     // Handle T1-T6 columns based on actual results array
     const cols = Array(6).fill(dim('·'));
-    (f.results || []).forEach((t, idx) => {
+    const results = Array.isArray(f.results) ? f.results : [];
+    results.forEach((t, idx) => {
       if (idx < 6) {
         const val = t.passed ? `${t.passed_count}/${t.total_count || '?'}` : (t.partial ? 'part' : 'fail');
         cols[idx] = t.passed ? mint(val) : (t.partial ? gold(val) : red(val));
@@ -386,7 +387,7 @@ function loadScientificFixtures() {
     return scientificCache;
   }
 
-  const bootSeed = fs.readFileSync(path.join(__dirname, '..', 'boot.md'), 'utf8');
+  const bootSeed = fs.readFileSync(path.join(__dirname, 'src', 'boot.md'), 'utf8');
   const calibrationSeed = [
     'Dual-query calibration fixture.',
     'Question one asks the runtime to answer in codec form.',
@@ -394,8 +395,8 @@ function loadScientificFixtures() {
     'The calibration seed is intentionally short and repeatable so context budget claims stay measurable.',
   ].join(' ');
   const protocolSeed = [
-    fs.readFileSync(path.join(__dirname, '..', 'mode-lock.md'), 'utf8'),
-    fs.readFileSync(path.join(__dirname, '..', 'validate.md'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'src', 'mode-lock.md'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'src', 'validate.md'), 'utf8'),
   ].join('\n\n');
 
   const budgetReports = {

@@ -62,7 +62,8 @@ import {
   loadFormalTestData,
 } from '../../tests/formal-reasoning/run-v1-v5.mjs';
 
-import { main as runDashboardOnce, runLiveDashboard } from './dashboard.mjs';
+import { main as runDashboardOnce, runLiveDashboard } from '../../dashboard.mjs';
+
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(moduleDir, '..', '..');

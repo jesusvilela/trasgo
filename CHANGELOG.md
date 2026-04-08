@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.6] - 2026-04-07
+### Fixed
+- **Dashboard Final Resolution**: Refactored the dashboard logic to reside at the root `dashboard.mjs` while being imported directly into `cli.mjs`. This provides the strongest possible resolution for both standalone execution and built-in CLI command paths across all platforms.
+- **Robust Rendering**: Added defensive array checks to the dashboard to prevent crashes when partial benchmark data is encountered.
+
 ## [0.2.5] - 2026-04-07
 ### Fixed
 - **Dashboard Command Persistence**: Completely resolved the `MODULE_NOT_FOUND` error for the `dashboard` command by removing legacy tool and machine definitions from `registry.json` that were still attempting to resolve `dashboard.mjs` as an external file. The dashboard is now a purely internal built-in command.
