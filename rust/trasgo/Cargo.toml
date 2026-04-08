@@ -1,6 +1,6 @@
 [package]
 name = "trasgo"
-version = "0.2.9"
+version = "0.2.10"
 
 edition = "2021"
 description = "Native orchestrator for the Trasgo semantic runtime and §1 context codec."

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.10] - 2026-04-08
+### Changed
+- **Lighter Package**: Removed the 3.2MB `trasgo.png` image to drastically reduce install size and speed up downloads. The CLI now relies on its native ASCII banner rendering across all environments.
+- **Benchmarks**: Added `openai` provider natively to `bench_online.py` so that `bench openai` works out of the box with GPT models.
+
 ## [0.2.9] - 2026-04-08
 ### Fixed
 - **Publish CI Flap**: Fixed an intermittent CI issue where running a single test (`verify --tc`) inadvertently overwrote the entire `results.json` suite file, causing subsequent smoke tests (like those in `prepublishOnly`) to fail. The smoke test now restores the full verification state after the isolated probe.

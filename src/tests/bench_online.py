@@ -47,6 +47,12 @@ PROVIDERS = {
         "api_key_env": None,
         "provider": "custom",
     },
+    "openai": {
+        "model": "gpt-4o",
+        "base_url": "https://api.openai.com/v1",
+        "api_key_env": "OPENAI_API_KEY",
+        "provider": "openai",
+    },
 }
 
 # ── Boot Seed ─────────────────────────────────────────────────────────

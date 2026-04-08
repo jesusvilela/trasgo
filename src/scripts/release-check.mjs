@@ -44,7 +44,6 @@ function main() {
   const requiredMedia = [
     'assets/trasgo-s1-codec-demo.gif',
     'assets/trasgo-live-demo.gif',
-    'assets/trasgo.png',
     'docs/index.html',
     'src/scripts/trasgo-launch.cjs',
   ];

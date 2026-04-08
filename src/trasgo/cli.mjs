@@ -176,112 +176,26 @@ function logoFont(width) {
   return 'Standard';
 }
 
-function findChafaBinary() {
-  const candidates = [
-    process.platform === 'win32'
-      ? path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Links', 'Chafa.exe')
-      : null,
-    process.platform === 'win32' ? 'Chafa.exe' : 'chafa',
-  ].filter(Boolean);
-
-  for (const candidate of candidates) {
-    if (candidate.includes(path.sep)) {
-      if (fs.existsSync(candidate)) {
-        return candidate;
-      }
-      continue;
-    }
-
-    const probe = spawnSync(candidate, ['--version'], {
-      stdio: 'ignore',
-      shell: false,
-      timeout: 1500,
-    });
-    if (probe.status === 0) {
-      return candidate;
-    }
-  }
-
-  return null;
-}
-
-function detectImageBackend() {
-  if (!process.stdout?.isTTY) return null;
-  if (process.env.WT_SESSION) return 'sixels';
-  if (process.env.TERM_PROGRAM === 'iTerm.app') return 'iterm';
-  if (process.env.TERM?.includes('kitty') || process.env.KITTY_WINDOW_ID) return 'kitty';
-  // Fallback to symbols (ASCII/Unicode) which works everywhere if chafa is present
-  return 'symbols';
-}
-
-function renderInlineLogo(width) {
-  const backend = detectImageBackend();
-  const chafa = findChafaBinary();
-  if (!backend || !chafa) {
-    return false;
-  }
-
-  const imagePathCandidates = [
-    path.join(runtime.baseDir, 'trasgo.png'),
-    path.join(runtime.baseDir, 'assets', 'trasgo.png'),
-  ];
-  const imagePath = imagePathCandidates.find(candidate => fs.existsSync(candidate));
-  if (!imagePath) {
-    return false;
-  }
-
-  const imageWidth = Math.max(28, Math.min(54, Math.floor(width * 0.42)));
-  const imageHeight = Math.max(10, Math.min(20, Math.floor(imageWidth * 0.5)));
-  const result = spawnSync(chafa, [
-    '--format', backend,
-    '--probe', 'off',
-    '--animate', 'off',
-    '--align', 'center,top',
-    '--polite', 'off',
-    '--margin-bottom', '0',
-    '--margin-right', '0',
-    '--view-size', `${width}x${Math.max(imageHeight + 2, 12)}`,
-    '--size', `${imageWidth}x${imageHeight}`,
-    imagePath,
-  ], {
-    stdio: ['ignore', 'inherit', 'ignore'],
-    shell: false,
-    timeout: 4000,
-  });
-
-  if (result.status !== 0) {
-    return false;
-  }
-  process.stdout.write('\n');
-  return true;
-}
-
 function printAsciiBanner(width) {
   const logo = figlet.textSync('TRASGO', {
     font: logoFont(width),
     horizontalLayout: 'fitted',
   });
-  const orbit = `${randomFrom(TRASGO_SPRITES)}  ${randomFrom(TRASGO_QUOTES)}`;
-  const rule = dim(centerLine('─'.repeat(Math.max(30, Math.min(width - 8, 72))), width));
-  const title = centerLine('runtime shell / codec broker / postGenZ control plane', width);
-  const subtitle = centerLine('init -> pack -> boot -> send', width);
-
   console.log(centerBlock(logo, width, brand));
 }
 
 function printBanner() {
   const width = terminalWidth();
   const logoMode = bannerOptions.logo || 'auto';
-  const wantImage = logoMode === 'image' || logoMode === 'auto';
-  const imageShown = wantImage ? renderInlineLogo(width) : false;
+  
+  if (logoMode !== 'none') {
+    printAsciiBanner(width);
+  }
+
   const orbit = `${randomFrom(TRASGO_SPRITES)}  ${randomFrom(TRASGO_QUOTES)}`;
   const rule = dim(centerLine('─'.repeat(Math.max(30, Math.min(width - 8, 72))), width));
   const title = centerLine('runtime shell / codec broker / postGenZ control plane', width);
   const subtitle = centerLine('init -> pack -> boot -> send', width);
-
-  if (!imageShown && logoMode !== 'none') {
-    printAsciiBanner(width);
-  }
 
   console.log(rule);
   console.log(accent(title));

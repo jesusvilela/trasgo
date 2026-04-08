@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo.png" alt="Trasgo" width="280"/>
-</p>
-
 <h1 align="center">TRASGO §1</h1>
 
 <p align="center">
