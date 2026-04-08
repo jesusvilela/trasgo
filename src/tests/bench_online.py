@@ -48,9 +48,21 @@ PROVIDERS = {
         "provider": "custom",
     },
     "openai": {
-        "model": "gpt-4o",
+        "model": "gpt-5.4",
         "base_url": "https://api.openai.com/v1",
         "api_key_env": "OPENAI_API_KEY",
+        "provider": "openai",
+    },
+    "gemini": {
+        "model": "gemini-1.5-pro",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+        "api_key_env": "GEMINI_API_KEY",
+        "provider": "openai",
+    },
+    "ibm": {
+        "model": "granite-3.1-8b-instruct",
+        "base_url": "https://api.ibm.com/v1",
+        "api_key_env": "IBM_API_KEY",
         "provider": "openai",
     },
 }

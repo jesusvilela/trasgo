@@ -95,8 +95,8 @@
       "base_url": "https://api.openai.com/v1",
       "api_key_env": "OPENAI_API_KEY",
       "probe_path": "/models",
-      "capabilities": ["calibrate", "runtime"],
-      "model": "gpt-4o",
+      "capabilities": ["calibrate", "bench", "runtime"],
+      "model": "gpt-5.4",
       "footprint": {
         "calibration": 0.95,
         "transfer": 0.95,
@@ -107,6 +107,48 @@
         "locality": 0.1,
         "privacy": 0.3,
         "cost": 0.35
+      }
+    },
+    {
+      "id": "gemini",
+      "kind": "cloud",
+      "api": "openai",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "api_key_env": "GEMINI_API_KEY",
+      "probe_path": "/models",
+      "capabilities": ["bench", "runtime"],
+      "model": "gemini-1.5-pro",
+      "footprint": {
+        "calibration": 0.95,
+        "transfer": 0.95,
+        "delta": 0.95,
+        "protocol": 0.9,
+        "structured": 0.95,
+        "efficiency": 0.60,
+        "locality": 0.1,
+        "privacy": 0.3,
+        "cost": 0.40
+      }
+    },
+    {
+      "id": "ibm",
+      "kind": "cloud",
+      "api": "openai",
+      "base_url": "https://api.ibm.com/v1",
+      "api_key_env": "IBM_API_KEY",
+      "probe_path": "/models",
+      "capabilities": ["bench", "runtime"],
+      "model": "granite-3.1-8b-instruct",
+      "footprint": {
+        "calibration": 0.85,
+        "transfer": 0.80,
+        "delta": 0.85,
+        "protocol": 0.7,
+        "structured": 0.80,
+        "efficiency": 0.70,
+        "locality": 0.1,
+        "privacy": 0.3,
+        "cost": 0.50
       }
     }
   ],

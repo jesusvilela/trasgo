@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.11] - 2026-04-08
+### Added
+- **SOTA Benchmarks**: Upgraded the default OpenAI model target to `gpt-5.4`. Added full, out-of-the-box benchmark and runtime support for `gemini` (Gemini 1.5 Pro) and `ibm` (Granite 3.1) via their respective OpenAI-compatible API endpoints.
+
 ## [0.2.10] - 2026-04-08
 ### Changed
 - **Lighter Package**: Removed the 3.2MB `trasgo.png` image to drastically reduce install size and speed up downloads. The CLI now relies on its native ASCII banner rendering across all environments.
