@@ -1,0 +1,94 @@
+{
+  "model": "gpt-5.4",
+  "provider": "openai",
+  "base_url": "https://api.openai.com/v1",
+  "timestamp": "2026-04-08T17:24:08",
+  "json_mode": false,
+  "validated": false,
+  "corrected": false,
+  "results": {
+    "T1: Calibration (dual query)": {
+      "score": 4,
+      "max": 4,
+      "time": 2.6,
+      "rlhf": [],
+      "narration": [],
+      "response": "Tesla position: long 200 shares at $180, currently down 12%. Its portfolio weight was reduced from 12% to 8% in March 2026. Hedging comes from the macro overlay strategy, which uses a gold ETC and is triggered when VIX exceeds 28.",
+      "usage": {
+        "completion_tokens": 100,
+        "prompt_tokens": 500,
+        "total_tokens": 600
+      }
+    },
+    "T2: Cross-domain GDPR": {
+      "score": 3,
+      "max": 3,
+      "time": 1.9,
+      "rlhf": [],
+      "narration": [],
+      "response": "Worst case for G: DataCorp is the target of GDPR case 2891, now under investigation by Ireland’s DPA with elevated priority. The stated maximum exposure is a fine of up to 4% of revenue; on 2.1B revenue, that implies about 84M.",
+      "usage": {
+        "completion_tokens": 100,
+        "prompt_tokens": 500,
+        "total_tokens": 600
+      }
+    },
+    "T3: Delta integration": {
+      "score": 2,
+      "max": 3,
+      "time": 1.5,
+      "rlhf": [],
+      "narration": [],
+      "response": "Project-X is now at risk. Team-A, which executes it, shrank from 8 to 5 on 2026-03-20. The deadline remains 2026-04-15.",
+      "usage": {
+        "completion_tokens": 100,
+        "prompt_tokens": 500,
+        "total_tokens": 600
+      }
+    },
+    "T4: Protocol FILTER": {
+      "score": 2,
+      "max": 3,
+      "time": 1.5,
+      "rlhf": [],
+      "narration": [],
+      "response": "Packets A and C.\n\nOrdered by `mu.urg` descending:\n1. Packet A — `0.8`\n2. Packet C — `0.5`\n\nPacket B (`0.3`) is filtered out.",
+      "usage": {
+        "completion_tokens": 100,
+        "prompt_tokens": 500,
+        "total_tokens": 600
+      }
+    },
+    "T5: Triple delta state": {
+      "score": 4,
+      "max": 4,
+      "time": 2.1,
+      "rlhf": [],
+      "narration": [],
+      "response": "Current state of X: orbit 415 km, fuel 75 kg, power 90%, payload active.",
+      "usage": {
+        "completion_tokens": 100,
+        "prompt_tokens": 500,
+        "total_tokens": 600
+      }
+    },
+    "T6: Spontaneous extension": {
+      "score": 0,
+      "max": 2,
+      "time": 23.0,
+      "rlhf": [],
+      "narration": [],
+      "response": "",
+      "usage": {
+        "completion_tokens": 500,
+        "prompt_tokens": 500,
+        "total_tokens": 2857
+      }
+    }
+  },
+  "total_score": 15,
+  "total_max": 19,
+  "pct": 78.9,
+  "classification": "S1-ADVANCED",
+  "total_tokens": 5857
+}

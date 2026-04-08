@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.13] - 2026-04-08
+### Added
+- **Default OpenAI Benchmark**: Added `gpt-5.4` (`bench_gpt-54.json`) as a default file in the benchmark suite, making it immediately visible on the `dashboard` leaderboard with a verified `S1-ADVANCED` score of 78.9% (15/19).
+
 ## [0.2.12] - 2026-04-08
 ### Fixed
 - **API Payloads**: Adapted payload generation in `tests/bench_online.py` and `src/trasgo/provider.mjs` to dynamically use `max_completion_tokens` instead of `max_tokens` for OpenAI's `o1`, `o3`, and `gpt-5` series models. Dropped `temperature` for `o1/o3` models. 
