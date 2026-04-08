@@ -166,14 +166,6 @@
   ],
   "machines": [
     {
-      "id": "observatory",
-      "type": "pipeline",
-      "description": "Admin observatory loop for continuous dashboard monitoring.",
-      "steps": [
-        { "tool": "live-dashboard" }
-      ]
-    },
-    {
       "id": "bench-suite",
       "type": "router",
       "description": "Route a runtime id into the benchmark runner.",
@@ -195,15 +187,6 @@
       "description": "Session runtime with negotiated local/API balancing.",
       "steps": [
         { "tool": "serve" }
-      ]
-    },
-    {
-      "id": "research-mesh",
-      "type": "mesh",
-      "description": "Run research suite then inspect artifacts in the dashboard.",
-      "steps": [
-        { "tool": "research" },
-        { "tool": "dashboard" }
       ]
     },
     {

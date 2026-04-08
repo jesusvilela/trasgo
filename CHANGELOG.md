@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.5] - 2026-04-07
+### Fixed
+- **Dashboard Command Persistence**: Completely resolved the `MODULE_NOT_FOUND` error for the `dashboard` command by removing legacy tool and machine definitions from `registry.json` that were still attempting to resolve `dashboard.mjs` as an external file. The dashboard is now a purely internal built-in command.
+
 ## [0.2.4] - 2026-04-07
 ### Changed
 - **Built-in Dashboard**: Refactored the `dashboard` and `live-dashboard` tools into built-in CLI commands. They are now directly imported and executed within the main `trasgo` process, eliminating all `MODULE_NOT_FOUND` and process-spawning issues in global NPM installations.
