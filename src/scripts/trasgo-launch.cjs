@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(__dirname, '..', '..');
 const nodeCli = path.join(repoRoot, 'src', 'trasgo', 'cli.mjs');
 const binName = process.platform === 'win32' ? 'trasgo.exe' : 'trasgo';
 const cargoName = process.platform === 'win32' ? 'cargo.exe' : 'cargo';

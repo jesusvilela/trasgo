@@ -271,6 +271,9 @@ async function main() {
   const verifyTc = parseJsonCommand(['verify', '--tc', '--dry-run', '--json']);
   assert.equal(verifyTc.kind, 'trasgo-verify-run');
   assert.equal(verifyTc.results[0].testId, 'v6-tc-factorial');
+  
+  // Restore all verify results for subsequent test runs
+  parseJsonCommand(['verify', '--all', '--dry-run', '--json']);
 
   const evolveReview = parseJsonCommand(['evolve', '--review', '--json']);
   assert.equal(evolveReview.kind, 'trasgo-evolve-list');

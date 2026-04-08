@@ -9,7 +9,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(moduleDir, '..');
+const repoRoot = path.resolve(moduleDir, '..', '..');
 const isWindows = process.platform === 'win32';
 
 function quoteWindowsArg(arg) {
@@ -69,7 +69,7 @@ function main() {
       ? path.join(prefixDir, 'trasgo.cmd')
       : path.join(prefixDir, 'bin', 'trasgo');
     assert.ok(fs.existsSync(binPath), `installed launcher missing: ${binPath}`);
-    const launcherPath = path.join(prefixDir, 'node_modules', 'trasgo', 'scripts', 'trasgo-launch.cjs');
+    const launcherPath = path.join(prefixDir, 'node_modules', 'trasgo', 'src', 'scripts', 'trasgo-launch.cjs');
     assert.ok(fs.existsSync(launcherPath), `installed Node launcher missing: ${launcherPath}`);
 
     if (isWindows) {
