@@ -62,7 +62,9 @@ import {
   loadFormalTestData,
 } from '../tests/formal-reasoning/run-v1-v5.mjs';
 
-import { main as runDashboardOnce, runLiveDashboard } from './dashboard.mjs';
+import { main as runDashboardOnce, runLiveDashboard } from '../../dashboard.mjs';
+
+
 
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
@@ -513,7 +515,7 @@ function outputValue(context, value, printer) {
 }
 
 function launcherScript() {
-  return path.join(runtime.assetDir, 'scripts', 'trasgo-launch.cjs');
+  return path.join(runtime.assetDir, 'src', 'scripts', 'trasgo-launch.cjs');
 }
 
 function nativeStatusSnapshot() {
@@ -2018,7 +2020,7 @@ async function handleVerify(rest, context) {
   }
 
   if (rest[0] === '--report') {
-    const resultsPath = path.join(repoDir, 'tests', 'formal-reasoning', 'results.json');
+    const resultsPath = path.join(repoDir, 'src', 'tests', 'formal-reasoning', 'results.json');
     if (!fs.existsSync(resultsPath)) {
       const payload = { kind: 'trasgo-verify-report', results: [], note: 'no results.json yet — run trasgo verify --all first' };
       outputValue(context, payload, () => {

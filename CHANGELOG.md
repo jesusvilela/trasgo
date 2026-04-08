@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.8] - 2026-04-08
+### Fixed
+- **Publish scripts**: Fixed `release:check` and `test` scripts that failed during `npm publish` due to path refactoring in previous versions. `trasgo-launch.cjs`, `ci-smoke.mjs`, and `results.json` paths have been updated to properly locate the moved scripts within `src/`.
+
+## [0.2.7] - 2026-04-07
+### Fixed
+- **Dashboard Loader Resolution**: Restored `dashboard.mjs` to the package root while keeping the implementation in `src/trasgo/`. This root proxy ensures that the Node.js loader can always find the module in global installations on Windows, resolving the persistent `MODULE_NOT_FOUND` error.
+
 ## [0.2.6] - 2026-04-07
 ### Fixed
 - **Dashboard Final Resolution**: Refactored the dashboard logic to reside at the root `dashboard.mjs` while being imported directly into `cli.mjs`. This provides the strongest possible resolution for both standalone execution and built-in CLI command paths across all platforms.

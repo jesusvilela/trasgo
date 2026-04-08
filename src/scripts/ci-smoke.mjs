@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(moduleDir, '..');
+const repoRoot = path.resolve(moduleDir, '..', '..');
 const isWindows = process.platform === 'win32';
 const packageVersion = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).version;
 
@@ -27,7 +27,7 @@ function runLauncher(args, options = {}) {
     ...process.env,
     TRASGO_LOGO: 'none',
   };
-  const launcherScript = path.join(repoRoot, 'scripts', 'trasgo-launch.cjs');
+  const launcherScript = path.join(repoRoot, 'src', 'scripts', 'trasgo-launch.cjs');
   const launch = spawnSync(process.execPath, [launcherScript, ...args], {
     cwd: repoRoot,
     env,
@@ -70,7 +70,7 @@ async function withHttpBridge(test) {
     TRASGO_LOGO: 'none',
     TRASGO_HTTP_PORT: String(port),
   };
-  const launcherScript = path.join(repoRoot, 'scripts', 'trasgo-launch.cjs');
+  const launcherScript = path.join(repoRoot, 'src', 'scripts', 'trasgo-launch.cjs');
   const child = spawn(process.execPath, [launcherScript, 'serve', '--http', '--port', String(port)], {
     cwd: repoRoot,
     env,
