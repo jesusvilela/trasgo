@@ -61,9 +61,9 @@ PROVIDERS = {
     },
     "ibm": {
         "model": "granite-3.1-8b-instruct",
-        "base_url": "https://api.ibm.com/v1",
-        "api_key_env": "IBM_API_KEY",
-        "provider": "openai",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "api_key_env": None,
+        "provider": "custom",
     },
 }
 

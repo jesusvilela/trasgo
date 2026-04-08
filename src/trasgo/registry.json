@@ -132,10 +132,10 @@
     },
     {
       "id": "ibm",
-      "kind": "cloud",
-      "api": "openai",
-      "base_url": "https://api.ibm.com/v1",
-      "api_key_env": "IBM_API_KEY",
+      "kind": "local",
+      "api": "openai-compatible",
+      "base_url": "http://127.0.0.1:11434/v1",
+      "base_url_env": "TRASGO_OLLAMA_URL",
       "probe_path": "/models",
       "capabilities": ["bench", "runtime"],
       "model": "granite-3.1-8b-instruct",
@@ -146,9 +146,9 @@
         "protocol": 0.7,
         "structured": 0.80,
         "efficiency": 0.70,
-        "locality": 0.1,
-        "privacy": 0.3,
-        "cost": 0.50
+        "locality": 1.0,
+        "privacy": 1.0,
+        "cost": 1.0
       }
     }
   ],

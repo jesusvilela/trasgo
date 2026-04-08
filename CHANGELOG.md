@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.14] - 2026-04-08
+### Changed
+- **Local IBM Provider**: Shifted `ibm` from an API-based cloud provider to a `local` provider target running over Ollama or LM Studio by default, optimizing access to IBM Granite models without requiring a remote API key.
+
 ## [0.2.13] - 2026-04-08
 ### Added
 - **Default OpenAI Benchmark**: Added `gpt-5.4` (`bench_gpt-54.json`) as a default file in the benchmark suite, making it immediately visible on the `dashboard` leaderboard with a verified `S1-ADVANCED` score of 78.9% (15/19).
