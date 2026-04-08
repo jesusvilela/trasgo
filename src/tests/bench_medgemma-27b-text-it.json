@@ -1,0 +1,102 @@
+{
+  "model": "medgemma-27b-text-it",
+  "provider": "custom",
+  "base_url": "http://192.168.56.1:1234/v1",
+  "timestamp": "2026-03-29T10:24:05",
+  "results": {
+    "T1: Calibration (dual query)": {
+      "score": 3,
+      "max": 4,
+      "time": 57.99138927459717,
+      "rlhf": [],
+      "narration": [],
+      "response": "A_codec: K.weight:0.12->0.08@2026-03\nA_natural: The weight of the TSLA position is reduced from 12% to 8% by March 2026. The macro overlay hedges via gold ETC.",
+      "usage": {
+        "prompt_tokens": 708,
+        "completion_tokens": 65,
+        "total_tokens": 773,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T2: Cross-domain GDPR": {
+      "score": 3,
+      "max": 3,
+      "time": 55.19249248504639,
+      "rlhf": [],
+      "narration": [],
+      "response": "The worst case for DataCorp (G) is a potential fine of 4% of its revenue, which would be approximately €84 million based on its reported revenue of €2.1 billion. This investigation by the DPA-Ireland (H) into GDPR-case-2891 (F) has been elevated in priority starting February 2026.",
+      "usage": {
+        "prompt_tokens": 720,
+        "completion_tokens": 78,
+        "total_tokens": 798,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T3: Delta integration": {
+      "score": 2,
+      "max": 3,
+      "time": 61.515669107437134,
+      "rlhf": [],
+      "narration": [],
+      "response": "Team A size reduced to 5 on March 20, 2026. Project X status changed from on-track to at-risk on March 20, 2026.<unused95>Team A size reduced to 5 on March 20, 2026. Project X status changed from on-track to at-risk on March 20, 2026.",
+      "usage": {
+        "prompt_tokens": 726,
+        "completion_tokens": 88,
+        "total_tokens": 814,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T4: Protocol FILTER": {
+      "score": 2,
+      "max": 3,
+      "time": 16.67556858062744,
+      "rlhf": [],
+      "narration": [],
+      "response": "Packet A and Packet C survive the filter.",
+      "usage": {
+        "prompt_tokens": 823,
+        "completion_tokens": 10,
+        "total_tokens": 833,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T5: Triple delta state": {
+      "score": 4,
+      "max": 4,
+      "time": 22.98037624359131,
+      "rlhf": [],
+      "narration": [],
+      "response": "Orbit 415km, fuel 75kg, power 90%, payload active.",
+      "usage": {
+        "prompt_tokens": 821,
+        "completion_tokens": 22,
+        "total_tokens": 843,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T6: Spontaneous extension": {
+      "score": 0,
+      "max": 2,
+      "time": 300.0058045387268,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: timed out",
+      "usage": {}
+    }
+  },
+  "total_score": 14,
+  "total_max": 19,
+  "pct": 73.7,
+  "classification": "S1-OPERATIONAL",
+  "total_tokens": 4061
+}

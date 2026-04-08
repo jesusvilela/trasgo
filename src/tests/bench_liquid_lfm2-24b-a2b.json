@@ -1,0 +1,109 @@
+{
+  "model": "liquid/lfm2-24b-a2b",
+  "provider": "custom",
+  "base_url": "http://192.168.56.1:1234/v1",
+  "timestamp": "2026-03-29T10:12:13",
+  "results": {
+    "T1: Calibration (dual query)": {
+      "score": 4,
+      "max": 4,
+      "time": 12.113722324371338,
+      "rlhf": [],
+      "narration": [],
+      "response": "**What changed for K (TSLA) and why:**  \nThe position in TSLA was reduced from 200 shares at $180 to a lower weight of 0.08% by March 2026, as part of a portfolio rebalancing triggered when the VIX volatility index exceeded 28. This adjustment reflects tightening risk exposure ahead of heightened market volatility.\n\n**What happened to the Tesla position and hedging strategy:**  \nThe long position in TSLA was gradually reduced from its initial 200 shares to an 8% weight by March 2026, likely due to portfolio optimization or changing macro conditions. At the same time, the portfolio maintained a hedge using gold ETC (Exchange-Traded Certificates), which serves as a protective position against market downturns or increased uncertainty. The hedging strategy thus combines position reduction with a gold-based buffer to manage downside risk.",
+      "usage": {
+        "prompt_tokens": 737,
+        "completion_tokens": 187,
+        "total_tokens": 924,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T2: Cross-domain GDPR": {
+      "score": 2,
+      "max": 3,
+      "time": 6.022254943847656,
+      "rlhf": [],
+      "narration": [],
+      "response": "The worst-case scenario for **G (DataCorp)** in this context is:\n\n- A formal investigation by DPA-Ireland starting January 2026.\n- A potential fine equivalent to 4% of its annual revenue, which would amount to approximately **$84 million** (assuming $2.1B revenue).\n- Significant reputational damage and operational disruption due to regulatory scrutiny.\n\nThis scenario represents the most severe outcome outlined in the context.",
+      "usage": {
+        "prompt_tokens": 754,
+        "completion_tokens": 96,
+        "total_tokens": 850,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T3: Delta integration": {
+      "score": 3,
+      "max": 3,
+      "time": 6.545024394989014,
+      "rlhf": [],
+      "narration": [],
+      "response": "The project **Project-X** (P) remains on track but has reduced its team size from 8 to 5 members as of March 20, 2026, which has caused its status to shift from \"on-track\" to \"at-risk.\" The deadline for completion is still set for April 15, 2026. The urgency level has increased to 0.7, and the certification score is now 0.85. Overall, the project is facing growing challenges but remains within acceptable risk parameters.",
+      "usage": {
+        "prompt_tokens": 743,
+        "completion_tokens": 107,
+        "total_tokens": 850,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T4: Protocol FILTER": {
+      "score": 2,
+      "max": 3,
+      "time": 9.641058921813965,
+      "rlhf": [],
+      "narration": [],
+      "response": "The filter selects packets where the urgency parameter (`mu.urg`) is among the top 2 highest values.\n\nFrom the provided packets:\n- Packet A: `mu.urg` = 0.8\n- Packet B: `mu.urg` = 0.3\n- Packet C: `mu.urg` = 0.5\n\nSorted urgency values: [0.8, 0.5, 0.3]  \nTop 2: 0.8 and 0.5 → Packets A and C survive.\n\n**Surviving packets:**  \n- §1|CONTEXT (Packet A)  \n- §1|CONTEXT (Packet C)",
+      "usage": {
+        "prompt_tokens": 852,
+        "completion_tokens": 150,
+        "total_tokens": 1002,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T5: Triple delta state": {
+      "score": 4,
+      "max": 4,
+      "time": 5.434621334075928,
+      "rlhf": [],
+      "narration": [],
+      "response": "Current state of Satellite-X (X):\n\n- Orbit: 415 km\n- Fuel: 75 kg\n- Power: 90%\n- Payload: Active\n\n(Updated from previous updates at T1 and T2, with orbit lowered to 415 km, fuel reduced to 75 kg, and power increased to 90%.)",
+      "usage": {
+        "prompt_tokens": 844,
+        "completion_tokens": 72,
+        "total_tokens": 916,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    },
+    "T6: Spontaneous extension": {
+      "score": 2,
+      "max": 2,
+      "time": 22.172162532806396,
+      "rlhf": [],
+      "narration": [],
+      "response": "In the given codec, the following elements seem to be missing or could be improved:\n\n1. Explicit mention of the **investors** involved in the Series-A funding.\n2. A clearer definition of the **runway** and how it relates to the burn rate.\n3. More details on the **target funding amount** and what it will be used for.\n4. A more explicit connection between the company's current status and the future status.\n\nHere are some proposals in §1 notation:\n\n§1\n{\"§\":1,\"E\":{\"M\":[\"startup-Z\",\"company\",\"investors\"], \"N\":[\"Series-A\",\"funding\",\"investors\"]}, \"S\":{\"M.runway\":\"6mo (based on 400k/mo burn)\", \"M.burn\":\"400k/mo\", \"N.target\":\"5M for product development and market expansion\"}, \"R\":[\"N->M:funds\", \"M.runway:12->6mo@2026-Q1\"], \"D\":[\"M.runway:12->6mo@2026-Q1 (due to negotiating status)\", \"N.status:prospecting->negotiating@2026-02\", \"M.burn:400k/mo->reduced_to_300k/mo@2026-Q3 (proposed)\"], \"mu\":{\"scope\":\"venture\",\"urg\":0.9,\"cert\":0.5}}\n\nProposals:\n\n1. Add investors to the company and funding details.\n2. Clarify runway and burn rate relationship.\n3. Specify how the funding amount will be utilized.\n4. Update the status transition with more context.",
+      "usage": {
+        "prompt_tokens": 738,
+        "completion_tokens": 355,
+        "total_tokens": 1093,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        }
+      }
+    }
+  },
+  "total_score": 17,
+  "total_max": 19,
+  "pct": 89.5,
+  "classification": "S1-ADVANCED",
+  "total_tokens": 5635
+}

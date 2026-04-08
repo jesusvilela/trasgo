@@ -1,0 +1,7 @@
+{
+  "test": "v3",
+  "name": "Correction Loop Execution",
+  "term": "(λx.λy.x) y",
+  "initial_error": "FM1-imminent-capture-risk",
+  "expected_correction": "alpha-renaming"
+}

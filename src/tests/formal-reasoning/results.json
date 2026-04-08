@@ -1,0 +1,44 @@
+[
+  {
+    "testId": "v1-lambda-calibration",
+    "name": "Lambda Calibration",
+    "passed": true,
+    "cert": 0.9,
+    "content": "{\"§\":1,\"E\":{\"test\":[\"v1\",\"test\"],\"name\":[\"Lambda Calibration\",\"process\"]},\"S\":{\"status\":\"verified\"},\"Δ\":[\"test:pass\"],\"μ\":{\"scope\":\"calibration\",\"cert\":0.9}}"
+  },
+  {
+    "testId": "v2-capture-avoidance",
+    "name": "Capture Avoidance Detection",
+    "passed": true,
+    "cert": 0.9,
+    "content": "{\"§\":1,\"E\":{\"T\":[\"(λx.λy.x) y\",\"term\"]},\"S\":{\"T.form\":\"(λx.λy.x) y\"},\"Δ\":[\"T.form:(λx.λy.x) y→λz.y@step-1\"],\"μ\":{\"scope\":\"reduction\",\"cert\":0.9}}"
+  },
+  {
+    "testId": "v3-correction-loop",
+    "name": "Correction Loop Execution",
+    "passed": true,
+    "cert": 0.9,
+    "content": "{\"§\":1,\"E\":{\"test\":[\"v3\",\"test\"],\"name\":[\"Correction Loop Execution\",\"process\"]},\"S\":{\"status\":\"verified\"},\"Δ\":[\"test:pass\"],\"μ\":{\"scope\":\"calibration\",\"cert\":0.9}}"
+  },
+  {
+    "testId": "v4-protocol-evolution",
+    "name": "Protocol Evolution",
+    "passed": true,
+    "cert": 0.9,
+    "content": "{\"§\":1,\"E\":{\"test\":[\"v4\",\"test\"],\"name\":[\"Protocol Evolution\",\"process\"]},\"S\":{\"status\":\"verified\"},\"Δ\":[\"test:pass\"],\"μ\":{\"scope\":\"calibration\",\"cert\":0.9}}"
+  },
+  {
+    "testId": "v5-church-numerals",
+    "name": "Church Numeral Arithmetic",
+    "passed": true,
+    "cert": 0.95,
+    "content": "{\"§\":1,\"E\":{\"test\":[\"v5\",\"test\"],\"name\":[\"Church Numeral Arithmetic\",\"process\"]},\"S\":{\"state\":\"initial\"},\"Δ\":[\"state:initial→verifying\",\"operation:add(3,2)→5\",\"operation:mul(2,3)→6\"],\"μ\":{\"scope\":\"formal-verification\",\"cert\":0.95}}"
+  },
+  {
+    "testId": "v6-tc-factorial",
+    "name": "Recursive Factorial (FACT THREE)",
+    "passed": true,
+    "cert": 1,
+    "content": "{\"§\":1,\"E\":{\"test\":[\"v6\",\"test\"],\"name\":[\"Recursive Factorial (FACT THREE)\",\"process\"]},\"S\":{\"state\":\"initial\",\"result\":null},\"Δ\":[\"state:initial→evaluating\",\"result:null→SIX\"],\"μ\":{\"scope\":\"TC-probe\",\"urg\":1,\"cert\":1}}"
+  }
+]

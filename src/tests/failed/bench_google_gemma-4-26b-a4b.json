@@ -1,0 +1,70 @@
+{
+  "model": "google/gemma-4-26b-a4b",
+  "provider": "custom",
+  "base_url": "http://192.168.56.1:1234/v1",
+  "timestamp": "2026-04-07T07:57:53",
+  "json_mode": false,
+  "validated": false,
+  "corrected": false,
+  "results": {
+    "T1: Calibration (dual query)": {
+      "score": 0,
+      "max": 4,
+      "time": 45.009673833847046,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: timed out",
+      "usage": {}
+    },
+    "T2: Cross-domain GDPR": {
+      "score": 0,
+      "max": 3,
+      "time": 0.5432641506195068,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: HTTP 400",
+      "usage": {}
+    },
+    "T3: Delta integration": {
+      "score": 0,
+      "max": 3,
+      "time": 45.01454281806946,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: timed out",
+      "usage": {}
+    },
+    "T4: Protocol FILTER": {
+      "score": 0,
+      "max": 3,
+      "time": 0.03151082992553711,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: HTTP 400",
+      "usage": {}
+    },
+    "T5: Triple delta state": {
+      "score": 0,
+      "max": 4,
+      "time": 45.001731634140015,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: timed out",
+      "usage": {}
+    },
+    "T6: Spontaneous extension": {
+      "score": 0,
+      "max": 2,
+      "time": 0.0406949520111084,
+      "rlhf": [],
+      "narration": [],
+      "response": "ERROR: HTTP 400",
+      "usage": {}
+    }
+  },
+  "total_score": 0,
+  "total_max": 19,
+  "pct": 0.0,
+  "classification": "FAILED",
+  "total_tokens": 0
+}

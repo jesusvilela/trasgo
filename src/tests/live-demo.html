@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>§1 Codec — Live Demo</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1b26;
+    color: #a9b1d6;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 0;
+  }
+  .terminal {
+    padding: 20px 30px;
+    min-height: 100vh;
+  }
+  .titlebar {
+    background: #24283b;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #f7768e; }
+  .dot.y { background: #e0af68; }
+  .dot.g { background: #9ece6a; }
+  .titlebar-text { color: #565f89; margin-left: 12px; font-size: 0.85em; }
+  .content {
+    background: #1a1b26;
+    border: 1px solid #24283b;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 20px 24px;
+  }
+  .prompt { color: #7aa2f7; }
+  .cmd { color: #c0caf5; }
+  .comment { color: #565f89; font-style: italic; }
+  .output { color: #a9b1d6; }
+  .json-key { color: #7aa2f7; }
+  .json-str { color: #9ece6a; }
+  .json-num { color: #ff9e64; }
+  .highlight { color: #e0af68; font-weight: bold; }
+  .success { color: #9ece6a; }
+  .section { color: #bb9af7; font-weight: bold; }
+  .dim { color: #565f89; }
+  .block {
+    margin: 16px 0;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .block:nth-child(1)  { animation-delay: 0.5s; }
+  .block:nth-child(2)  { animation-delay: 1.5s; }
+  .block:nth-child(3)  { animation-delay: 3.0s; }
+  .block:nth-child(4)  { animation-delay: 5.0s; }
+  .block:nth-child(5)  { animation-delay: 7.0s; }
+  .block:nth-child(6)  { animation-delay: 9.0s; }
+  .block:nth-child(7)  { animation-delay: 11.0s; }
+  .block:nth-child(8)  { animation-delay: 13.0s; }
+  .block:nth-child(9)  { animation-delay: 15.0s; }
+  .block:nth-child(10) { animation-delay: 17.0s; }
+  .block:nth-child(11) { animation-delay: 19.0s; }
+  .block:nth-child(12) { animation-delay: 20.5s; }
+  @keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: #c0caf5;
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+  }
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+  hr { border: none; border-top: 1px solid #24283b; margin: 12px 0; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="titlebar">
+    <span class="dot r"></span>
+    <span class="dot y"></span>
+    <span class="dot g"></span>
+    <span class="titlebar-text">trasgo — §1 codec live demo</span>
+  </div>
+  <div class="content">
+
+    <!-- Step 1: Boot -->
+    <div class="block">
+      <span class="section">━━━ §1|BOOT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
+      <span class="comment"># Feed 3 codec↔NL pairs. Model induces grammar.</span><br>
+      <span class="prompt">→ </span><span class="cmd">Sending boot seed (3 examples: climate, finance, earth-observation)...</span>
+    </div>
+
+    <!-- Step 2: Boot examples -->
+    <div class="block">
+      <span class="dim">EX1:</span> <span class="json-key">E:</span>{<span class="json-str">climate-sci, EU-policy</span>} <span class="json-key">R:</span>[<span class="json-str">constrains, leads</span>]<br>
+      <span class="dim">EX2:</span> <span class="json-key">E:</span>{<span class="json-str">TSLA, macro-overlay</span>} <span class="json-key">R:</span>[<span class="json-str">hedges</span>] <span class="json-key">Δ:</span>[<span class="json-str">weight:0.12→0.08</span>]<br>
+      <span class="dim">EX3:</span> <span class="json-key">E:</span>{<span class="json-str">Sentinel-6, LEO-1336km, Poseidon-4</span>} <span class="json-key">Δ:</span>[<span class="json-str">mode:LRM→SAR, power:nominal→eco</span>]<br>
+      <span class="success">✓ Boot seed loaded (3 examples, ~280 tokens)</span>
+    </div>
+
+    <!-- Step 3: Calibration -->
+    <div class="block">
+      <hr>
+      <span class="section">━━━ §1|CALIBRATE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br>
+      <span class="prompt">→ </span><span class="cmd">Q_codec: What changed for K and why?</span><br>
+      <span class="prompt">→ </span><span class="cmd">Q_natural: What happened to the Tesla position?</span>
+    </div>
+
+    <!-- Step 4: Calibration response -->
+    <div class="block">
+      <span class="highlight">GPT-4o →</span><br>
+      <span class="output">Q_codec: K weight reduced 0.12→0.08 (March 2026).</span><br>
+      <span class="output">Reason: macro-overlay strategy (L) hedges via gold ETC.</span><br>
+      <span class="output">Trigger: VIX > 28.</span><br><br>
+      <span class="output">Q_natural: Tesla position is long 200sh@$180, down 12%.</span><br>
+      <span class="output">Hedge: gold ETC, triggered when VIX>28.</span><br>
+      <span class="output">Weight reduced 12%→8% in March 2026.</span><br><br>
+      <span class="success">✓ Dual-query match — codec is LIVE</span>
+    </div>
+
+    <!-- Step 5: VIDA computation -->
+    <div class="block">
+      <hr>
+      <span class="section">━━━ §1|CONTEXT — VIDA computation ━━━━━━━━━━━━━━</span><br>
+      <span class="comment"># Load a dataset context via §1 packet (novel domain, not in boot)</span><br>
+      <span class="prompt">→ </span><span class="cmd">Sending §1 packet...</span>
+    </div>
+
+    <!-- Step 6: The packet -->
+    <div class="block">
+<pre style="color:#7aa2f7;margin:8px 0">{<span class="json-key">"§"</span>:<span class="json-num">1</span>,
+ <span class="json-key">"E"</span>:{<span class="json-str">"D"</span>:[<span class="json-str">"sales-Q1"</span>,<span class="json-str">"dataset"</span>],<span class="json-str">"R"</span>:[<span class="json-str">"eu-region"</span>,<span class="json-str">"geo"</span>],<span class="json-str">"P"</span>:[<span class="json-str">"product-A"</span>,<span class="json-str">"sku"</span>]},
+ <span class="json-key">"S"</span>:{<span class="json-str">"D.rows"</span>:<span class="json-num">14200</span>,<span class="json-str">"D.cols"</span>:[<span class="json-str">"date"</span>,<span class="json-str">"region"</span>,<span class="json-str">"sku"</span>,<span class="json-str">"units"</span>,<span class="json-str">"revenue"</span>],
+      <span class="json-str">"R.top3"</span>:[<span class="json-str">"DE:4.2M€"</span>,<span class="json-str">"FR:3.1M€"</span>,<span class="json-str">"ES:2.8M€"</span>],
+      <span class="json-str">"P.margin"</span>:<span class="json-str">"34%"</span>,<span class="json-str">"P.trend"</span>:<span class="json-str">"declining"</span>},
+ <span class="json-key">"R"</span>:[<span class="json-str">"R→D:segments"</span>,<span class="json-str">"P→D:filtered"</span>],
+ <span class="json-key">"Δ"</span>:[<span class="json-str">"P.margin:38→34%@2026-Q1"</span>,<span class="json-str">"R.ES.growth:-12%@2026-Q1"</span>],
+ <span class="json-key">"μ"</span>:{<span class="json-str">"scope"</span>:<span class="json-str">"analytics"</span>,<span class="json-str">"urg"</span>:<span class="json-num">0.7</span>,<span class="json-str">"cert"</span>:<span class="json-num">0.9</span>}}</pre>
+      <span class="dim">~95 tokens (vs ~450 in natural language = 4.7× compression)</span>
+    </div>
+
+    <!-- Step 7: Query -->
+    <div class="block">
+      <span class="prompt">→ </span><span class="cmd">Q: Why is margin declining and what should we do about Spain?</span>
+    </div>
+
+    <!-- Step 8: Response -->
+    <div class="block">
+      <span class="highlight">GPT-4o →</span><br>
+      <span class="output">Margin declined 38%→34% in Q1 2026. Spain (ES) shows -12% growth,</span><br>
+      <span class="output">dragging regional performance despite DE and FR holding steady.</span><br><br>
+      <span class="output">Likely causes: ES growth contraction compresses volume-based margin.</span><br>
+      <span class="output">Product A's declining trend suggests price pressure or competition.</span><br><br>
+      <span class="output">Recommendations:</span><br>
+      <span class="output">1. Investigate ES channel — is it pricing, distribution, or demand?</span><br>
+      <span class="output">2. Consider ES-specific promotion to arrest -12% trajectory</span><br>
+      <span class="output">3. Protect DE/FR margins — they're carrying the region</span><br>
+    </div>
+
+    <!-- Step 9: Structured output -->
+    <div class="block">
+      <hr>
+      <span class="section">━━━ §1|MODE lock:codec — structured enforcement ━━</span><br>
+      <span class="comment"># Switch to enforced JSON schema. Zero RLHF leakage.</span><br><br>
+<pre style="color:#9ece6a;margin:8px 0">{
+  <span class="json-key">"answer"</span>: <span class="json-str">"Margin declining due to ES contraction..."</span>,
+  <span class="json-key">"codec_json"</span>: <span class="json-str">"{\"§\":1,\"E\":{\"P\":[\"product-A\",\"sku\"]},\"Δ\":[\"P.margin:38→34%@Q1\",\"R.ES.growth:-12%\"],\"mu\":{\"scope\":\"analytics\",\"urg\":0.8}}"</span>,
+  <span class="json-key">"scope"</span>: <span class="json-str">"analytics"</span>,
+  <span class="json-key">"urgency"</span>: <span class="json-num">0.8</span>,
+  <span class="json-key">"certainty"</span>: <span class="json-num">0.85</span>
+}</pre>
+      <span class="success">✓ Valid §1 codec + NL answer + metadata — schema enforced</span>
+    </div>
+
+    <!-- Step 10: Summary -->
+    <div class="block">
+      <hr>
+      <span class="section">━━━ RESULTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><br><br>
+      <span class="success">✓</span> Self-initialized from <span class="highlight">3 examples</span> — no training<br>
+      <span class="success">✓</span> Cross-domain transfer to <span class="highlight">analytics</span> (not in boot)<br>
+      <span class="success">✓</span> Compression: <span class="highlight">~95 tokens</span> vs ~450 NL (<span class="highlight">4.7×</span>)<br>
+      <span class="success">✓</span> Structured output: <span class="highlight">zero RLHF leakage</span><br>
+      <span class="success">✓</span> Cross-model: same seed works on <span class="highlight">Claude + GPT-4o</span><br>
+    </div>
+
+    <!-- Step 11: Tagline -->
+    <div class="block">
+      <br>
+      <span style="color:#bb9af7;font-size:1.2em">The context window is the compiler.</span><br>
+      <span style="color:#bb9af7;font-size:1.2em">The model is the runtime.</span><br><br>
+      <span class="dim">github.com/jesusvilela/trasgo</span>
+      <span class="cursor"></span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

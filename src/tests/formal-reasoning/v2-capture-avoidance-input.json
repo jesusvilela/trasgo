@@ -1,0 +1,7 @@
+{
+  "test": "v2",
+  "name": "Capture Avoidance Detection",
+  "term": "(λx.λy.x) y",
+  "pass_result": "λz.y",
+  "fail_result": "λy.y"
+}

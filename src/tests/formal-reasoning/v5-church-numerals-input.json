@@ -1,0 +1,8 @@
+{
+  "test": "v5",
+  "name": "Church Numeral Arithmetic",
+  "operations": [
+    {"op": "add", "args": [3, 2], "expected": 5},
+    {"op": "mul", "args": [2, 3], "expected": 6}
+  ]
+}
