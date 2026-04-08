@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.12] - 2026-04-08
+### Fixed
+- **API Payloads**: Adapted payload generation in `tests/bench_online.py` and `src/trasgo/provider.mjs` to dynamically use `max_completion_tokens` instead of `max_tokens` for OpenAI's `o1`, `o3`, and `gpt-5` series models. Dropped `temperature` for `o1/o3` models. 
+- **Missing API Keys**: Added an explicit warning to `bench_online.py` if an API key (like `GEMINI_API_KEY`) is missing from the environment, to gracefully handle `400` validation errors from OpenAI-compatible endpoints that expect `Bearer` tokens.
+
 ## [0.2.11] - 2026-04-08
 ### Added
 - **SOTA Benchmarks**: Upgraded the default OpenAI model target to `gpt-5.4`. Added full, out-of-the-box benchmark and runtime support for `gemini` (Gemini 1.5 Pro) and `ibm` (Granite 3.1) via their respective OpenAI-compatible API endpoints.

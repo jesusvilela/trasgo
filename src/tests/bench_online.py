@@ -254,15 +254,25 @@ def call_api(base_url, model, messages, api_key=None, timeout=45, json_mode=Fals
     payload = {
         "model": model,
         "messages": messages,
-        "temperature": 0.3,
-        "max_tokens": 1500,
     }
+    
+    if "o1" in model or "o3" in model:
+        payload["max_completion_tokens"] = 1500
+    elif "gpt-5" in model:
+        payload["temperature"] = 0.3
+        payload["max_completion_tokens"] = 1500
+    else:
+        payload["temperature"] = 0.3
+        payload["max_tokens"] = 1500
+
     if json_mode:
         payload["response_format"] = S1_JSON_SCHEMA
     body = json.dumps(payload).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
+    else:
+        print("Warning: No API key provided for the request. It might fail if the endpoint requires authentication.", file=sys.stderr)
 
     req = urllib.request.Request(
         f"{base_url}/chat/completions", data=body, headers=headers

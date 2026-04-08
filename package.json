@@ -1,6 +1,6 @@
 {
   "name": "trasgo",
-  "version": "0.2.11",
+  "version": "0.2.12",
 
 
   "description": "Self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and formal verification.",

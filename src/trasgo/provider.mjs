@@ -78,9 +78,20 @@ export async function chatCompletion(runtimeEntry, messages, options = {}) {
   const payload = {
     model,
     messages,
-    temperature: options.temperature ?? 0.3,
-    max_tokens: options.maxTokens ?? 1500,
   };
+
+  const isO1 = model.includes('o1') || model.includes('o3');
+  const isGpt5 = model.includes('gpt-5');
+
+  if (isO1) {
+    payload.max_completion_tokens = options.maxTokens ?? 1500;
+  } else if (isGpt5) {
+    payload.temperature = options.temperature ?? 0.3;
+    payload.max_completion_tokens = options.maxTokens ?? 1500;
+  } else {
+    payload.temperature = options.temperature ?? 0.3;
+    payload.max_tokens = options.maxTokens ?? 1500;
+  }
 
   const response = await fetchWithTimeout(runtimeEntry, '/chat/completions', {
     method: 'POST',
