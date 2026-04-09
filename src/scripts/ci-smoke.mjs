@@ -54,6 +54,16 @@ function runLauncher(args, options = {}) {
   };
 }
 
+function hasChafa() {
+  const probe = spawnSync(process.platform === 'win32' ? 'Chafa.exe' : 'chafa', ['--version'], {
+    cwd: repoRoot,
+    env: process.env,
+    encoding: 'utf8',
+    shell: false,
+  });
+  return !probe.error && (probe.status ?? 1) === 0;
+}
+
 function parseJsonCommand(args) {
   const result = runLauncher(args, { quiet: true });
   try {
@@ -173,6 +183,11 @@ async function main() {
 
   const plainHello = runLauncher(['hello']);
   assert.match(plainHello.stdout, /Hello, Operator! Welcome to Trasgo\./u);
+
+  if (hasChafa()) {
+    const imageHelp = runLauncher(['help', '--logo', 'image'], { quiet: true });
+    assert.match(imageHelp.stdout, /Natural Language/u);
+  }
 
   const naturalRuntimes = runLauncher(['show', 'me', 'the', 'runtimes']);
   assert.match(naturalRuntimes.stdout, /Runtimes/u);

@@ -1,6 +1,6 @@
 {
   "name": "trasgo",
-  "version": "0.2.15",
+  "version": "0.2.16",
 
 
   "description": "Self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and formal verification.",
@@ -22,7 +22,15 @@
     "docs/*.md",
     "docs/index.html",
     "examples/*.md",
-    "src",
+    "src/boot.md",
+    "src/cot.md",
+    "src/harness",
+    "src/hyperprotocol.md",
+    "src/machines",
+    "src/mode-lock.md",
+    "src/scripts",
+    "src/trasgo",
+    "src/validate.md",
     "rust/trasgo/assets",
     "rust/trasgo/Cargo.lock",
     "rust/trasgo/Cargo.toml",

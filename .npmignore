@@ -1,3 +1,4 @@
 rust/trasgo/target/
 **/__pycache__/
 __pycache__/
+src/tests/

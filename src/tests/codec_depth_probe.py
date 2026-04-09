@@ -357,6 +357,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run a quick local-vs-cloud Trasgo codec depth probe.")
     parser.add_argument("--local-url", default="http://192.168.56.1:1234/v1")
     parser.add_argument("--local-model", default=None)
+    parser.add_argument("--local-only", action="store_true")
     parser.add_argument("--cloud-provider", choices=sorted(PROVIDERS.keys()), default="deepseek")
     parser.add_argument("--cloud-model", default=None)
     parser.add_argument("--cloud-url", default=None)
@@ -370,21 +371,41 @@ def main():
 
     local_model = args.local_model or get_local_model(args.local_url)
 
-    cloud_config = PROVIDERS[args.cloud_provider]
-    cloud_url = args.cloud_url or cloud_config["base_url"]
-    cloud_model = args.cloud_model or cloud_config["model"]
-    cloud_key = os.environ.get(cloud_config["api_key_env"], "")
-    if not cloud_key:
-        raise RuntimeError(f"Missing {cloud_config['api_key_env']} for cloud provider {args.cloud_provider}")
-
     local_result = run_probe("local", args.local_url, local_model, timeout=args.timeout)
-    cloud_result = run_probe("cloud", cloud_url, cloud_model, api_key=cloud_key, timeout=args.timeout)
 
-    payload = {
-        "local": local_result,
-        "cloud": cloud_result,
-        "summary": build_summary(local_result, cloud_result),
-    }
+    if args.local_only:
+        payload = {
+            "local": local_result,
+            "summary": {
+                "local_pct": local_result["pct"],
+                "local_tokens": local_result["total_tokens"],
+                "interpretation": (
+                    "Local-only run. This measures behavioral evidence of an induced codec representation "
+                    "without comparing against a cloud baseline."
+                ),
+                "limits": [
+                    "No cloud comparison was run.",
+                    "The script cannot inspect hidden states or activations directly.",
+                ],
+            },
+        }
+    else:
+        cloud_config = PROVIDERS[args.cloud_provider]
+        cloud_url = args.cloud_url or cloud_config["base_url"]
+        cloud_model = args.cloud_model or cloud_config["model"]
+        cloud_key = os.environ.get(cloud_config["api_key_env"], "")
+        if not cloud_key:
+            raise RuntimeError(
+                f"Missing {cloud_config['api_key_env']} for cloud provider {args.cloud_provider}. "
+                "Use --local-only to skip the cloud run."
+            )
+
+        cloud_result = run_probe("cloud", cloud_url, cloud_model, api_key=cloud_key, timeout=args.timeout)
+        payload = {
+            "local": local_result,
+            "cloud": cloud_result,
+            "summary": build_summary(local_result, cloud_result),
+        }
 
     with open(args.out, "w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2, ensure_ascii=False)

@@ -55,13 +55,6 @@ import { writeCheckpoint, logCertTrajectory, logError } from '../harness/checkpo
 import { analyzeErrorHistory } from '../harness/pattern-detector.mjs';
 import { proposeEvolution, saveProposal, listProposals } from '../harness/evolution-proposer.mjs';
 import { runCorrectionLoop } from '../harness/loop-executor.mjs';
-import {
-  runFormalTest,
-  saveResults,
-  listFormalTestIds,
-  loadFormalTestData,
-} from '../tests/formal-reasoning/run-v1-v5.mjs';
-
 import { main as runDashboardOnce, runLiveDashboard } from '../../dashboard.mjs';
 
 
@@ -149,6 +142,15 @@ const HELP_TOPICS = {
   ],
 };
 
+let formalReasoningModulePromise;
+
+async function loadFormalReasoningModule() {
+  if (!formalReasoningModulePromise) {
+    formalReasoningModulePromise = import('../tests/formal-reasoning/run-v1-v5.mjs');
+  }
+  return formalReasoningModulePromise;
+}
+
 function randomFrom(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
@@ -184,11 +186,65 @@ function printAsciiBanner(width) {
   console.log(centerBlock(logo, width, brand));
 }
 
+function chafaCommand() {
+  return process.platform === 'win32' ? 'Chafa.exe' : 'chafa';
+}
+
+function hasImageBannerSupport() {
+  const probe = spawnSync(chafaCommand(), ['--version'], {
+    encoding: 'utf8',
+    shell: false,
+    windowsHide: true,
+  });
+  return !probe.error && (probe.status ?? 1) === 0;
+}
+
+function printImageBanner(width) {
+  const logoPath = path.join(repoDir, 'assets', 'trasgo.png');
+  if (!fs.existsSync(logoPath)) {
+    printAsciiBanner(width);
+    return;
+  }
+
+  const bannerWidth = Math.max(32, Math.min(width, 72));
+  const rendered = spawnSync(chafaCommand(), [
+    '--format', 'symbols',
+    '--symbols', 'block+border+half',
+    '--colors', 'full',
+    '--size', `${bannerWidth}x14`,
+    '--align', 'mid,mid',
+    '--margin-bottom', '0',
+    '--margin-right', '0',
+    logoPath,
+  ], {
+    encoding: 'utf8',
+    shell: false,
+    windowsHide: true,
+  });
+
+  if (rendered.error || (rendered.status ?? 1) !== 0 || !rendered.stdout.trim()) {
+    printAsciiBanner(width);
+    return;
+  }
+
+  console.log(centerBlock(rendered.stdout.trimEnd(), width));
+}
+
 function printBanner() {
   const width = terminalWidth();
   const logoMode = bannerOptions.logo || 'auto';
-  
-  if (logoMode !== 'none') {
+
+  if (logoMode === 'image') {
+    printImageBanner(width);
+  } else if (logoMode === 'ascii') {
+    printAsciiBanner(width);
+  } else if (logoMode === 'auto') {
+    if (process.stdout?.isTTY && hasImageBannerSupport()) {
+      printImageBanner(width);
+    } else {
+      printAsciiBanner(width);
+    }
+  } else if (logoMode !== 'none') {
     printAsciiBanner(width);
   }
 
@@ -1907,20 +1963,28 @@ async function handleHarness(rest, context) {
   return 1;
 }
 
-function loadFormalTestInput(id) {
+async function loadFormalTestInput(id) {
+  const { loadFormalTestData } = await loadFormalReasoningModule();
   return loadFormalTestData(id);
 }
 
 async function handleVerify(rest, context) {
+  const formal = await loadFormalReasoningModule();
+  const {
+    runFormalTest,
+    saveResults,
+    listFormalTestIds,
+  } = formal;
+
   if (rest.length === 0 || rest[0] === '--list') {
-    const tests = listFormalTestIds().map(id => {
+    const tests = await Promise.all(listFormalTestIds().map(async id => {
       try {
-        const data = loadFormalTestInput(id);
+        const data = await loadFormalTestInput(id);
         return { id, name: data.name || id, ok: true };
       } catch (error) {
         return { id, error: error.message, ok: false };
       }
-    });
+    }));
     const payload = { kind: 'trasgo-verify-list', tests };
     outputValue(context, payload, () => {
       console.log(accent('Formal Verification Suite'));
@@ -1960,9 +2024,9 @@ async function handleVerify(rest, context) {
 
   if (rest[0] === '--dry-run') {
     const ids = rest[1] === '--test' && rest[2] ? [rest[2]] : listFormalTestIds();
-    const inspected = ids.map(id => {
+    const inspected = await Promise.all(ids.map(async id => {
       try {
-        const data = loadFormalTestInput(id);
+        const data = await loadFormalTestInput(id);
         return {
           testId: id,
           name: data.name || id,
@@ -1972,7 +2036,7 @@ async function handleVerify(rest, context) {
       } catch (error) {
         return { testId: id, ok: false, error: error.message };
       }
-    });
+    }));
     const payload = { kind: 'trasgo-verify-dry-run', tests: inspected };
     outputValue(context, payload, () => {
       console.log(accent('Verify · dry-run'));
