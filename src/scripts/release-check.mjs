@@ -35,7 +35,7 @@ function main() {
   assert.equal(pkg.version, cargoVersion, 'package.json version must match rust/trasgo/Cargo.toml');
   assert.equal(packageLock.version, pkg.version, 'package-lock version must match package.json');
   assert.equal(packageLock.packages?.['']?.version, pkg.version, 'root package-lock entry must match package.json');
-  assert.equal(pkg.bin?.trasgo, './src/scripts/trasgo-launch.cjs', 'bin.trasgo must point to ./src/scripts/trasgo-launch.cjs');
+  assert.equal(pkg.bin?.trasgo, 'src/scripts/trasgo-launch.cjs', 'bin.trasgo must point to src/scripts/trasgo-launch.cjs');
   assert.equal(packageLock.packages?.['']?.bin?.trasgo, 'src/scripts/trasgo-launch.cjs', 'package-lock bin.trasgo must match src/scripts/trasgo-launch.cjs');
   assert.equal(pkg.publishConfig?.access, 'public', 'publishConfig.access must be public');
   assert.match(pkg.homepage || '', /jesusvilela\.github\.io\/trasgo/i, 'homepage must target the GitHub pages site');

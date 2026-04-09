@@ -206,12 +206,17 @@ function printImageBanner(width) {
     return;
   }
 
-  const bannerWidth = Math.max(32, Math.min(width, 72));
+  const bannerWidth = Math.max(48, Math.min(width - 4, 96));
+  const bannerHeight = Math.max(18, Math.min(30, Math.round(bannerWidth / 2.6)));
   const rendered = spawnSync(chafaCommand(), [
     '--format', 'symbols',
-    '--symbols', 'block+border+half',
+    '--symbols', 'block+border+half+quad+sextant',
     '--colors', 'full',
-    '--size', `${bannerWidth}x14`,
+    '--work', '9',
+    '--dither', 'diffusion',
+    '--preprocess', 'on',
+    '--font-ratio', '1/2',
+    '--size', `${bannerWidth}x${bannerHeight}`,
     '--align', 'mid,mid',
     '--margin-bottom', '0',
     '--margin-right', '0',
@@ -1132,11 +1137,16 @@ function ensureSession(context) {
 }
 
 async function runNamed(id, args = []) {
+  const normalizedArgs = [...args];
+  if ((id === 'bench' || id === 'research') && normalizedArgs[0] === 'local') {
+    normalizedArgs[0] = 'lmstudio';
+  }
+
   if (getEntry(registry, 'tools', id)) {
-    return runTool(registry, id, args, runtime);
+    return runTool(registry, id, normalizedArgs, runtime);
   }
   if (getEntry(registry, 'machines', id)) {
-    return runMachine(registry, id, args, runtime);
+    return runMachine(registry, id, normalizedArgs, runtime);
   }
   console.error(coral(`unknown tool or machine: ${id}`));
   return 1;

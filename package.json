@@ -1,10 +1,10 @@
 {
   "name": "trasgo",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Self-initializing semantic runtime and context codec (§1) for autonomous LLM reasoning and formal verification.",
   "main": "src/scripts/trasgo-launch.cjs",
   "bin": {
-    "trasgo": "./src/scripts/trasgo-launch.cjs"
+    "trasgo": "src/scripts/trasgo-launch.cjs"
   },
   "files": [
     "LICENSE",
@@ -27,6 +27,11 @@
     "src/machines",
     "src/mode-lock.md",
     "src/scripts",
+    "src/tests/bench_online.py",
+    "src/tests/run_calibration.py",
+    "src/tests/research_runner.py",
+    "src/tests/validator.py",
+    "src/tests/formal-reasoning",
     "src/trasgo",
     "src/validate.md",
     "rust/trasgo/assets",

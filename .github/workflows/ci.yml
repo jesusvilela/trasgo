@@ -54,13 +54,13 @@ jobs:
         run: cargo test --manifest-path rust/trasgo/Cargo.toml -j 1
 
       - name: Build native launcher target
-        run: node scripts/trasgo-launch.cjs --build-native
+        run: node src/scripts/trasgo-launch.cjs --build-native
 
       - name: Run launcher smoke tests
-        run: node scripts/ci-smoke.mjs
+        run: node src/scripts/ci-smoke.mjs
 
       - name: Run packaged install smoke tests
-        run: node scripts/packaged-smoke.mjs
+        run: node src/scripts/packaged-smoke.mjs
 
       - name: Package Unix CI artifact
         if: runner.os != 'Windows'
