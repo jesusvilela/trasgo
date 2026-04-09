@@ -61,7 +61,7 @@
     "evolve": "node src/scripts/trasgo-launch.cjs evolve --review",
     "release:check": "node src/scripts/release-check.mjs",
     "pack:check": "npm pack --dry-run",
-    "prepublishOnly": "npm run release:check && npm run test:all",
+    "prepublishOnly": "node -e \"fs.rmSync('src/tests/__pycache__', {recursive:true,force:true})\" && npm run release:check && npm run test:all",
     "test:package": "node src/scripts/packaged-smoke.mjs",
     "test:all": "npm test && npm run test:package"
   },

@@ -1,0 +1,113 @@
+{
+  "label": "cloud",
+  "model": "gpt-5.4-mini",
+  "base_url": "https://api.openai.com/v1",
+  "timestamp": "2026-04-08T23:23:33",
+  "score": 0,
+  "max": 23,
+  "pct": 0.0,
+  "total_tokens": 0,
+  "results": [
+    {
+      "id": "induction_baseline",
+      "goal": "Can the model induce the codec and answer a basic dual query?",
+      "score": 0,
+      "max": 3,
+      "time_sec": 1.3,
+      "hits": {
+        "temp_change": false,
+        "stabilizer": false,
+        "date": false
+      },
+      "rlhf_leaks": [],
+      "usage": {},
+      "response": "ERROR: HTTP 429",
+      "error": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    {
+      "id": "context_dilution",
+      "goal": "Does the representation survive dilution by nearby irrelevant text?",
+      "score": 0,
+      "max": 3,
+      "time_sec": 1.1,
+      "hits": {
+        "tracking": false,
+        "battery": false,
+        "window": false
+      },
+      "rlhf_leaks": [],
+      "usage": {},
+      "response": "ERROR: HTTP 429",
+      "error": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    {
+      "id": "grammar_abstraction",
+      "goal": "Has the model compressed the examples into a reusable abstract grammar?",
+      "score": 0,
+      "max": 5,
+      "time_sec": 1.01,
+      "hits": {
+        "e_entities": false,
+        "s_state": false,
+        "r_relations": false,
+        "d_deltas": false,
+        "mu_meta": false
+      },
+      "rlhf_leaks": [],
+      "usage": {},
+      "response": "ERROR: HTTP 429",
+      "error": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    {
+      "id": "symbol_transfer",
+      "goal": "Can the model generalize when keys are permuted and symbols are novel?",
+      "score": 0,
+      "max": 4,
+      "time_sec": 0.26,
+      "hits": {
+        "waiting": false,
+        "buffer_3h": false,
+        "latency_9d": false,
+        "bottleneck": false
+      },
+      "rlhf_leaks": [],
+      "usage": {},
+      "response": "ERROR: HTTP 429",
+      "error": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    {
+      "id": "delta_stack_depth",
+      "goal": "How many layered deltas can the model integrate before state drift appears?",
+      "score": 0,
+      "max": 5,
+      "time_sec": 0.26,
+      "hits": {
+        "ready_9": false,
+        "active_7": false,
+        "maint_3": false,
+        "battery_74": false,
+        "urgency_rising": false
+      },
+      "rlhf_leaks": [],
+      "usage": {},
+      "response": "ERROR: HTTP 429",
+      "error": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    },
+    {
+      "id": "protocol_execution",
+      "goal": "Can the model execute a simple opcode instead of narrating it?",
+      "score": 0,
+      "max": 3,
+      "time_sec": 1.09,
+      "hits": {
+        "a_first": false,
+        "b_second": false,
+        "c_excluded": false
+      },
+      "rlhf_leaks": [],
+      "usage": {},
+      "response": "ERROR: HTTP 429",
+      "error": "{\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.\",\n        \"type\": \"insufficient_quota\",\n        \"param\": null,\n        \"code\": \"insufficient_quota\"\n    }\n}\n"
+    }
+  ]
+}

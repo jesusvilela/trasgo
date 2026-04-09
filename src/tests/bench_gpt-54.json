@@ -2,7 +2,7 @@
   "model": "gpt-5.4",
   "provider": "openai",
   "base_url": "https://api.openai.com/v1",
-  "timestamp": "2026-04-08T17:24:08",
+  "timestamp": "2026-04-08T17:34:41",
   "json_mode": false,
   "validated": false,
   "corrected": false,
@@ -10,85 +10,145 @@
     "T1: Calibration (dual query)": {
       "score": 4,
       "max": 4,
-      "time": 2.6,
+      "time": 2.1989967823028564,
       "rlhf": [],
       "narration": [],
-      "response": "Tesla position: long 200 shares at $180, currently down 12%. Its portfolio weight was reduced from 12% to 8% in March 2026. Hedging comes from the macro overlay strategy, which uses a gold ETC and is triggered when VIX exceeds 28.",
+      "response": "The Tesla position is long 200 shares at $180 and is currently down 12%. Its portfolio weight was reduced from 12% to 8% in March 2026. The hedging strategy is a macro overlay using a gold ETC, triggered when VIX is above 28.",
       "usage": {
-        "completion_tokens": 100,
-        "prompt_tokens": 500,
-        "total_tokens": 600
+        "prompt_tokens": 644,
+        "completion_tokens": 62,
+        "total_tokens": 706,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
       }
     },
     "T2: Cross-domain GDPR": {
       "score": 3,
       "max": 3,
-      "time": 1.9,
+      "time": 2.6188695430755615,
       "rlhf": [],
       "narration": [],
-      "response": "Worst case for G: DataCorp is the target of GDPR case 2891, now under investigation by Ireland’s DPA with elevated priority. The stated maximum exposure is a fine of up to 4% of revenue; on 2.1B revenue, that implies about 84M.",
+      "response": "Worst case for G: DataCorp is the target of GDPR case 2891, now under investigation by Ireland’s DPA with elevated priority. The stated exposure is a potential fine of up to 4% of revenue; on 2.1B revenue, that implies about 84M in fines.",
       "usage": {
-        "completion_tokens": 100,
-        "prompt_tokens": 500,
-        "total_tokens": 600
+        "prompt_tokens": 665,
+        "completion_tokens": 65,
+        "total_tokens": 730,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
       }
     },
     "T3: Delta integration": {
       "score": 2,
       "max": 3,
-      "time": 1.5,
+      "time": 1.5519838333129883,
       "rlhf": [],
       "narration": [],
       "response": "Project-X is now at risk. Team-A, which executes it, shrank from 8 to 5 on 2026-03-20. The deadline remains 2026-04-15.",
       "usage": {
-        "completion_tokens": 100,
-        "prompt_tokens": 500,
-        "total_tokens": 600
+        "prompt_tokens": 658,
+        "completion_tokens": 45,
+        "total_tokens": 703,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
       }
     },
     "T4: Protocol FILTER": {
-      "score": 2,
+      "score": 3,
       "max": 3,
-      "time": 1.5,
+      "time": 1.4978344440460205,
       "rlhf": [],
       "narration": [],
-      "response": "Packets A and C.\n\nOrdered by `mu.urg` descending:\n1. Packet A — `0.8`\n2. Packet C — `0.5`\n\nPacket B (`0.3`) is filtered out.",
+      "response": "Packets **A** and **C** survive.\n\nOrdered by `mu.urg` descending:\n1. **Packet A** — `0.8`\n2. **Packet C** — `0.5`\n\nPacket **B** is excluded — `0.3`.",
       "usage": {
-        "completion_tokens": 100,
-        "prompt_tokens": 500,
-        "total_tokens": 600
+        "prompt_tokens": 750,
+        "completion_tokens": 58,
+        "total_tokens": 808,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
       }
     },
     "T5: Triple delta state": {
       "score": 4,
       "max": 4,
-      "time": 2.1,
+      "time": 0.9975757598876953,
       "rlhf": [],
       "narration": [],
       "response": "Current state of X: orbit 415 km, fuel 75 kg, power 90%, payload active.",
       "usage": {
-        "completion_tokens": 100,
-        "prompt_tokens": 500,
-        "total_tokens": 600
+        "prompt_tokens": 745,
+        "completion_tokens": 25,
+        "total_tokens": 770,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
       }
     },
     "T6: Spontaneous extension": {
       "score": 0,
       "max": 2,
-      "time": 23.0,
+      "time": 22.630136489868164,
       "rlhf": [],
       "narration": [],
       "response": "",
       "usage": {
-        "completion_tokens": 500,
-        "prompt_tokens": 500,
-        "total_tokens": 2857
+        "prompt_tokens": 652,
+        "completion_tokens": 1500,
+        "total_tokens": 2152,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1500,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
       }
     }
   },
-  "total_score": 15,
+  "total_score": 16,
   "total_max": 19,
-  "pct": 78.9,
+  "pct": 84.2,
   "classification": "S1-ADVANCED",
-  "total_tokens": 5857
+  "total_tokens": 5869
 }

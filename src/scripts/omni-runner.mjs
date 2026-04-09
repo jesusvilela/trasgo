@@ -38,9 +38,16 @@ async function main() {
   console.log('\n--- Trasgo Scientific Omni Runner ---');
   console.log('Targeting SOTA models for dimensional mapping...\n');
 
-  // Use runtimes that are likely to have keys or be available
-  const targets = ['openai']; 
-  if (process.env.DEEPSEEK_API_KEY) targets.push('deepseek');
+  // Dynamically resolve available runtimes from the registry
+  const targets = registry.runtimes
+    .filter(r => {
+      // Local models are assumed available for probing
+      if (r.kind === 'local') return true;
+      // Cloud models require their respective API key
+      if (r.api_key_env && process.env[r.api_key_env]) return true;
+      return false;
+    })
+    .map(r => r.id);
 
   const results = [];
 
