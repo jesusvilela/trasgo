@@ -5,12 +5,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(moduleDir, '..', '..');
 const isWindows = process.platform === 'win32';
+const npmCommand = isWindows ? 'npm.cmd' : 'npm';
 
 function quoteWindowsArg(arg) {
   if (arg.length === 0) return '""';
@@ -21,15 +22,17 @@ function quoteWindowsArg(arg) {
 }
 
 function run(command, args, options = {}) {
-  const result = isWindows && String(command).toLowerCase().endsWith('.cmd')
-    ? spawnSync(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', `${quoteWindowsArg(command)} ${args.map(quoteWindowsArg).join(' ')}`], {
-      cwd: options.cwd || repoRoot,
+  const effectiveCommand = isWindows && command === 'npm' ? 'npm.cmd' : command;
+  const cwd = options.cwd || repoRoot;
+  const result = isWindows && String(effectiveCommand).toLowerCase().endsWith('.cmd')
+    ? spawnSync(effectiveCommand, args, {
+      cwd,
       env: options.env || process.env,
       encoding: 'utf8',
-      shell: false,
+      shell: true,
     })
-    : spawnSync(command, args, {
-      cwd: options.cwd || repoRoot,
+    : spawnSync(effectiveCommand, args, {
+      cwd,
       env: options.env || process.env,
       encoding: 'utf8',
       shell: options.shell ?? false,
@@ -37,7 +40,7 @@ function run(command, args, options = {}) {
 
   if (result.error) throw result.error;
   if ((result.status ?? 1) !== 0) {
-    throw new Error(`${command} ${args.join(' ')} failed\n${result.stdout || ''}\n${result.stderr || ''}`);
+    throw new Error(`${effectiveCommand} ${args.join(' ')} failed\n${result.stdout || ''}\n${result.stderr || ''}`);
   }
   return result.stdout.trim();
 }
@@ -54,16 +57,15 @@ function main() {
   fs.mkdirSync(workspaceDir, { recursive: true });
 
   let tarballPath;
+  let packedTarballPath;
   try {
-    const packJson = execFileSync('npm', ['pack', '--json'], {
-      cwd: repoRoot,
-      encoding: 'utf8',
-      shell: isWindows,
-    });
+    const packJson = run(npmCommand, ['pack', '--json'], { cwd: repoRoot });
     const [packInfo] = JSON.parse(packJson);
-    tarballPath = path.join(repoRoot, packInfo.filename);
+    packedTarballPath = path.join(repoRoot, packInfo.filename);
+    tarballPath = path.join(sandbox, packInfo.filename);
+    fs.copyFileSync(packedTarballPath, tarballPath);
 
-    run('npm', ['install', '-g', '--prefix', prefixDir, tarballPath], { cwd: repoRoot, shell: isWindows });
+    run(npmCommand, ['install', '-g', '--prefix', prefixDir, tarballPath], { cwd: repoRoot });
 
     const binPath = isWindows
       ? path.join(prefixDir, 'trasgo.cmd')
@@ -116,6 +118,9 @@ function main() {
 
     process.stdout.write('packaged smoke ok\n');
   } finally {
+    if (packedTarballPath && fs.existsSync(packedTarballPath)) {
+      fs.rmSync(packedTarballPath, { force: true });
+    }
     if (tarballPath && fs.existsSync(tarballPath)) {
       fs.rmSync(tarballPath, { force: true });
     }
