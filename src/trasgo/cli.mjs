@@ -67,12 +67,31 @@ const runtimeHome = {
   assetDir: repoDir,
   stateDir,
 };
+function resolvePythonBin() {
+  if (process.env.TRASGO_PYTHON) return process.env.TRASGO_PYTHON;
+  const py3Check = ['-c', 'import sys; sys.exit(0 if sys.version_info[0] >= 3 else 1)'];
+  for (const bin of ['python3', 'python']) {
+    const probe = spawnSync(bin, py3Check, { stdio: 'ignore' });
+    if (probe.status === 0) return bin;
+  }
+  return 'python3';
+}
+
+function resolveCodecArg(value) {
+  if (!value) return value;
+  const candidate = path.resolve(process.cwd(), value);
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+    return fs.readFileSync(candidate, 'utf8');
+  }
+  return value;
+}
+
 const runtime = {
   baseDir: repoDir,
   assetDir: repoDir,
   stateDir,
   nodeBin: process.execPath,
-  pythonBin: process.env.TRASGO_PYTHON || 'python',
+  pythonBin: resolvePythonBin(),
 };
 const activeSessionFile = path.join(runtime.stateDir, '.trasgo-runtime', 'active-session.json');
 
@@ -686,13 +705,13 @@ function parseCodecArgs(rest) {
     const arg = rest[i];
     if (arg === '--codec' && rest[i + 1]) {
       const consumed = consumeOptionValue(rest, i + 1);
-      options.codec = consumed.value;
+      options.codec = resolveCodecArg(consumed.value);
       i = consumed.nextIndex;
       continue;
     }
     if (arg === '--natural' && rest[i + 1]) {
       const consumed = consumeOptionValue(rest, i + 1);
-      options.natural = consumed.value;
+      options.natural = resolveCodecArg(consumed.value);
       i = consumed.nextIndex;
       continue;
     }
@@ -718,13 +737,13 @@ function parseCotArgs(rest) {
     const arg = rest[i];
     if (arg === '--natural' && rest[i + 1]) {
       const consumed = consumeOptionValue(rest, i + 1);
-      options.natural = consumed.value;
+      options.natural = resolveCodecArg(consumed.value);
       i = consumed.nextIndex;
       continue;
     }
     if (arg === '--codec' && rest[i + 1]) {
       const consumed = consumeOptionValue(rest, i + 1);
-      options.codec = consumed.value;
+      options.codec = resolveCodecArg(consumed.value);
       i = consumed.nextIndex;
       continue;
     }
@@ -1211,15 +1230,6 @@ async function handleAdvise(rest, context) {
   return 0;
 }
 
-function resolveCodecArg(value) {
-  if (!value) return null;
-  const candidate = path.resolve(process.cwd(), value);
-  if (fs.existsSync(candidate)) {
-    return fs.readFileSync(candidate, 'utf8');
-  }
-  return value;
-}
-
 async function handleTokens(rest, context) {
   const options = parseCodecArgs(rest);
   if (!options.codec) {
@@ -1227,8 +1237,8 @@ async function handleTokens(rest, context) {
     return 1;
   }
   const report = runTokenReport({
-    codec: resolveCodecArg(options.codec),
-    natural: options.natural ? resolveCodecArg(options.natural) : null,
+    codec: options.codec,
+    natural: options.natural,
     models: options.models,
   });
   outputValue(context, report, () => {
@@ -1256,7 +1266,7 @@ async function handleOptimize(rest, context) {
     return 1;
   }
   const report = runOptimizeReport({
-    codec: resolveCodecArg(options.codec),
+    codec: options.codec,
     models: options.models,
   });
   outputValue(context, report, () => {
@@ -1358,16 +1368,12 @@ async function handleCot(rest, context) {
   }
 
   if (action === 'expand') {
-    const codecInput = options.codec || positional.join(' ').trim();
+    const codecInput = options.codec || resolveCodecArg(positional.join(' ').trim());
     if (!codecInput) {
       console.error(coral('usage: trasgo cot expand --codec <text>'));
       return 1;
     }
-    const codecPath = path.resolve(process.cwd(), codecInput);
-    const codec = fs.existsSync(codecPath)
-      ? fs.readFileSync(codecPath, 'utf8')
-      : codecInput;
-    const result = expandCot(codec);
+    const result = expandCot(codecInput);
     outputValue(context, result, () => {
       console.log(accent('§CoT Expand'));
       console.log();
