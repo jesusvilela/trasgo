@@ -204,7 +204,7 @@
             <span class="title">trasgo — semantic-runtime-shell</span>
           </div>
           <div class="terminal-body" id="term-body">
-            <div class="term-line">Trasgo v0.2.16-verified (Web Sandbox)</div>
+            <div class="term-line">Trasgo v0.2.17-verified (Web Sandbox)</div>
             <div class="term-line">Type <code class="inline">trasgo --help</code> to see commands, or try the <b>demo loop</b>:</div>
             <div class="term-line dim">1. trasgo init "demo"</div>
             <div class="term-line dim">2. trasgo models</div>
@@ -281,6 +281,11 @@
       let isProcessing = false;
       let lastEvalReport = null;
 
+      if (jsonMode === "schema") {
+        jsonMode = "json_object";
+        localStorage.setItem(JSON_MODE_KEY, jsonMode);
+      }
+
       function getStatus() {
         return [
           "Session: sess-browser-101",
@@ -311,10 +316,15 @@
           "  evolve     Manage protocol evolution proposals",
           "  status     Show current routing status",
           "",
+          "JSON modes:",
+          "  json_object   Provider JSON mode + Trasgo post-parse validation",
+          "  schema        Alias to json_object in the browser sandbox; HF Router grammars can reject Unicode §1 keys",
+          "  prompt        Prompt-only JSON enforcement fallback",
+          "",
           "Examples:",
           "  trasgo models",
           "  trasgo model Qwen/Qwen2.5-7B-Instruct",
-          "  trasgo json schema",
+          "  trasgo json json_object",
           "  trasgo eval",
           "  trasgo send \"Reduce (λx.λy.x) y\""
         ].join("\n")
@@ -408,11 +418,18 @@
       function handleJsonMode(val) {
         const mode = val.replace("trasgo json", "").trim();
         if (!mode) {
-          appendLine(`Structured output mode: ${jsonMode}\nOptions: schema | json_object | prompt`);
+          appendLine(`Structured output mode: ${jsonMode}\nOptions: json_object | schema | prompt\nNote: schema is mapped to json_object in this browser sandbox to avoid HF Router grammar failures on Unicode §1 keys.`);
           return;
         }
         if (!["schema", "json_object", "prompt"].includes(mode)) {
-          appendLine("Invalid JSON mode. Use one of: schema | json_object | prompt", "err");
+          appendLine("Invalid JSON mode. Use one of: json_object | schema | prompt", "err");
+          return;
+        }
+        if (mode === "schema") {
+          jsonMode = "json_object";
+          localStorage.setItem(JSON_MODE_KEY, jsonMode);
+          appendLine("[Warn] HF Router JSON schema grammars can reject Trasgo Unicode keys (§, Δ). Using json_object + post-parse validation instead.", "yellow");
+          appendLine("[OK] Structured output mode set to: json_object", "green");
           return;
         }
         jsonMode = mode;
@@ -525,33 +542,11 @@
           max_tokens: maxTokens,
           stream: false
         };
-        if (jsonMode === "schema") {
-          body.response_format = {
-            type: "json_schema",
-            json_schema: {
-              name: "trasgo_packet",
-              strict: false,
-              schema: {
-                type: "object",
-                required: ["§", "E", "S", "R", "Δ", "μ"],
-                properties: {
-                  "§": { const: 1 },
-                  "E": { type: "object" },
-                  "S": { type: "object" },
-                  "R": { type: "array", items: { type: "string" } },
-                  "Δ": { type: "array", items: { type: "string" } },
-                  "μ": { type: "object" },
-                  "ERR": { type: "object" }
-                },
-                additionalProperties: true
-              }
-            }
-          };
-        } else if (jsonMode === "json_object") {
+        if (jsonMode === "json_object") {
           body.response_format = { type: "json_object" };
         }
 
-        const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+        const response = await fetchWithRetry("https://router.huggingface.co/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -562,16 +557,29 @@
         if (!response.ok) {
           let message = "Unknown API Error";
           try { message = (await response.json()).error?.message || message; } catch (e) {}
-          if (jsonMode !== "prompt" && /response_format|json_schema|json_object/i.test(message)) {
-            const oldMode = jsonMode;
+          if (jsonMode === "json_object" && /response_format|json_object|grammar|compile/i.test(message)) {
+            const previous = jsonMode;
             jsonMode = "prompt";
-            appendLine(`[Warn] Provider rejected ${oldMode}; retrying with prompt-only JSON enforcement.`, "yellow");
+            appendLine(`[Warn] Provider rejected ${previous}; retrying with prompt-only JSON enforcement.`, "yellow");
             return runTrasgoCompletion(query, model, maxTokens);
           }
           throw new Error(message);
         }
         const data = await response.json();
         return data.choices?.[0]?.message?.content || "{}";
+      }
+
+      async function fetchWithRetry(url, options, attempts = 2) {
+        let lastError;
+        for (let i = 0; i < attempts; i++) {
+          try {
+            return await fetch(url, options);
+          } catch (err) {
+            lastError = err;
+            if (i < attempts - 1) await new Promise(resolve => setTimeout(resolve, 650));
+          }
+        }
+        throw lastError;
       }
 
       function buildSystemPrompt() {
