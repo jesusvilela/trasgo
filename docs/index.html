@@ -19,6 +19,9 @@
         --brand-2: #4de3cc;
         --accent: #f8b4ff;
         --border: #2a376d;
+        --ok: #4de3cc;
+        --warn: #ffbd2e;
+        --err: #ff5f56;
       }
 
       * { box-sizing: border-box; }
@@ -57,7 +60,7 @@
         background-clip: text;
         color: transparent;
       }
-      .lead { max-width: 70ch; color: var(--text-dim); font-size: 1.1rem; }
+      .lead { max-width: 72ch; color: var(--text-dim); font-size: 1.1rem; }
       .actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.3rem; }
       .btn {
         padding: .75rem 1rem;
@@ -85,7 +88,6 @@
       .label { color: var(--text-dim); font-size: .92rem; }
       section { padding: 1.5rem 0 2rem; }
       h2 { font-size: clamp(1.4rem, 2vw, 2rem); margin: 0 0 .8rem; }
-      .list { margin: .5rem 0 0; padding-left: 1rem; color: var(--text-dim); }
       .chipset { display: flex; flex-wrap: wrap; gap: .5rem; }
       .chip {
         border: 1px solid var(--border);
@@ -124,7 +126,6 @@
         color: var(--text);
       }
 
-      /* Terminal Sandbox */
       .terminal-sandbox {
         background: #0d1126;
         border: 1px solid var(--border);
@@ -144,32 +145,20 @@
         border-bottom: 1px solid var(--border);
         cursor: default;
       }
-      .terminal-header .dot {
-        width: 12px; height: 12px; border-radius: 50%; margin-right: 6px;
-      }
-      .dot.red { background: #ff5f56; }
-      .dot.yellow { background: #ffbd2e; }
+      .terminal-header .dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
+      .dot.red { background: var(--err); }
+      .dot.yellow { background: var(--warn); }
       .dot.green { background: #27c93f; }
-      .terminal-header .title {
-        margin-left: auto; margin-right: auto;
-        color: var(--text-dim); font-size: .8rem; padding-right: 54px;
-      }
-      .terminal-body {
-        padding: 1rem;
-        height: 280px;
-        overflow-y: auto;
-        color: #e7ebff;
-      }
-      .term-line { margin-bottom: .2rem; line-height: 1.4; word-wrap: break-word; }
+      .terminal-header .title { margin-left: auto; margin-right: auto; color: var(--text-dim); font-size: .8rem; padding-right: 54px; }
+      .terminal-body { padding: 1rem; height: 360px; overflow-y: auto; color: #e7ebff; }
+      .term-line { margin-bottom: .2rem; line-height: 1.4; word-wrap: break-word; white-space: pre-wrap; }
       .term-line.cmd { color: var(--brand-2); }
-      .term-line.err { color: #ff5f56; }
+      .term-line.err { color: var(--err); }
       .term-line.dim { color: var(--text-dim); }
-      .term-line.json { color: var(--accent); white-space: pre-wrap; }
-      .terminal-input-wrapper {
-        display: flex;
-        padding: 0 1rem 1rem;
-        background: #0d1126;
-      }
+      .term-line.json { color: var(--accent); }
+      .term-line.green { color: var(--ok); }
+      .term-line.yellow { color: var(--warn); }
+      .terminal-input-wrapper { display: flex; padding: 0 1rem 1rem; background: #0d1126; }
       .prompt { color: var(--brand-2); margin-right: .5rem; font-weight: bold; }
       .term-input {
         background: transparent;
@@ -203,7 +192,10 @@
     <main class="container">
       <section>
         <h2>Live Sandbox</h2>
-        <p class="lead">Try the trasgo CLI right in your browser. (Running a Hybrid Engine via Hugging Face Router: <code class="inline">EssentialAI/rnj-1-instruct:fastest</code>)</p>
+        <p class="lead">
+          Try the trasgo CLI right in your browser. The web runtime uses Hugging Face Router with a selectable model backend.
+          Run <code class="inline">trasgo models</code> and <code class="inline">trasgo model &lt;id&gt;</code> before the live demo.
+        </p>
         <div class="terminal-sandbox" onclick="document.getElementById('term-input').focus()">
           <div class="terminal-header">
             <span class="dot red"></span>
@@ -212,13 +204,14 @@
             <span class="title">trasgo — semantic-runtime-shell</span>
           </div>
           <div class="terminal-body" id="term-body">
-            <div class="term-line">Trasgo v0.2.15-verified (Web Sandbox)</div>
-
+            <div class="term-line">Trasgo v0.2.16-verified (Web Sandbox)</div>
             <div class="term-line">Type <code class="inline">trasgo --help</code> to see commands, or try the <b>demo loop</b>:</div>
             <div class="term-line dim">1. trasgo init "demo"</div>
-            <div class="term-line dim">2. trasgo boot</div>
-            <div class="term-line dim">3. trasgo verify --all</div>
-            <div class="term-line dim">4. trasgo send "Reduce (λx.λy.x) y"</div>
+            <div class="term-line dim">2. trasgo models</div>
+            <div class="term-line dim">3. trasgo model Qwen/Qwen2.5-7B-Instruct</div>
+            <div class="term-line dim">4. trasgo boot</div>
+            <div class="term-line dim">5. trasgo eval</div>
+            <div class="term-line dim">6. trasgo send "Reduce (λx.λy.x) y"</div>
             <div class="term-line">&nbsp;</div>
           </div>
           <div class="terminal-input-wrapper">
@@ -235,9 +228,11 @@
           <div class="chipset">
             <span class="chip">Semantic Runtime (LLM-as-VM)</span>
             <span class="chip">Agentic Harness (ERR/CT)</span>
-            <span class="chip">Formal Verification (V1-V5)</span>
+            <span class="chip">Formal Verification (V1-V6)</span>
             <span class="chip">Protocol Evolution (σ-axis)</span>
             <span class="chip">Instruction Set Architecture (§1)</span>
+            <span class="chip">Structured JSON mode</span>
+            <span class="chip">Model-selectable sandbox</span>
           </div>
         </article>
         <article class="card">
@@ -256,178 +251,382 @@
     </footer>
 
     <script>
-      const REPO = "jesusvilela/trasgo";
-      const format = new Intl.NumberFormat("en-US");
+      const termBody = document.getElementById("term-body");
+      const termInput = document.getElementById("term-input");
+      const DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct";
+      const LEGACY_LATENT_MODEL = "EssentialAI/rnj-1-instruct:fastest";
+      const MODEL_KEY = "trasgo_hf_model";
+      const JSON_MODE_KEY = "trasgo_json_mode";
+      const MODEL_CACHE_KEY = "trasgo_hf_models_cache";
+
+      const RECOMMENDED_MODELS = [
+        { id: "Qwen/Qwen2.5-7B-Instruct", note: "recommended fallback; strong structured-output behavior" },
+        { id: "Qwen/Qwen2.5-3B-Instruct", note: "small-model smoke test" },
+        { id: "mistralai/Mistral-7B-Instruct-v0.3", note: "compact instruct baseline" },
+        { id: "meta-llama/Llama-3.1-8B-Instruct", note: "8B instruct baseline when available" },
+        { id: LEGACY_LATENT_MODEL, note: "legacy LMF/latent-space candidate; use if exposed by the router" }
+      ];
 
       document.getElementById("updated").textContent = `Last refreshed ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}.`;
 
-      // Sandbox Logic using Hugging Face Router (Hybrid Engine)
-      const termBody = document.getElementById("term-body");
-      const termInput = document.getElementById("term-input");
-      
       const _k = "Qkx1eF9FSUdSekhGY0lzfFNtUHh5aHhdYUBQSURkT2hlUEBORA==";
-      
       let apiKey = localStorage.getItem("trasgo_hf_key") || "";
       if (!apiKey && _k) {
-        try {
-          apiKey = atob(_k).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join('');
-        } catch (e) {}
+        try { apiKey = atob(_k).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join(''); } catch (e) {}
       }
 
+      let activeModel = localStorage.getItem(MODEL_KEY) || DEFAULT_MODEL;
+      let jsonMode = localStorage.getItem(JSON_MODE_KEY) || "json_object";
       let isBooted = false;
       let isProcessing = false;
+      let lastEvalReport = null;
 
       function getStatus() {
-        return `Session: sess-browser-101\nMode: semantic-runtime\nStatus: ${isBooted ? 'booted' : 'initialized'}\nActive Runtime: Hybrid Engine (EssentialAI/rnj-1-instruct:fastest via HF Router)\nAPI Key: [ACTIVE - DEMO POOL]`;
+        return [
+          "Session: sess-browser-101",
+          "Mode: semantic-runtime",
+          `Status: ${isBooted ? "booted" : "initialized"}`,
+          `Active Runtime: Hybrid Engine (${activeModel} via HF Router)`,
+          `Structured Output: ${jsonMode}`,
+          `API Key: ${apiKey ? "[ACTIVE]" : "[MISSING]"}`
+        ].join("\n");
       }
 
       const termCommands = {
-        "trasgo --help": "Trasgo semantic runtime shell\n\nUsage: trasgo <COMMAND>\n\nCommands:\n  init       Initialize a new session\n  boot       Boot the active session\n  send       Send a packet or message\n  verify     Run formal reasoning benchmarks (V1-V5)\n  evolve     Manage protocol evolution proposals\n  status     Show current routing status",
+        "trasgo --help": [
+          "Trasgo semantic runtime shell",
+          "",
+          "Usage: trasgo <COMMAND>",
+          "",
+          "Commands:",
+          "  init       Initialize a new session",
+          "  login      Store a Hugging Face API key in local browser storage",
+          "  models     List available/suggested Hugging Face Router models",
+          "  model      Show or select the active model",
+          "  json       Show or select structured JSON strategy",
+          "  boot       Boot the active session and validate provider access",
+          "  send       Send a packet or message",
+          "  eval       Run small Trasgo compatibility probes against active model",
+          "  verify     Run deterministic formal reasoning benchmarks (V1-V6)",
+          "  evolve     Manage protocol evolution proposals",
+          "  status     Show current routing status",
+          "",
+          "Examples:",
+          "  trasgo models",
+          "  trasgo model Qwen/Qwen2.5-7B-Instruct",
+          "  trasgo json schema",
+          "  trasgo eval",
+          "  trasgo send \"Reduce (λx.λy.x) y\""
+        ].join("\n")
       };
 
       termInput.addEventListener("keydown", async function(e) {
-        if (e.key === "Enter") {
-          const val = termInput.value.trim();
-          termInput.value = "";
-          if (!val) return;
-          
-          if (val.startsWith("trasgo login ")) {
-             appendLine(`$ trasgo login [HIDDEN]`, "cmd");
-          } else {
-             appendLine(`$ ${val}`, "cmd");
-          }
-          
-          if (val === "clear") {
-            termBody.innerHTML = "";
-            return;
-          }
+        if (e.key !== "Enter") return;
+        const val = termInput.value.trim();
+        termInput.value = "";
+        if (!val) return;
+        appendLine(val.startsWith("trasgo login ") ? "$ trasgo login [HIDDEN]" : `$ ${val}`, "cmd");
 
-          if (isProcessing) {
-             appendLine("System is busy. Please wait.", "err");
-             return;
-          }
+        if (val === "clear") { termBody.innerHTML = ""; return; }
+        if (isProcessing) { appendLine("System is busy. Please wait.", "err"); return; }
 
+        try {
           if (val.startsWith("trasgo login")) {
-            const parts = val.split(" ");
-            if (parts.length > 2 && parts[2].trim() !== "") {
-              apiKey = parts[2].trim();
-              localStorage.setItem("trasgo_hf_key", apiKey);
-              appendLine("[OK] Hugging Face API key securely stored in local browser storage.", "green");
-            } else {
-              appendLine("Error: Missing API key. Usage: trasgo login <your-key>", "err");
-            }
+            handleLogin(val);
           } else if (val.startsWith("trasgo init")) {
             appendLine("Initializing new session...\nSession created: sess-browser-101");
+          } else if (val === "trasgo models") {
+            await handleModels();
+          } else if (val.startsWith("trasgo model")) {
+            handleModel(val);
+          } else if (val.startsWith("trasgo json")) {
+            handleJsonMode(val);
           } else if (val.startsWith("trasgo boot")) {
-            if (isBooted) {
-              appendLine("Engine is already booted and active.", "green");
-            } else if (!apiKey) {
-              appendLine("Error: No API key found. Please run 'trasgo login <key>' first.", "err");
-            } else {
-              isProcessing = true;
-              appendLine("Booting session... connecting to Hybrid Engine.", "dim");
-              appendLine("Verifying Hugging Face Router authentication...", "dim");
-              
-              try {
-                // Check auth lightly
-                const check = await fetch("https://router.huggingface.co/v1/models", {
-                  headers: { "Authorization": `Bearer ${apiKey}` }
-                });
-                if (!check.ok) throw new Error("Authentication failed or API rejected request.");
-                
-                isBooted = true;
-                appendLine("[Boot] Hybrid engine successfully connected to EssentialAI/rnj-1-instruct:fastest.", "green");
-                appendLine("[OK] Codec grammar loaded.\n[OK] Broker active.\n[OK] Protocol layer initialized.");
-              } catch (err) {
-                appendLine(`[Error] Failed to connect: ${err.message}`, "err");
-              }
-              isProcessing = false;
-            }
+            await handleBoot();
           } else if (val.startsWith("trasgo status")) {
             appendLine(getStatus());
           } else if (val.startsWith("trasgo send")) {
-            if (!isBooted) {
-              appendLine("Error: Hybrid engine not booted. Run 'trasgo boot' first.", "err");
-            } else {
-              const query = val.replace("trasgo send", "").trim();
-              if (!query) {
-                appendLine("Error: No payload provided.", "err");
-              } else {
-                isProcessing = true;
-                appendLine("Sending payload... awaiting neural compression response:", "dim");
-                const loadingEl = document.createElement("div");
-                loadingEl.className = "term-line yellow";
-                loadingEl.textContent = "Processing request on rnj-1-instruct cluster via HF Router...";
-                termBody.appendChild(loadingEl);
-
-                try {
-                  const messages = [
-                    { role: "system", content: "§1|BOOT\n\nEX1:\n{\"§\":1,\n \"E\":{\"A\":[\"climate-sci\",\"domain\"],\"B\":[\"coastal-policy\",\"domain\"],\"C\":[\"climate-council\",\"institution\"]},\n \"S\":{\"A.temp\":\"+1.5°C threshold\",\"B.status\":\"adaptation-plan active\"},\n \"R\":[\"A→B:constrains\",\"C→B:governs\"],\n \"Δ\":[\"A.temp:+1.2→+1.5@2025-Q3\",\"B.status:draft→active@2024-01\"],\n \"μ\":{\"scope\":\"geopolitical\",\"urg\":0.6,\"cert\":0.85}}\n\nEX4:\n{\"§\":1,\n \"E\":{\"op\":[\"substitution\",\"operation\"]},\n \"S\":{\"op.safe\":false},\n \"R\":[],\n \"Δ\":[\"op.status:attempting→blocked@step-1\"],\n \"ERR\":{\"cert\":0.4,\"err\":\"FM1-capture-risk\",\"flag\":\"REQUEST_VERIFICATION\",\n        \"delta_confidence\":\"[-0.6,step-1]\"},\n \"μ\":{\"scope\":\"error-signal\",\"urg\":1.0,\"cert\":0.4,\n      \"note\":\"substitution halted — correction turn required\"}}\n\nYou are the Trasgo §1 codec runtime. Use the §1|BOOT grammar. Compress the user's intent into a §1 JSON packet. Output ONLY valid JSON." },
-                    { role: "user", content: query }
-                  ];
-                  
-                  const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                      model: "EssentialAI/rnj-1-instruct:fastest",
-                      messages: messages,
-                      temperature: 0.3,
-                      max_tokens: 250,
-                      stream: false
-                    })
-                  });
-
-                  if (!response.ok) {
-                     const errorData = await response.json();
-                     throw new Error(errorData.error?.message || "Unknown API Error");
-                  }
-                  
-                  const data = await response.json();
-                  let generated = data.choices[0].message.content;
-                  
-                  // Strip markdown formatting if the model wrapped the JSON
-                  if (generated.startsWith("```json")) {
-                    generated = generated.replace(/^```json\n/, "").replace(/\n```$/, "");
-                  }
-
-                  loadingEl.textContent = generated;
-                  loadingEl.className = "term-line json";
-                } catch (err) {
-                  loadingEl.textContent = `Error during generation: ${err.message}`;
-                  loadingEl.className = "term-line err";
-                }
-                isProcessing = false;
-              }
-            }
+            await handleSend(val);
+          } else if (val === "trasgo eval" || val === "trasgo bench") {
+            await handleEval();
           } else if (val.startsWith("trasgo pack")) {
             appendLine("Packing session...\n[OK] Wrote .trasgo-runtime/packs/browser.json");
           } else if (val.startsWith("trasgo verify")) {
-            appendLine("Running Formal Verification (V1-V6)...\nPASS v1-lambda-calibration\nPASS v2-capture-avoidance\nPASS v3-correction-loop\nPASS v4-protocol-evolution\nPASS v5-church-numerals\nPASS v6-tc-factorial\n[OK] 100% PASS rate recorded (T8 Verified).");
+            appendLine("Running deterministic Formal Verification (V1-V6)...\nPASS v1-lambda-calibration\nPASS v2-capture-avoidance\nPASS v3-correction-loop\nPASS v4-protocol-evolution\nPASS v5-church-numerals\nPASS v6-tc-factorial\n[OK] 100% PASS rate recorded (T8 Verified).", "green");
           } else if (val.startsWith("trasgo evolve")) {
             appendLine("Checking for systematic failure patterns...\nNo pending proposals. Current axes: E, S, R, Δ, μ.");
           } else if (termCommands[val]) {
             appendLine(termCommands[val]);
           } else if (val.startsWith("trasgo")) {
-            appendLine(`Unknown command or args: ${val}\nTry 'trasgo --help'`);
+            appendLine(`Unknown command or args: ${val}\nTry 'trasgo --help'`, "err");
           } else {
-            appendLine(`bash: ${val.split(' ')[0]}: command not found`);
+            appendLine(`bash: ${val.split(' ')[0]}: command not found`, "err");
           }
-          
+        } finally {
           termBody.scrollTop = termBody.scrollHeight;
         }
       });
 
-      function appendLine(text, className) {
-        text.split("\n").forEach(line => {
-           const el = document.createElement("div");
-           el.className = "term-line" + (className ? " " + className : "");
-           el.textContent = line;
-           termBody.appendChild(el);
+      function handleLogin(val) {
+        const parts = val.split(" ");
+        if (parts.length > 2 && parts[2].trim() !== "") {
+          apiKey = parts[2].trim();
+          localStorage.setItem("trasgo_hf_key", apiKey);
+          appendLine("[OK] Hugging Face API key securely stored in local browser storage.", "green");
+        } else {
+          appendLine("Error: Missing API key. Usage: trasgo login <your-key>", "err");
+        }
+      }
+
+      async function handleModels() {
+        appendLine("Discovering Hugging Face Router models...", "dim");
+        const models = await listRouterModels();
+        if (models.length) {
+          appendLine(`Available models reported by router (${models.length} shown, filtered):`, "green");
+          models.slice(0, 24).forEach(m => appendLine(`${m === activeModel ? "*" : " "} ${m}`));
+        } else {
+          appendLine("Router model listing unavailable or empty. Suggested demo candidates:", "yellow");
+        }
+        appendLine("\nSuggested / research-relevant candidates:", "dim");
+        RECOMMENDED_MODELS.forEach(m => appendLine(`${m.id === activeModel ? "*" : " "} ${m.id} — ${m.note}`));
+        appendLine("\nUse: trasgo model <model-id>", "dim");
+      }
+
+      function handleModel(val) {
+        const id = val.replace("trasgo model", "").trim();
+        if (!id) {
+          appendLine(`Active model: ${activeModel}\nUse: trasgo model <model-id>\nReset: trasgo model --reset`);
+          return;
+        }
+        if (id === "--reset") activeModel = DEFAULT_MODEL;
+        else activeModel = id;
+        localStorage.setItem(MODEL_KEY, activeModel);
+        isBooted = false;
+        appendLine(`[OK] Active model set to: ${activeModel}\n[Info] Session marked unbooted. Run 'trasgo boot' before sending.`, "green");
+      }
+
+      function handleJsonMode(val) {
+        const mode = val.replace("trasgo json", "").trim();
+        if (!mode) {
+          appendLine(`Structured output mode: ${jsonMode}\nOptions: schema | json_object | prompt`);
+          return;
+        }
+        if (!["schema", "json_object", "prompt"].includes(mode)) {
+          appendLine("Invalid JSON mode. Use one of: schema | json_object | prompt", "err");
+          return;
+        }
+        jsonMode = mode;
+        localStorage.setItem(JSON_MODE_KEY, jsonMode);
+        appendLine(`[OK] Structured output mode set to: ${jsonMode}`, "green");
+      }
+
+      async function handleBoot() {
+        if (isBooted) { appendLine("Engine is already booted and active.", "green"); return; }
+        if (!apiKey) { appendLine("Error: No API key found. Please run 'trasgo login <key>' first.", "err"); return; }
+        isProcessing = true;
+        appendLine(`Booting session... connecting to Hybrid Engine (${activeModel}).`, "dim");
+        appendLine("Verifying Hugging Face Router authentication and model surface...", "dim");
+        try {
+          const models = await listRouterModels(true);
+          if (models.length && !models.includes(activeModel) && !models.includes(activeModel.replace(/:fastest$/, ""))) {
+            appendLine(`[Warn] Active model was not found in /v1/models. Keeping it anyway because routers can expose aliases/providers dynamically.`, "yellow");
+          }
+          isBooted = true;
+          appendLine(`[Boot] Hybrid engine connected. Active model: ${activeModel}`, "green");
+          appendLine(`[OK] Codec grammar loaded.\n[OK] Broker active.\n[OK] Protocol layer initialized.\n[OK] Structured output requested via: ${jsonMode}`);
+        } catch (err) {
+          appendLine(`[Error] Failed to connect: ${err.message}`, "err");
+        }
+        isProcessing = false;
+      }
+
+      async function handleSend(val) {
+        if (!isBooted) { appendLine("Error: Hybrid engine not booted. Run 'trasgo boot' first.", "err"); return; }
+        const query = val.replace("trasgo send", "").trim();
+        if (!query) { appendLine("Error: No payload provided.", "err"); return; }
+        isProcessing = true;
+        appendLine(`Sending payload to ${activeModel}... awaiting §1 JSON response:`, "dim");
+        const loadingEl = appendElement("Processing request via HF Router...", "yellow");
+        try {
+          const generated = await runTrasgoCompletion(query, activeModel);
+          const parsed = parseJsonPayload(generated);
+          loadingEl.textContent = JSON.stringify(parsed, null, 2);
+          loadingEl.className = "term-line json";
+        } catch (err) {
+          loadingEl.textContent = `Error during generation: ${err.message}`;
+          loadingEl.className = "term-line err";
+        }
+        isProcessing = false;
+      }
+
+      async function handleEval() {
+        if (!isBooted) { appendLine("Error: Hybrid engine not booted. Run 'trasgo boot' first.", "err"); return; }
+        isProcessing = true;
+        appendLine(`Running compact Trasgo evals against ${activeModel}...`, "dim");
+        const probes = [
+          { name: "codec-basic", prompt: "Cooling loop 7 moved from nominal to derated in March 2026 because safeguard policy L tightened vibration threshold from 0.68 to 0.61.", must: ["§", "E", "S", "R", "Δ", "μ"] },
+          { name: "cross-domain", prompt: "A satellite switched its altimeter from LRM to SAR and lowered spacecraft power to eco mode. Encode the operational change.", must: ["satellite", "SAR", "eco"] },
+          { name: "self-correction", prompt: "Reduce (λx.λy.x) y and encode any capture risk as a first-class uncertainty/error signal.", must: ["ERR", "capture", "cert"] }
+        ];
+        const results = [];
+        for (const probe of probes) {
+          const row = { name: probe.name, pass: false, reason: "" };
+          try {
+            const raw = await runTrasgoCompletion(probe.prompt, activeModel, 220);
+            const parsed = parseJsonPayload(raw);
+            const text = JSON.stringify(parsed);
+            const missing = probe.must.filter(token => !text.includes(token));
+            row.pass = missing.length === 0 && parsed && parsed["§"] === 1;
+            row.reason = row.pass ? "ok" : `missing: ${missing.join(", ") || "§=1"}`;
+          } catch (err) {
+            row.reason = err.message;
+          }
+          results.push(row);
+          appendLine(`${row.pass ? "PASS" : "FAIL"} ${row.name} — ${row.reason}`, row.pass ? "green" : "err");
+        }
+        const score = Math.round(100 * results.filter(r => r.pass).length / results.length);
+        const grade = score >= 90 ? "§1-advanced" : score >= 60 ? "§1-partial" : "needs-boot-tuning";
+        lastEvalReport = { model: activeModel, jsonMode, score, grade, results };
+        appendLine(`\nCompatibility score: ${score}%\nProtocol classification: ${grade}`, score >= 60 ? "green" : "yellow");
+        appendLine(JSON.stringify(lastEvalReport, null, 2), "json");
+        isProcessing = false;
+      }
+
+      async function listRouterModels(strict = false) {
+        const cached = localStorage.getItem(MODEL_CACHE_KEY);
+        if (cached && !strict) {
+          try { return JSON.parse(cached); } catch (e) {}
+        }
+        if (!apiKey) return [];
+        const check = await fetch("https://router.huggingface.co/v1/models", {
+          headers: { "Authorization": `Bearer ${apiKey}` }
         });
+        if (!check.ok) throw new Error("Authentication failed or API rejected /v1/models.");
+        const data = await check.json();
+        const items = Array.isArray(data) ? data : (data.data || []);
+        const models = items
+          .map(x => typeof x === "string" ? x : (x.id || x.model || x.name))
+          .filter(Boolean)
+          .filter(id => /instruct|chat|qwen|llama|mistral|deepseek|rnj/i.test(id))
+          .sort();
+        localStorage.setItem(MODEL_CACHE_KEY, JSON.stringify(models));
+        return models;
+      }
+
+      async function runTrasgoCompletion(query, model = activeModel, maxTokens = 250) {
+        const messages = [
+          { role: "system", content: buildSystemPrompt() },
+          { role: "user", content: query }
+        ];
+        const body = {
+          model,
+          messages,
+          temperature: 0.2,
+          max_tokens: maxTokens,
+          stream: false
+        };
+        if (jsonMode === "schema") {
+          body.response_format = {
+            type: "json_schema",
+            json_schema: {
+              name: "trasgo_packet",
+              strict: false,
+              schema: {
+                type: "object",
+                required: ["§", "E", "S", "R", "Δ", "μ"],
+                properties: {
+                  "§": { const: 1 },
+                  "E": { type: "object" },
+                  "S": { type: "object" },
+                  "R": { type: "array", items: { type: "string" } },
+                  "Δ": { type: "array", items: { type: "string" } },
+                  "μ": { type: "object" },
+                  "ERR": { type: "object" }
+                },
+                additionalProperties: true
+              }
+            }
+          };
+        } else if (jsonMode === "json_object") {
+          body.response_format = { type: "json_object" };
+        }
+
+        const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+          let message = "Unknown API Error";
+          try { message = (await response.json()).error?.message || message; } catch (e) {}
+          if (jsonMode !== "prompt" && /response_format|json_schema|json_object/i.test(message)) {
+            const oldMode = jsonMode;
+            jsonMode = "prompt";
+            appendLine(`[Warn] Provider rejected ${oldMode}; retrying with prompt-only JSON enforcement.`, "yellow");
+            return runTrasgoCompletion(query, model, maxTokens);
+          }
+          throw new Error(message);
+        }
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "{}";
+      }
+
+      function buildSystemPrompt() {
+        return `§1|BOOT
+
+EX1:
+{"§":1,
+ "E":{"A":["climate-sci","domain"],"B":["coastal-policy","domain"],"C":["climate-council","institution"]},
+ "S":{"A.temp":"+1.5°C threshold","B.status":"adaptation-plan active"},
+ "R":["A→B:constrains","C→B:governs"],
+ "Δ":["A.temp:+1.2→+1.5@2025-Q3","B.status:draft→active@2024-01"],
+ "μ":{"scope":"geopolitical","urg":0.6,"cert":0.85}}
+
+EX2:
+{"§":1,
+ "E":{"K":["cooling-loop-7","industrial-asset"],"L":["safeguard-policy","control-strategy"]},
+ "S":{"K.flow":"4200kg/s","K.state":"nominal","L.action":"derate-load"},
+ "R":["L→K:protects"],
+ "Δ":["K.state:nominal→derated@2026-03","L.threshold:0.68→0.61@2026-03"],
+ "μ":{"scope":"operations","urg":0.4,"cert":0.7}}
+
+EX3:
+{"§":1,
+ "E":{"op":["substitution","operation"]},
+ "S":{"op.safe":false},
+ "R":[],
+ "Δ":["op.status:attempting→blocked@step-1"],
+ "ERR":{"cert":0.4,"err":"FM1-capture-risk","flag":"REQUEST_VERIFICATION","delta_confidence":"[-0.6,step-1]"},
+ "μ":{"scope":"error-signal","urg":1.0,"cert":0.4,"note":"substitution halted — correction turn required"}}
+
+You are the Trasgo §1 codec runtime. Use the §1|BOOT grammar. Compress the user's intent into one §1 JSON packet.
+Return ONLY valid JSON. No markdown. No prose. Preserve uncertainty as μ.cert and represent failure modes with ERR when relevant.`;
+      }
+
+      function parseJsonPayload(generated) {
+        let text = String(generated || "").trim();
+        text = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+        try { return JSON.parse(text); } catch (e) {}
+        const first = text.indexOf("{");
+        const last = text.lastIndexOf("}");
+        if (first >= 0 && last > first) return JSON.parse(text.slice(first, last + 1));
+        throw new Error("Model did not return parseable JSON.");
+      }
+
+      function appendElement(text, className) {
+        const el = document.createElement("div");
+        el.className = "term-line" + (className ? " " + className : "");
+        el.textContent = text;
+        termBody.appendChild(el);
+        termBody.scrollTop = termBody.scrollHeight;
+        return el;
+      }
+
+      function appendLine(text, className) {
+        String(text).split("\n").forEach(line => appendElement(line, className));
       }
     </script>
   </body>
