@@ -22,7 +22,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(__dirname, '..', '..');
 const cliEntry = path.join(repoRoot, 'src', 'trasgo', 'cli.mjs');
 
 const verbose = process.argv.includes('--verbose');

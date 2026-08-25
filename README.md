@@ -20,7 +20,7 @@
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"/>
   <img src="https://img.shields.io/badge/status-experimental-orange.svg" alt="Status: experimental"/>
   <img src="https://img.shields.io/badge/training-none_required-brightgreen.svg" alt="No training required"/>
-  <img src="https://img.shields.io/badge/dependencies-zero-brightgreen.svg" alt="Zero dependencies"/>
+  <img src="https://img.shields.io/badge/runtime-Node_20%2B-5fa04e.svg" alt="Node.js 20 or newer"/>
 </p>
 
 ---
@@ -31,7 +31,9 @@
   <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo §1 Codec Demo" width="800"/>
 </p>
 
-Trasgo is a self-initializing context compression codec and in-context reasoning protocol that treats the LLM context window as an active computational substrate. By factoring verbose natural language into a compact, multidimensional JSON representation (§1), it enables frontier models to induce a dense logic grammar from just three examples, effectively turning the forward pass of the transformer into a self-calibrating semantic runtime.
+Trasgo is an experimental context codec and in-context reasoning protocol. It factors natural-language context into compact §1 JSON packets, then uses worked examples to help a capable LLM infer the packet grammar inside its existing context window—without fine-tuning or weight updates.
+
+The repository contains the codec specification, a Node.js orchestration CLI, an optional Rust runtime, offline verification fixtures, demonstrations, and recorded model evaluations. “Three examples” describes the current boot protocol, not a universal guarantee: behavior depends on model, prompt, and task.
 
 ---
 
@@ -53,13 +55,15 @@ cert
      encode    clash-detected  alpha-rename  reduce
 ```
 
-This trajectory proves that the model isn't just "chatting"—it is executing a formal verification loop where the codec acts as an Instruction Set Architecture (ISA).
+This trajectory is evidence that the tested model followed the correction protocol on this bounded fixture. It does not by itself establish general self-verification; treat the ISA framing as a useful systems analogy and an experimental hypothesis.
 
 ---
 
 ## Quick Start
 
-**Step 1.** Paste [`src/boot.md`](src/boot.md) into any frontier model's context window.
+### Prompt-only path
+
+**Step 1.** Paste [`src/boot.md`](src/boot.md) into a capable instruction-following model's context window.
 
 **Step 2.** The model reads 3 codec↔natural language pairs and induces the grammar.
 
@@ -79,6 +83,24 @@ Q_natural: What happened to cooling loop 7 and what's the safeguard strategy?
  "R":["N→X:hosts"],
  "Δ":["X.stage:staging→active@2026-01"],
  "μ":{"scope":"operations","urg":0.6,"cert":0.85}}
+```
+
+### CLI path
+
+Requirements: Node.js 20+. Rust is optional unless you want the native runtime.
+
+```bash
+npm install -g trasgo
+trasgo quickstart
+trasgo doctor
+```
+
+For a source checkout:
+
+```bash
+npm ci
+npm test
+npm run quickstart
 ```
 
 ---
@@ -114,7 +136,7 @@ Trasgo defines a three-layer stack that transforms an LLM into a virtual machine
 ### The LLM is the Runtime. JSON is the Instruction Set.
 
 Unlike traditional frameworks, Trasgo does not "process" strings for the model. It teaches the model to **think in codec**.
-- **§1 Codec:** Lossless dimensional factoring of relational context.
+- **§1 Codec:** Compact dimensional factoring of relational context. Losslessness is task- and packet-dependent and should be checked with round-trip evaluation.
 - **§P Protocol:** Atomic operations (opcodes) for context manipulation.
 - **§M Machines:** Composable topologies (VM configurations) for multi-agent orchestration.
 
@@ -137,7 +159,7 @@ trasgo verify --all
 trasgo status
 ```
 
-Install surfaces:
+Installation surfaces:
 
 ```bash
 # npm
@@ -165,9 +187,9 @@ Self-initialization is an **emergent capability** with a sharp scale threshold:
 | GPT-4o | frontier | OpenAI API | ✓ (3/3) | ✓ (3/3) | ✓ | ✓ | **§1-advanced** |
 | Claude Opus | frontier | Anthropic API | ✓ (3/3) | ✓ (3/3) | ✓ | ✓ | **§1-advanced** |
 
-### Formal Verification (T8)
+### Bounded formal-reasoning probes (T8)
 
-The system is **T8-Verified** for bounded Turing Completeness. In the FACT THREE probe, the model autonomously managed context window pressure to compute a recursive factorial.
+The repository records a passing **T8 bounded recursive-factorial probe**. This demonstrates execution of the tested trace under the recorded conditions; it is not a proof that an LLM or Trasgo is Turing-complete, nor a guarantee of general formal correctness.
 
 | Capability | Test | Result | Status |
 |:-----------|:-----|:------:|:-------|
@@ -175,9 +197,11 @@ The system is **T8-Verified** for bounded Turing Completeness. In the FACT THREE
 | Correction Loop | V3 | ✓ | PASS |
 | Protocol Evolution | V4 | ✓ | PASS |
 | Church Arithmetic | V5 | ✓ | PASS |
-| **Recursive Factorial** | **T8** | **✓** | **VERIFIED** |
+| **Recursive Factorial** | **T8** | **✓** | **Recorded pass** |
 
 > **Finding:** FM3 (Depth Collapse) triggers at recursive depth ~2 on frontier models. The Trasgo harness autonomously issues `§P|CHECKPOINT` to compress state and resume, extending effective depth.
+
+Results above are repository-recorded experiments, not independently reproduced benchmarks. Model names, endpoints, prompts, and outputs can drift; see [`src/tests/`](src/tests/) and [`docs/foundations.md`](docs/foundations.md) before comparing systems or citing a result.
 
 ---
 

@@ -1992,7 +1992,12 @@ async function handleVerify(rest, context) {
     listFormalTestIds,
   } = formal;
 
-  if (rest.length === 0 || rest[0] === '--list') {
+  // `--dry-run` is parsed as a global option so it can also modify
+  // `verify --all`. Preserve the standalone `verify --dry-run` command
+  // instead of accidentally falling through to the default list action.
+  const standaloneDryRun = context.dryRun && rest.length === 0;
+
+  if (!standaloneDryRun && (rest.length === 0 || rest[0] === '--list')) {
     const tests = await Promise.all(listFormalTestIds().map(async id => {
       try {
         const data = await loadFormalTestInput(id);
@@ -2038,7 +2043,7 @@ async function handleVerify(rest, context) {
     return 0;
   }
 
-  if (rest[0] === '--dry-run') {
+  if (standaloneDryRun || rest[0] === '--dry-run') {
     const ids = rest[1] === '--test' && rest[2] ? [rest[2]] : listFormalTestIds();
     const inspected = await Promise.all(ids.map(async id => {
       try {

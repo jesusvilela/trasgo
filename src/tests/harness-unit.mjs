@@ -7,11 +7,11 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { parsePacketStream, extractJsonBlocks } from '../src/harness/err-watcher.mjs';
-import { createCorrectionInstruction } from '../src/harness/correction-injector.mjs';
-import { analyzeErrorHistory } from '../src/harness/pattern-detector.mjs';
-import { proposeEvolution } from '../src/harness/evolution-proposer.mjs';
-import { runCorrectionLoop } from '../src/harness/loop-executor.mjs';
+import { parsePacketStream, extractJsonBlocks } from '../harness/err-watcher.mjs';
+import { createCorrectionInstruction } from '../harness/correction-injector.mjs';
+import { analyzeErrorHistory } from '../harness/pattern-detector.mjs';
+import { proposeEvolution } from '../harness/evolution-proposer.mjs';
+import { runCorrectionLoop } from '../harness/loop-executor.mjs';
 import {
   buildFormalTestPrompt,
   evaluateFormalResponse,
