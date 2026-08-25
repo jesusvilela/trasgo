@@ -46,7 +46,7 @@
     "test": "src/tests"
   },
   "scripts": {
-    "test": "node src/scripts/ci-smoke.mjs",
+    "test": "node src/tests/harness-unit.mjs && node src/tests/v1-cli.mjs && node src/scripts/ci-smoke.mjs",
     "cli": "node src/scripts/trasgo-launch.cjs",
     "quickstart": "node src/scripts/trasgo-launch.cjs quickstart",
     "native:status": "node src/scripts/trasgo-launch.cjs --native-status",
