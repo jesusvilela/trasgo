@@ -38,7 +38,7 @@ A CPU instruction set architecture defines:
 | **Interrupts / traps** | `μ.urg` escalation | Urgency > threshold triggers priority context switch |
 | **Memory model** | Conversation context | The context window IS the address space |
 | **Stack / call frame** | §P checkpoint + fork | `§P:checkpoint` = push state, `§P:fork` = create new stack frame |
-| **Microcode / firmware** | Boot seed (3 examples) | The 3 EX blocks bootstrap the ISA from raw silicon (untrained model) |
+| **Microcode / firmware** | Finite boot exemplar set | The current EX blocks attempt to induce the codec on a frozen model substrate |
 | **ISA specification** | `docs/codec-grammar.md` | The formal spec — never loaded into the runtime (like ARM ARM) |
 | **CPU** | The LLM (any frontier model) | Claude = one architecture, GPT-4o = another, Gemini = another |
 | **Cross-compilation** | Same boot seed → different models | Same "binary" (§1 packet) runs on Claude-arch and GPT4o-arch |
@@ -123,7 +123,7 @@ State access uses dot-notation addressing:
 
 ## ALU operations (§P opcodes)
 
-Seven primitive operations, each with defined semantics:
+The current protocol specifies nine operations with example-defined semantics:
 
 | Opcode | Function | Operands | Analog |
 |:-------|:---------|:---------|:-------|
@@ -134,8 +134,10 @@ Seven primitive operations, each with defined semantics:
 | `checkpoint` | Snapshot current state | (none) | `STP` (store pair) / push |
 | `fork` | Create isolated context branch | (none) | `BL` (branch with link) |
 | `route` | Conditional context activation | match, activate, suppress | `CBZ` / conditional branch |
+| `validate` | Check and optionally correct an output | target, checks, on_fail | exception/status check |
+| `balance` | Negotiate runtime dispatch contract | targets, priorities, constraints | scheduler policy update |
 
-These are **sufficient** — any context manipulation can be composed from these primitives, just as any computation can be composed from a small set of ALU operations.
+These form the current experimental vocabulary. General sufficiency for arbitrary context manipulation is a hypothesis, not an established closure result.
 
 ---
 
@@ -204,7 +206,7 @@ The same §1 "binary" (packet) runs on different "architectures" (models):
 
 The outputs are **semantically equivalent** — same facts, same reasoning, possibly different phrasing. This is exactly like how the same C program compiled to AMD64 and ARM64 produces the same output via different instruction sequences.
 
-The boot seed is the **compiler**: it transforms the model's raw capability into an ISA-specific runtime. Three examples = the compiler's optimization passes.
+The boot seed acts like a **compiler input**: a finite exemplar set attempts to induce ISA-specific behavior from the model's existing capability. The exemplar count is an implementation parameter, not a machine axiom.
 
 ---
 
@@ -215,7 +217,7 @@ Real CPUs have microcode — firmware that defines how instructions execute. The
 ```
 AMD64 microcode:       ~3000 micro-ops define the ISA behavior
 ARM64 microcode:       varies by implementation (Cortex, Apple Silicon, etc.)
-§1 microcode:          3 examples define the codec behavior
+§1 microcode:          finite examples induce candidate codec behavior
 
 AMD64 microcode load:  CPU reads from ROM at power-on
 §1 microcode load:     Model reads from context at conversation start

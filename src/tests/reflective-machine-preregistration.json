@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "study_id": "trm-cross-substrate-evolve-v1",
+  "status": "preregistered-design-not-run",
+  "freeze_policy": "Hash this file and all prompt fixtures before collecting model outputs; never overwrite raw runs.",
+  "independent_variables": {
+    "backend_pair": "At least two independently served, frozen model/version identifiers",
+    "condition": ["full-machine", "no-evolve", "no-validation", "natural-language-only"],
+    "seed": "Provider seed when available; otherwise repeated stochastic trials"
+  },
+  "minimum_trials_per_backend_condition": 30,
+  "properties": {
+    "inducibility": {"primary_metric": "held_out_program_exact_pass_rate", "threshold": 0.8},
+    "operational_closure": {"primary_metric": "well_formed_committed_state_rate", "threshold": 0.99},
+    "reflectivity": {"primary_metric": "paired_unseen_rule_change_rate", "threshold": 0.8},
+    "transport_invariance": {"primary_metric": "declared_invariant_survival_rate", "threshold": 0.95},
+    "recoverability": {"primary_metric": "fault_recovery_rate", "threshold": 0.8},
+    "substrate_portability": {"primary_metric": "cross_backend_continuation_rate", "threshold": 0.8}
+  },
+  "exclusions": [
+    "Provider outage recorded before response generation",
+    "Truncated response proven by provider finish reason",
+    "Backend version differs from the frozen run manifest"
+  ],
+  "analysis": {
+    "unit": "trial",
+    "interval": "Wilson 95% confidence interval for every proportion",
+    "decision_rule": "A property conforms only when its point estimate meets the threshold and its Wilson lower bound exceeds chance baseline.",
+    "multiplicity": "Report all six properties; no composite success if any property fails.",
+    "missing_data": "Count non-excluded parse failures as failures. Report exclusions separately."
+  }
+}
