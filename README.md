@@ -5,7 +5,7 @@
 <h1 align="center">TRASGO §1</h1>
 
 <p align="center">
-  <strong>Teach any LLM a compact context language — in 3 examples, 0 training.</strong>
+  <strong>Induce a compact context language from finite examples — no weight updates.</strong>
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@
 
 Trasgo is an experimental context codec and in-context reasoning protocol. It factors natural-language context into compact §1 JSON packets, then uses worked examples to help a capable LLM infer the packet grammar inside its existing context window—without fine-tuning or weight updates.
 
-The repository contains the codec specification, a Node.js orchestration CLI, an optional Rust runtime, offline verification fixtures, demonstrations, and recorded model evaluations. “Three examples” describes the current boot protocol, not a universal guarantee: behavior depends on model, prompt, and task.
+The repository contains the codec specification, a Node.js orchestration CLI, an optional Rust runtime, offline verification fixtures, demonstrations, and recorded model evaluations. The current boot seed has four examples; exemplar count is an implementation parameter, not a universal guarantee. Behavior depends on model, prompt, and task.
 
 ---
 
@@ -65,7 +65,7 @@ This trajectory is evidence that the tested model followed the correction protoc
 
 **Step 1.** Paste [`src/boot.md`](src/boot.md) into a capable instruction-following model's context window.
 
-**Step 2.** The model reads 3 codec↔natural language pairs and induces the grammar.
+**Step 2.** The model reads the current finite boot exemplar set (four examples) and attempts to induce the grammar.
 
 **Step 3.** Run the calibration query:
 
@@ -107,38 +107,38 @@ npm run quickstart
 
 ## Architecture
 
-Trasgo defines a three-layer stack that transforms an LLM into a virtual machine.
+Trasgo's research architecture distinguishes programs from the induced kernel that executes them. The LLM is the generative substrate; §K is the proposed machine boundary.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     §1 CODEC LAYER                       │
+│                  §M PROGRAM / TOPOLOGY                   │
+│        pipeline · router · agent · mesh · loop           │
 │                                                          │
-│  3 examples → grammar induction → operational codec      │
-│  E · S · R · Δ · μ  +  evolvable custom axes            │
-│                                                          │
-├─────────────────────────────────────────────────────────┤
-│                   §P PROTOCOL LAYER                      │
-│                                                          │
-│  route · compress · decompress · filter · validate       │
-│  merge · checkpoint · fork · balance                     │
-│  (each self-initializes from 1 example)                  │
+│                 §P TRANSITION ALGEBRA                    │
+│ route · compress · merge · validate · checkpoint · ...   │
 │                                                          │
 ├─────────────────────────────────────────────────────────┤
-│                  §M MACHINE LAYER                        │
+│                  §1 SEMANTIC STATE IR                    │
 │                                                          │
-│  pipeline · router · agent · mesh · loop · broker        │
-│  (composable — machines contain machines)                │
+│       E · S · R · Δ · μ · ERR · evolved axes            │
 │                                                          │
-│  The LLM is the runtime. JSON is the instruction set.    │
+├─────────────────────────────────────────────────────────┤
+│                §K INDUCED SEMANTIC KERNEL                │
+│                                                          │
+│    Σ · propose · verify · evolve · commit · rollback     │
+├─────────────────────────────────────────────────────────┤
+│             FROZEN GENERATIVE SUBSTRATE                  │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### The LLM is the Runtime. JSON is the Instruction Set.
+### The LLM is the substrate. §K is the research machine.
 
-Unlike traditional frameworks, Trasgo does not "process" strings for the model. It teaches the model to **think in codec**.
+Unlike traditional frameworks, Trasgo uses in-context examples to elicit codec operations from the model and validates the resulting transition proposals.
 - **§1 Codec:** Compact dimensional factoring of relational context. Losslessness is task- and packet-dependent and should be checked with round-trip evaluation.
 - **§P Protocol:** Atomic operations (opcodes) for context manipulation.
 - **§M Machines:** Composable topologies (VM configurations) for multi-agent orchestration.
+
+The full definition, falsifiable conformance properties, and claim boundaries are in [`docs/trasgo-machine.md`](docs/trasgo-machine.md). The decisive cross-backend experiment is specified in the [`preregistration`](docs/reflective-machine-preregistration.md), with staged engineering work in the [`implementation roadmap`](docs/reflective-machine-roadmap.md).
 
 ---
 
