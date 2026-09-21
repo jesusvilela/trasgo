@@ -13,7 +13,7 @@
     "inducibility": {"primary_metric": "held_out_program_exact_pass_rate", "threshold": 0.8},
     "operational_closure": {"primary_metric": "well_formed_committed_state_rate", "threshold": 0.99},
     "reflectivity": {"primary_metric": "paired_unseen_rule_change_rate", "threshold": 0.8},
-    "transport_invariance": {"primary_metric": "declared_invariant_survival_rate", "threshold": 0.95},
+    "transport_invariance": {"primary_metric": "preregistered_symbolic_and_structural_predicate_survival_rate", "threshold": 0.95},
     "recoverability": {"primary_metric": "fault_recovery_rate", "threshold": 0.8},
     "substrate_portability": {"primary_metric": "cross_backend_continuation_rate", "threshold": 0.8}
   },

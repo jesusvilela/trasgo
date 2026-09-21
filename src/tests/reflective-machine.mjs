@@ -10,7 +10,14 @@ import {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const prereg = JSON.parse(fs.readFileSync(path.join(here, 'reflective-machine-preregistration.json')));
-const base = { '§': 1, E: { X: ['probe', 'entity'] }, S: { 'X.value': 1 }, R: [], Δ: [], μ: { cert: 0.9 } };
+const base = {
+  '§': 1,
+  E: { A: ['probe'], B: ['probe'], C: ['probe'] },
+  S: { phase: 'boot' },
+  R: [['braid', 'A', 'B', 'C'], ['braid', 'C', 'B', 'A']],
+  Δ: [],
+  μ: { cert: 0.9 },
+};
 
 assert.equal(prereg.status, 'preregistered-design-not-run');
 assert.deepEqual(Object.keys(prereg.properties), [
@@ -23,16 +30,24 @@ const evolvedExample = { ...structuredClone(base), ρ: { source: 'held-out-probe
 kernel = installAxis(kernel, evolvedExample);
 assert.ok(kernel.semantics.ρ, 'inducibility: finite exemplar installs an axis');
 
-const candidate = { ...structuredClone(base), S: { 'X.value': 2 }, Δ: ['X.value:1→2'], ρ: { source: 'trial' } };
+const candidate = { ...structuredClone(base), S: { phase: 'transported' }, Δ: ['phase:boot→transported'], ρ: { source: 'trial' } };
 const proposal = proposeTransition(kernel, base, candidate);
 assert.equal(proposal.valid, true);
 const committed = commitTransition(kernel, proposal);
 assert.ok(isMachineState(committed.state), 'operational closure: commit remains in §1 state space');
 assert.equal(proposeTransition(createKernel(), base, candidate).valid, false, 'reflectivity: behavior changes only after EVOLVE');
 
-const invariantPaths = ['E.X', 'S.X.value'];
+const invariantPaths = [
+  'E',
+  { kind: 'relation-topology', relation: 'braid' },
+];
 const roundTrip = JSON.parse(JSON.stringify(base));
 assert.ok(compareInvariants(base, roundTrip, invariantPaths).every(result => result.preserved), 'transport invariance');
+const tornTopology = { ...structuredClone(base), R: [['braid', 'A', 'B']] };
+assert.equal(compareInvariants(base, tornTopology, [invariantPaths[1]])[0].preserved, false);
+
+const reordered = { S: base.S, R: base.R, E: base.E, '§': 1, μ: base.μ, Δ: base.Δ };
+assert.equal(savedDigest(base), savedDigest(reordered), 'state digest is independent of object insertion order');
 
 const saved = checkpoint(committed.kernel, base, invariantPaths);
 const invalid = proposeTransition(saved.kernel, base, { E: {} });
@@ -44,3 +59,7 @@ assert.deepEqual(recovered.semantics.ρ.example, evolvedExample.ρ, 'substrate p
 
 process.stdout.write('reflective-machine scaffold: 6/6 deterministic contract checks passed\n');
 process.stdout.write('note: these checks validate the harness contract, not empirical LLM conformance\n');
+
+function savedDigest(state) {
+  return checkpoint(createKernel(), state).checkpoint.id;
+}

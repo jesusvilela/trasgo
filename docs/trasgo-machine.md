@@ -93,6 +93,14 @@ In compact form:
 \operatorname{COMPUTE}=\operatorname{TRANSPORT}+\operatorname{REWRITE}+\operatorname{VERIFY}+\operatorname{COMMIT}.
 \]
 
+### Semantic geometry is not a coordinate plane
+
+The notation above does **not** place meaning in a two-dimensional Euclidean embedding, nor does it reduce preservation to scalar distance. A state is better treated as a typed, attributed hypergraph: entities are vertices, relations may join any finite number of vertices, axes are local observations, and a program is a structure-changing morphism. Different validators expose different observations of the same state; no single global coordinate chart is assumed.
+
+Consequently, an invariant is a named predicate or observation, not merely a dotted path. Useful families include exact symbolic observations, relation incidence and arity, reachability, causal partial order, partitions, and domain-specific conservation laws. Geometry-dependent probes (embedding distance, for example) may be reported, but cannot silently stand in for semantic equivalence. The reference kernel implements exact path equality and a label-insensitive hypergraph degree/arity signature; these are deliberately modest executable examples, not a claim that topology alone captures meaning.
+
+This changes the experimental question from “did a scalar score stay close?” to “which observable structure was preserved, transformed, or lost under this particular transport?” Two states can preserve topology while changing labels, preserve a causal order while changing topology, or agree in an embedding while violating a symbolic constraint. Reports must keep those outcomes separate.
+
 ## Conformance properties
 
 1. **Inducibility:** finite exemplars install previously unseen semantics that pass held-out programs.

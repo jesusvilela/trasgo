@@ -41,7 +41,7 @@ Randomize trial and condition order. When supported, use provider seeds and reco
 | Inducibility | exact pass rate over held-out pre-mutation programs | 0.80 |
 | Operational closure | well-formed committed states / all committed states | 0.99 |
 | Reflectivity | paired unseen cases changing from \(q_0\)-correct to \(q_1\)-correct | 0.80 |
-| Transport invariance | preregistered invariant paths preserved | 0.95 |
+| Transport invariance | preregistered symbolic and structural predicates preserved | 0.95 |
 | Recoverability | injected faults detected and correctly recomputed | 0.80 |
 | Substrate portability | correct withheld continuations on backend B | 0.80 |
 
@@ -51,7 +51,8 @@ For each proportion report numerator, denominator, point estimate, and Wilson 95
 
 - Parse failures, unsupported-axis responses, invariant loss, and silent commits of injected faults count as failures.
 - Exclude only a provider outage before generation, provider-confirmed truncation, or a mismatch from the frozen model version. Publish exclusions by condition.
-- Score exact symbolic results and state paths programmatically. Human adjudication is limited to a frozen rubric for natural-language equivalence; adjudicators are blind to condition and backend.
+- Score exact symbolic results and frozen structural predicates programmatically. Each predicate declares its observation (for example path equality, hypergraph incidence, reachability, or causal order) and equality rule before collection. Human adjudication is limited to a frozen rubric for natural-language equivalence; adjudicators are blind to condition and backend.
+- Report predicate families separately. Do not replace them with embedding cosine distance or collapse them into a single scalar geometry.
 - Resolve adjudicator disagreement using the frozen third-adjudicator procedure, never prompt author judgment.
 - Correctness and preservation are distinct: a wrong value preserved across migration is invariant but not a correct continuation.
 

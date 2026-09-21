@@ -19,7 +19,15 @@ export function isMachineState(state) {
 }
 
 export function stateDigest(state) {
-  return createHash('sha256').update(JSON.stringify(state)).digest('hex');
+  return createHash('sha256').update(canonicalJson(state)).digest('hex');
+}
+
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 export function createKernel({ boot = [], semantics = {} } = {}) {
@@ -94,10 +102,47 @@ export function readPath(value, dottedPath) {
 }
 
 export function compareInvariants(before, after, paths) {
-  return paths.map(path => ({
-    path,
-    before: clone(readPath(before, path)),
-    after: clone(readPath(after, path)),
-    preserved: JSON.stringify(readPath(before, path)) === JSON.stringify(readPath(after, path)),
-  }));
+  return paths.map(specification => {
+    const spec = typeof specification === 'string'
+      ? { kind: 'path-equality', path: specification }
+      : specification;
+    if (!spec || typeof spec !== 'object') throw new TypeError('invariant must be a path or specification');
+
+    let left;
+    let right;
+    if (spec.kind === 'path-equality') {
+      left = readPath(before, spec.path);
+      right = readPath(after, spec.path);
+    } else if (spec.kind === 'relation-topology') {
+      left = relationTopology(before.R, spec.relation);
+      right = relationTopology(after.R, spec.relation);
+    } else {
+      throw new TypeError(`unknown invariant kind: ${spec.kind}`);
+    }
+    return {
+      ...clone(spec),
+      before: clone(left),
+      after: clone(right),
+      preserved: canonicalJson(left) === canonicalJson(right),
+    };
+  });
+}
+
+function relationTopology(relations, relation) {
+  const edges = relations.filter(edge => !relation || edge?.[0] === relation);
+  const incidence = new Map();
+  const arities = [];
+  for (const edge of edges) {
+    const vertices = Array.isArray(edge) ? edge.slice(1) : [];
+    arities.push(vertices.length);
+    for (const vertex of vertices) {
+      const key = canonicalJson(vertex);
+      incidence.set(key, (incidence.get(key) ?? 0) + 1);
+    }
+  }
+  return {
+    edges: edges.length,
+    arities: arities.sort((a, b) => a - b),
+    incidenceDegrees: [...incidence.values()].sort((a, b) => a - b),
+  };
 }
