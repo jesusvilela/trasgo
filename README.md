@@ -5,8 +5,7 @@
 <h1 align="center">trasgo §1</h1>
 
 <p align="center">
-  <strong>small packets · induced semantics · verified transitions</strong><br />
-  <sub>an experimental context codec and reflective-machine research program</sub>
+  <strong>Induce a compact context language from finite examples — no weight updates.</strong>
 </p>
 
 <p align="center">
@@ -28,7 +27,19 @@
 
 ## 間 · the space between prompt and machine
 
-Trasgo factors natural-language context into compact **§1** packets. Worked examples teach a capable language model how to read and transform those packets inside its existing context window—without fine-tuning or weight updates.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jesusvilela/trasgo/main/assets/trasgo-s1-codec-demo.gif" alt="Trasgo §1 Codec Demo" width="800"/>
+</p>
+
+Trasgo is an experimental context codec and in-context reasoning protocol. It factors natural-language context into compact §1 JSON packets, then uses worked examples to help a capable LLM infer the packet grammar inside its existing context window—without fine-tuning or weight updates.
+
+The repository contains the codec specification, a Node.js orchestration CLI, an optional Rust runtime, offline verification fixtures, demonstrations, and recorded model evaluations. The current boot seed has four examples; exemplar count is an implementation parameter, not a universal guarantee. Behavior depends on model, prompt, and task.
+
+---
+
+## The Key Result: Autonomous Self-Correction
+
+The Trasgo protocol allows LLMs to detect their own reasoning failures by encoding uncertainty as a first-class signal. In the **V2 Capture-Avoidance Test**, the model reduces a Lambda calculus redex `(λx.λy.x) y`. A naive substitution would lead to variable capture (`λy.y`), but Trasgo's `μ.cert` axis forces the model to monitor structural integrity.
 
 The interesting object is not generated text. It is a proposed state transition that can be checked, committed, rejected, or replayed.
 
@@ -59,11 +70,7 @@ flowchart LR
 
 Requires Node.js 20 or newer. Rust is optional.
 
-```bash
-npm install -g trasgo
-trasgo quickstart
-trasgo doctor
-```
+**Step 2.** The model reads the current finite boot exemplar set (four examples) and attempts to induce the grammar.
 
 From a source checkout:
 
@@ -146,18 +153,38 @@ The model proposes. The kernel decides what becomes operative state. See the [fo
 
 ### state is not a flat point
 
-Trasgo does not assume meaning lives in a two-dimensional scalar plane. A §1 state is treated as a typed, attributed hypergraph; transports declare symbolic or structural invariants before execution.
+Trasgo's research architecture distinguishes programs from the induced kernel that executes them. The LLM is the generative substrate; §K is the proposed machine boundary.
 
-```mermaid
-flowchart LR
-    A((A)) --- H1{"hosts"}
-    B((B)) --- H1
-    C((C)) --- H1
-    H1 -. "arity · incidence · component" .-> I["preregistered observations"]
-    I --> V{"preserved?"}
+```
+┌─────────────────────────────────────────────────────────┐
+│                  §M PROGRAM / TOPOLOGY                   │
+│        pipeline · router · agent · mesh · loop           │
+│                                                          │
+│                 §P TRANSITION ALGEBRA                    │
+│ route · compress · merge · validate · checkpoint · ...   │
+│                                                          │
+├─────────────────────────────────────────────────────────┤
+│                  §1 SEMANTIC STATE IR                    │
+│                                                          │
+│       E · S · R · Δ · μ · ERR · evolved axes            │
+│                                                          │
+├─────────────────────────────────────────────────────────┤
+│                §K INDUCED SEMANTIC KERNEL                │
+│                                                          │
+│    Σ · propose · verify · evolve · commit · rollback     │
+├─────────────────────────────────────────────────────────┤
+│             FROZEN GENERATIVE SUBSTRATE                  │
+└─────────────────────────────────────────────────────────┘
 ```
 
-The reference predicate observes incidence degrees, component sizes, and bounded color refinement. It is intentionally not presented as a complete graph-isomorphism oracle or a substitute for semantic validation.
+### The LLM is the substrate. §K is the research machine.
+
+Unlike traditional frameworks, Trasgo uses in-context examples to elicit codec operations from the model and validates the resulting transition proposals.
+- **§1 Codec:** Compact dimensional factoring of relational context. Losslessness is task- and packet-dependent and should be checked with round-trip evaluation.
+- **§P Protocol:** Atomic operations (opcodes) for context manipulation.
+- **§M Machines:** Composable topologies (VM configurations) for multi-agent orchestration.
+
+The full definition, falsifiable conformance properties, and claim boundaries are in [`docs/trasgo-machine.md`](docs/trasgo-machine.md). The decisive cross-backend experiment is specified in the [`preregistration`](docs/reflective-machine-preregistration.md), with staged engineering work in the [`implementation roadmap`](docs/reflective-machine-roadmap.md).
 
 ---
 

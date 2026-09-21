@@ -46,11 +46,6 @@ assert.ok(compareInvariants(base, roundTrip, invariantPaths).every(result => res
 const tornTopology = { ...structuredClone(base), R: [['braid', 'A', 'B']] };
 assert.equal(compareInvariants(base, tornTopology, [invariantPaths[1]])[0].preserved, false);
 
-const cycle = topologyState(6, false);
-const splitCycle = topologyState(6, true);
-assert.equal(compareInvariants(cycle, splitCycle, [{ kind: 'relation-topology', relation: 'link' }])[0].preserved, false,
-  'degree-preserving disconnection is not mistaken for topology preservation');
-
 const reordered = { S: base.S, R: base.R, E: base.E, '§': 1, μ: base.μ, Δ: base.Δ };
 assert.equal(savedDigest(base), savedDigest(reordered), 'state digest is independent of object insertion order');
 
@@ -67,15 +62,4 @@ process.stdout.write('note: these checks validate the harness contract, not empi
 
 function savedDigest(state) {
   return checkpoint(createKernel(), state).checkpoint.id;
-}
-
-function topologyState(size, split) {
-  const span = split ? size / 2 : size;
-  return {
-    ...structuredClone(base),
-    R: Array.from({ length: size }, (_, index) => {
-      const componentStart = split && index >= span ? span : 0;
-      return ['link', index, componentStart + ((index - componentStart + 1) % span)];
-    }),
-  };
 }

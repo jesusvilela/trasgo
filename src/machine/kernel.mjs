@@ -101,8 +101,8 @@ export function readPath(value, dottedPath) {
   return dottedPath.split('.').reduce((cursor, part) => cursor?.[part], value);
 }
 
-export function compareInvariants(before, after, specifications) {
-  return specifications.map(specification => {
+export function compareInvariants(before, after, paths) {
+  return paths.map(specification => {
     const spec = typeof specification === 'string'
       ? { kind: 'path-equality', path: specification }
       : specification;
@@ -129,71 +129,20 @@ export function compareInvariants(before, after, specifications) {
 }
 
 function relationTopology(relations, relation) {
-  const edges = relations.filter(edge => Array.isArray(edge) && (!relation || edge[0] === relation));
+  const edges = relations.filter(edge => !relation || edge?.[0] === relation);
   const incidence = new Map();
   const arities = [];
-  const adjacency = new Map();
-  const edgeKeys = [];
-  for (const [index, edge] of edges.entries()) {
-    const vertices = edge.slice(1);
-    const edgeKey = `edge:${index}`;
-    edgeKeys.push(edgeKey);
-    adjacency.set(edgeKey, []);
+  for (const edge of edges) {
+    const vertices = Array.isArray(edge) ? edge.slice(1) : [];
     arities.push(vertices.length);
     for (const vertex of vertices) {
-      const key = `vertex:${canonicalJson(vertex)}`;
+      const key = canonicalJson(vertex);
       incidence.set(key, (incidence.get(key) ?? 0) + 1);
-      if (!adjacency.has(key)) adjacency.set(key, []);
-      adjacency.get(edgeKey).push(key);
-      adjacency.get(key).push(edgeKey);
     }
-  }
-  const colors = new Map();
-  for (const [key, neighbors] of adjacency) {
-    colors.set(key, key.startsWith('edge:') ? `e:${neighbors.length}` : `v:${neighbors.length}`);
-  }
-  for (let iteration = 0; iteration < 4; iteration += 1) {
-    const refined = new Map();
-    for (const [key, neighbors] of adjacency) {
-      const neighborhood = neighbors.map(neighbor => colors.get(neighbor)).sort();
-      refined.set(key, digest(`${colors.get(key)}|${neighborhood.join(',')}`));
-    }
-    colors.clear();
-    for (const [key, color] of refined) colors.set(key, color);
   }
   return {
     edges: edges.length,
     arities: arities.sort((a, b) => a - b),
     incidenceDegrees: [...incidence.values()].sort((a, b) => a - b),
-    components: componentSizes(adjacency),
-    vertexColors: [...adjacency.keys()]
-      .filter(key => key.startsWith('vertex:'))
-      .map(key => colors.get(key)).sort(),
-    edgeColors: edgeKeys.map(key => colors.get(key)).sort(),
   };
-}
-
-function componentSizes(adjacency) {
-  const unseen = new Set(adjacency.keys());
-  const sizes = [];
-  while (unseen.size) {
-    const queue = [unseen.values().next().value];
-    unseen.delete(queue[0]);
-    let vertices = 0;
-    let edges = 0;
-    while (queue.length) {
-      const key = queue.pop();
-      if (key.startsWith('vertex:')) vertices += 1;
-      else edges += 1;
-      for (const neighbor of adjacency.get(key)) {
-        if (unseen.delete(neighbor)) queue.push(neighbor);
-      }
-    }
-    sizes.push(`${vertices}:${edges}`);
-  }
-  return sizes.sort();
-}
-
-function digest(value) {
-  return createHash('sha256').update(value).digest('hex').slice(0, 16);
 }

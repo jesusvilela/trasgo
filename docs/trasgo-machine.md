@@ -85,7 +85,7 @@ TRM computation transports and rewrites structured state under declared invarian
 T_{a\rightarrow b}^{\Sigma_t}(X)=(X',I_{preserved},I_{transformed},I_{lost},[R]).
 \]
 
-Codec-to-language, language-to-codec, parent-to-fork, full-to-delta state, and backend migration share this interface. Every transport declares its invariant predicates before execution; post-hoc selection of invariants is not admissible evidence.
+Codec-to-language, language-to-codec, parent-to-fork, full-to-delta state, and backend migration share this interface. Every transport declares its invariant paths before execution; post-hoc selection of invariants is not admissible evidence.
 
 In compact form:
 
@@ -97,7 +97,7 @@ In compact form:
 
 The notation above does **not** place meaning in a two-dimensional Euclidean embedding, nor does it reduce preservation to scalar distance. A state is better treated as a typed, attributed hypergraph: entities are vertices, relations may join any finite number of vertices, axes are local observations, and a program is a structure-changing morphism. Different validators expose different observations of the same state; no single global coordinate chart is assumed.
 
-Consequently, an invariant is a named predicate or observation, not merely a dotted path. Useful families include exact symbolic observations, relation incidence and arity, reachability, causal partial order, partitions, and domain-specific conservation laws. Geometry-dependent probes (embedding distance, for example) may be reported, but cannot silently stand in for semantic equivalence. The reference kernel implements exact path equality and a label-insensitive hypergraph signature comprising incidence degrees, component sizes, and four rounds of bipartite color refinement. These are deliberately modest executable examples, not a complete graph-isomorphism oracle or a claim that topology alone captures meaning.
+Consequently, an invariant is a named predicate or observation, not merely a dotted path. Useful families include exact symbolic observations, relation incidence and arity, reachability, causal partial order, partitions, and domain-specific conservation laws. Geometry-dependent probes (embedding distance, for example) may be reported, but cannot silently stand in for semantic equivalence. The reference kernel implements exact path equality and a label-insensitive hypergraph degree/arity signature; these are deliberately modest executable examples, not a claim that topology alone captures meaning.
 
 This changes the experimental question from “did a scalar score stay close?” to “which observable structure was preserved, transformed, or lost under this particular transport?” Two states can preserve topology while changing labels, preserve a causal order while changing topology, or agree in an embedding while violating a symbolic constraint. Reports must keep those outcomes separate.
 
@@ -123,12 +123,6 @@ The six properties are conjunctive. Failure of one cannot be hidden by a composi
 - explicit invariant comparisons and audit records.
 
 It is an oracle for the experimental harness, not a replacement for model execution. Run `npm run test:machine` to validate that contract.
-
-## Deterministic kernel benchmark
-
-`npm run bench:machine` benchmarks canonical state hashing and structural comparison over synthetic ternary hypergraphs from 32 through 4,096 vertices. Every size first runs seven correctness controls: identity, complete vertex relabelling, edge reordering, pin reordering, an unrelated relation, edge removal, and splitting one cycle into two components without changing vertex degrees or hyperedge arities. The first five must preserve the selected relation topology and the final two must not. This prevents a fast but structurally blind degree histogram from appearing successful.
-
-The runner performs three unmeasured warmups, then records 25 independent wall-clock samples and reports median, p95, minimum, maximum, and mean-derived throughput as JSON alongside the Node version, platform, architecture, and CPU model. It deliberately defines no universal latency threshold: host load and JavaScript runtime differ. Performance regressions should compare reports from the same runtime and machine. `--quick` reduces the matrix for local diagnostics. This is a kernel microbenchmark, not evidence of LLM conformance, semantic correctness, or cross-backend portability.
 
 ## Non-claims
 
