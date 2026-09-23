@@ -29,6 +29,7 @@ jobs:
           rm -rf .site
           mkdir -p .site/assets .site/.well-known
           cp docs/index.html .site/index.html
+          cp docs/.nojekyll .site/.nojekyll
           cp docs/.well-known/oauth-cimd .site/.well-known/oauth-cimd
           cp README.md .site/README.md
           cp -R assets/. .site/assets/
