@@ -648,6 +648,28 @@
         return message;
       }
 
+      async function readRouterError(response) {
+        let text = "";
+        try { text = await response.text(); } catch (e) {}
+        let payload = null;
+        try { payload = JSON.parse(text); } catch (e) {}
+        const detail = payload?.error?.message
+          || (typeof payload?.error === "string" ? payload.error : "")
+          || payload?.message
+          || payload?.detail
+          || "";
+        const hint = response.status === 401
+          ? "Sign in again with 'trasgo login'."
+          : response.status === 402
+            ? "This account needs Hugging Face Inference Providers credit or a model/provider available to it."
+            : response.status === 403
+              ? "Check the Hugging Face authorization and model access for this account."
+              : response.status === 429
+                ? "The provider is rate-limiting requests; wait briefly and retry."
+                : "";
+        return `Router request failed (HTTP ${response.status})${detail ? `: ${detail}` : ""}${hint ? ` ${hint}` : ""}`;
+      }
+
       async function runTrasgoCompletion(query, model = activeModel, maxTokens = 250) {
         const messages = [
           { role: "system", content: buildSystemPrompt() },
@@ -673,8 +695,7 @@
           body: JSON.stringify(body)
         });
         if (!response.ok) {
-          let message = "Unknown API Error";
-          try { message = (await response.json()).error?.message || message; } catch (e) {}
+          const message = await readRouterError(response);
           if (jsonMode === "json_object" && /response_format|json_object|grammar|compile/i.test(message)) {
             const previous = jsonMode;
             jsonMode = "prompt";
