@@ -1,5 +1,5 @@
 {
-  "client_id": "https://jesusvilela.github.io/trasgo/.well-known/oauth-cimd",
+  "client_id": "https://jesusvilela.github.io/trasgo/oauth-cimd.json",
   "client_name": "Trasgo Web Sandbox",
   "redirect_uris": ["https://jesusvilela.github.io/trasgo/"],
   "token_endpoint_auth_method": "none",
