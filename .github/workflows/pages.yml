@@ -27,8 +27,9 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf .site
-          mkdir -p .site/assets
+          mkdir -p .site/assets .site/.well-known
           cp docs/index.html .site/index.html
+          cp docs/.well-known/oauth-cimd .site/.well-known/oauth-cimd
           cp README.md .site/README.md
           cp -R assets/. .site/assets/
       - name: Upload artifact
