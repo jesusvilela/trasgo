@@ -204,11 +204,11 @@
             <span class="title">trasgo — semantic-runtime-shell</span>
           </div>
           <div class="terminal-body" id="term-body">
-            <div class="term-line">Trasgo v0.2.17-verified (Web Sandbox)</div>
+            <div class="term-line">Trasgo Web Sandbox · Hugging Face Inference Providers</div>
             <div class="term-line">Type <code class="inline">trasgo --help</code> to see commands, or try the <b>demo loop</b>:</div>
             <div class="term-line dim">1. trasgo init "demo"</div>
             <div class="term-line dim">2. trasgo models</div>
-            <div class="term-line dim">3. trasgo model Qwen/Qwen2.5-7B-Instruct</div>
+            <div class="term-line dim">3. trasgo model Qwen/Qwen3-4B-Instruct-2507</div>
             <div class="term-line dim">4. trasgo boot</div>
             <div class="term-line dim">5. trasgo eval</div>
             <div class="term-line dim">6. trasgo send "Reduce (λx.λy.x) y"</div>
@@ -253,27 +253,24 @@
     <script>
       const termBody = document.getElementById("term-body");
       const termInput = document.getElementById("term-input");
-      const DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct";
-      const LEGACY_LATENT_MODEL = "EssentialAI/rnj-1-instruct:fastest";
+      const DEFAULT_MODEL = "Qwen/Qwen3-4B-Instruct-2507";
       const MODEL_KEY = "trasgo_hf_model";
       const JSON_MODE_KEY = "trasgo_json_mode";
-      const MODEL_CACHE_KEY = "trasgo_hf_models_cache";
+      const MODEL_CACHE_KEY = "trasgo_hf_models_cache_v2";
+      const MODEL_CACHE_TTL_MS = 15 * 60 * 1000;
 
       const RECOMMENDED_MODELS = [
-        { id: "Qwen/Qwen2.5-7B-Instruct", note: "recommended fallback; strong structured-output behavior" },
-        { id: "Qwen/Qwen2.5-3B-Instruct", note: "small-model smoke test" },
-        { id: "mistralai/Mistral-7B-Instruct-v0.3", note: "compact instruct baseline" },
-        { id: "meta-llama/Llama-3.1-8B-Instruct", note: "8B instruct baseline when available" },
-        { id: LEGACY_LATENT_MODEL, note: "legacy LMF/latent-space candidate; use if exposed by the router" }
+        { id: DEFAULT_MODEL, note: "low-cost structured-output default" },
+        { id: "openai/gpt-oss-20b", note: "fast, structured-output capable reasoning model" },
+        { id: "openai/gpt-oss-120b", note: "larger structured-output capable reasoning model" },
+        { id: "deepseek-ai/DeepSeek-V3.2", note: "current general-purpose reasoning candidate" },
+        { id: "Qwen/Qwen3-Coder-30B-A3B-Instruct", note: "current code-oriented candidate" },
+        { id: "moonshotai/Kimi-K2.5", note: "long-context multimodal candidate" }
       ];
 
       document.getElementById("updated").textContent = `Last refreshed ${new Date().toLocaleDateString("en-US", { dateStyle: "long" })}.`;
 
-      const _k = "Qkx1eF9FSUdSekhGY0lzfFNtUHh5aHhdYUBQSURkT2hlUEBORA==";
       let apiKey = localStorage.getItem("trasgo_hf_key") || "";
-      if (!apiKey && _k) {
-        try { apiKey = atob(_k).split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ 42)).join(''); } catch (e) {}
-      }
 
       let activeModel = localStorage.getItem(MODEL_KEY) || DEFAULT_MODEL;
       let jsonMode = localStorage.getItem(JSON_MODE_KEY) || "json_object";
@@ -305,7 +302,7 @@
           "",
           "Commands:",
           "  init       Initialize a new session",
-          "  login      Store a Hugging Face API key in local browser storage",
+          "  login      Store your Hugging Face token in this browser only",
           "  models     List available/suggested Hugging Face Router models",
           "  model      Show or select the active model",
           "  json       Show or select structured JSON strategy",
@@ -323,7 +320,7 @@
           "",
           "Examples:",
           "  trasgo models",
-          "  trasgo model Qwen/Qwen2.5-7B-Instruct",
+          "  trasgo model Qwen/Qwen3-4B-Instruct-2507",
           "  trasgo json json_object",
           "  trasgo eval",
           "  trasgo send \"Reduce (λx.λy.x) y\""
@@ -372,6 +369,8 @@
           } else {
             appendLine(`bash: ${val.split(' ')[0]}: command not found`, "err");
           }
+        } catch (err) {
+          appendLine(`Error: ${formatRouterError(err)}`, "err");
         } finally {
           termBody.scrollTop = termBody.scrollHeight;
         }
@@ -382,21 +381,30 @@
         if (parts.length > 2 && parts[2].trim() !== "") {
           apiKey = parts[2].trim();
           localStorage.setItem("trasgo_hf_key", apiKey);
-          appendLine("[OK] Hugging Face API key securely stored in local browser storage.", "green");
+          appendLine("[OK] Hugging Face token stored in this browser only. It is never embedded in the page or sent anywhere except Hugging Face Router.", "green");
         } else {
           appendLine("Error: Missing API key. Usage: trasgo login <your-key>", "err");
         }
       }
 
       async function handleModels() {
-        appendLine("Discovering Hugging Face Router models...", "dim");
+        if (!apiKey) {
+          appendLine("No Hugging Face token configured. Run: trasgo login <hf_token>", "yellow");
+          appendSuggestedModels();
+          return;
+        }
+        appendLine("Discovering current Hugging Face Router chat models...", "dim");
         const models = await listRouterModels();
         if (models.length) {
-          appendLine(`Available models reported by router (${models.length} shown, filtered):`, "green");
+          appendLine(`Available Router models (${models.length} shown, filtered):`, "green");
           models.slice(0, 24).forEach(m => appendLine(`${m === activeModel ? "*" : " "} ${m}`));
         } else {
-          appendLine("Router model listing unavailable or empty. Suggested demo candidates:", "yellow");
+          appendLine("Router returned no compatible chat models. Suggested candidates:", "yellow");
         }
+        appendSuggestedModels();
+      }
+
+      function appendSuggestedModels() {
         appendLine("\nSuggested / research-relevant candidates:", "dim");
         RECOMMENDED_MODELS.forEach(m => appendLine(`${m.id === activeModel ? "*" : " "} ${m.id} — ${m.note}`));
         appendLine("\nUse: trasgo model <model-id>", "dim");
@@ -512,22 +520,33 @@
       async function listRouterModels(strict = false) {
         const cached = localStorage.getItem(MODEL_CACHE_KEY);
         if (cached && !strict) {
-          try { return JSON.parse(cached); } catch (e) {}
+          try {
+            const entry = JSON.parse(cached);
+            if (entry.cachedAt && Date.now() - entry.cachedAt < MODEL_CACHE_TTL_MS && Array.isArray(entry.models)) return entry.models;
+          } catch (e) {}
         }
         if (!apiKey) return [];
         const check = await fetch("https://router.huggingface.co/v1/models", {
           headers: { "Authorization": `Bearer ${apiKey}` }
         });
-        if (!check.ok) throw new Error("Authentication failed or API rejected /v1/models.");
+        if (!check.ok) throw new Error(`Router rejected /v1/models (HTTP ${check.status}). Check that this token has “Make calls to Inference Providers” permission.`);
         const data = await check.json();
         const items = Array.isArray(data) ? data : (data.data || []);
         const models = items
           .map(x => typeof x === "string" ? x : (x.id || x.model || x.name))
           .filter(Boolean)
-          .filter(id => /instruct|chat|qwen|llama|mistral|deepseek|rnj/i.test(id))
+          .filter(id => /instruct|chat|qwen|llama|mistral|deepseek|gpt-oss|kimi/i.test(id))
           .sort();
-        localStorage.setItem(MODEL_CACHE_KEY, JSON.stringify(models));
+        localStorage.setItem(MODEL_CACHE_KEY, JSON.stringify({ cachedAt: Date.now(), models }));
         return models;
+      }
+
+      function formatRouterError(err) {
+        const message = err?.message || String(err);
+        if (/failed to fetch|networkerror|network request failed/i.test(message)) {
+          return "Cannot reach Hugging Face Router. Check your network connection and browser privacy extensions, then retry.";
+        }
+        return message;
       }
 
       async function runTrasgoCompletion(query, model = activeModel, maxTokens = 250) {
