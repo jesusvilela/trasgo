@@ -1,0 +1,7 @@
+{
+  "status": "awaiting-authenticated-run",
+  "generated_at": null,
+  "protocol": "trasgo-openrouter-verification-v1",
+  "summary": {},
+  "note": "The verification harness is published. An authenticated OpenRouter run has not yet been executed from this environment."
+}
