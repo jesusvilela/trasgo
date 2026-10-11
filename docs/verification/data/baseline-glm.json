@@ -1,0 +1,33 @@
+{
+  "status": "reported-local-run",
+  "source": "User-supplied GLM study transcript, 2026-10-11",
+  "independent_rerun": false,
+  "models": ["GLM 5.3", "GLM 5.3 Flash"],
+  "reported": {
+    "crosstalk_calls": 66,
+    "crosstalk_fidelity_range": [0.974, 0.980],
+    "number_recall_encode": 1.0,
+    "session_turns": 16,
+    "evolve_turns": 7,
+    "persona_escapes": 0,
+    "document_chars": 13600,
+    "merged_packet_chars": 5300,
+    "critical_delta_chars": 1900,
+    "compression_document_to_packet": 2.57,
+    "compression_document_to_critical_delta": 7.15,
+    "prompt_chars_avoided_downstream": 92000,
+    "estimated_prompt_tokens_avoided_downstream": 23000,
+    "reasoning_share_completion": 0.82,
+    "seed_cache_hit_rate_glm53": 0.844,
+    "seed_cache_hit_rate_flash": 0.764,
+    "approx_total_tokens_all_logged_and_retries": 462000
+  },
+  "observations": [
+    "Cross-model handoffs remained protocol-compatible in the reported run.",
+    "Truncated ingest caused a downstream REQUEST_VERIFICATION instead of fabricated missing criticism.",
+    "Per-packet VALIDATE correction succeeded where a batched correction exceeded output budget.",
+    "Five one-example EVOLVE axes composed into a later trajectory machine.",
+    "Most completion-token spend was reported as hidden reasoning rather than visible packet output."
+  ],
+  "boundary": "These are claims from the supplied local transcript. They are published as baseline evidence, not as an independent rerun by this verification harness."
+}
