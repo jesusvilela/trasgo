@@ -31,6 +31,7 @@ jobs:
           cp docs/index.html .site/index.html
           cp docs/.nojekyll .site/.nojekyll
           cp docs/oauth-cimd.json .site/oauth-cimd.json
+          cp -R docs/verification .site/verification
           cp README.md .site/README.md
           cp -R assets/. .site/assets/
       - name: Upload artifact
