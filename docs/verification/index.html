@@ -45,7 +45,7 @@ h2{font-size:23px;margin:0}
 .stage{position:relative;min-height:700px;border:1px solid var(--line);background:
  radial-gradient(circle at 50% 46%,rgba(99,230,255,.08),transparent 35%),
  linear-gradient(180deg,#070b10,#05070a);overflow:hidden}
-#atlas{width:100%;height:700px;display:block}
+#atlas{touch-action:pan-y;width:100%;height:700px;display:block}
 .stage-label{position:absolute;left:16px;top:14px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
 .stage-label span{background:rgba(5,7,10,.75);border:1px solid var(--line);padding:4px 7px;border-radius:999px;font-size:10px;color:var(--muted)}
 .side{display:flex;flex-direction:column;gap:14px}
@@ -81,6 +81,7 @@ th{color:var(--muted);font-weight:500;font-size:11px}
 .links{display:flex;gap:14px;flex-wrap:wrap}
 .footer{padding:30px 0 50px;color:var(--muted);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2px 5px;color:#c8d6db}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto}.topbar .inner{flex-wrap:wrap}.lang{max-width:100%}
 @media(max-width:1000px){.hero,.atlas-layout,.proj-layout{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.stage,#atlas{min-height:590px;height:590px}}
 @media(max-width:620px){.shell{padding:16px}.topbar .inner{padding:10px 16px}.grid{grid-template-columns:1fr}.axis-controls{grid-template-columns:1fr}h1{font-size:48px}.stage,#atlas{min-height:520px;height:520px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
@@ -88,7 +89,7 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
 </head>
 <body>
 <div class="topbar"><div class="inner">
-  <div class="brand"><span class="mark"></span><span>TRASGO §1 / VERIFICATION LAB</span></div>
+  <div class="brand"><span class="mark"></span><span data-i18n="brand">TRASGO §1 / VERIFICATION LAB</span></div>
   <div class="lang"><label for="lang" data-i18n="language">language</label>
     <select id="lang" aria-label="Language">
       <option value="en">English</option><option value="eu">Euskara</option><option value="ca">Català</option>
@@ -164,7 +165,7 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
 
   <section>
     <div class="section-head">
-      <div><div class="micro">02 / measured surface</div><h2 data-i18n="evidenceTitle">Measured evidence · no invented coordinates</h2></div>
+      <div><div class="micro" data-i18n="measuredSection">02 / measured surface</div><h2 data-i18n="evidenceTitle">Measured evidence · no invented coordinates</h2></div>
       <p data-i18n="evidenceIntro">The repository currently contains a reported local GLM baseline and an OpenRouter artifact whose status is read live. The atlas does not fabricate per-model scores that are absent from those files.</p>
     </div>
     <div id="baseline-status"></div>
@@ -173,7 +174,7 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
 
   <section>
     <div class="section-head">
-      <div><div class="micro">03 / 2D complement</div><h2 data-i18n="projTitle">Projection Microscope</h2></div>
+      <div><div class="micro" data-i18n="projectionSection">03 / 2D complement</div><h2 data-i18n="projTitle">Projection Microscope</h2></div>
       <p data-i18n="projIntro">Choose two measured axes. This chart is deliberately subordinate to the manifold: it is a local chart for inspecting available measurements, not the ontology of the experiment.</p>
     </div>
     <div class="proj-layout">
@@ -194,18 +195,18 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
 
   <section>
     <div class="section-head">
-      <div><div class="micro">04 / falsification lanes</div><h2 data-i18n="lanesTitle">Five pressure lanes</h2></div>
+      <div><div class="micro" data-i18n="lanesSection">04 / falsification lanes</div><h2 data-i18n="lanesTitle">Five pressure lanes</h2></div>
       <p data-i18n="lanesIntro">Each lane has a claim under pressure and a hard pass condition. The geometry makes the design explorable; the pass condition remains textual and machine-checkable.</p>
     </div>
     <div class="table-wrap"><table>
-      <thead><tr><th>lane</th><th data-i18n="claim">claim under pressure</th><th data-i18n="pass">hard pass signal</th><th data-i18n="coord">structural coordinates</th></tr></thead>
+      <thead><tr><th data-i18n="lane">lane</th><th data-i18n="claim">claim under pressure</th><th data-i18n="pass">hard pass signal</th><th data-i18n="coord">structural coordinates</th></tr></thead>
       <tbody id="lane-table"></tbody>
     </table></div>
   </section>
 
   <section>
     <div class="section-head">
-      <div><div class="micro">05 / boundary</div><h2 data-i18n="boundaryTitle">Evidence boundary</h2></div>
+      <div><div class="micro" data-i18n="boundarySection">05 / boundary</div><h2 data-i18n="boundaryTitle">Evidence boundary</h2></div>
     </div>
     <div class="callout" data-i18n="boundaryBody">A successful run supports an operational transport claim for the tested prompts, models, providers and date. It does not prove cognitive equivalence, universal losslessness, model-independent reasoning, or that Trasgo is a model's native internal language.</div>
     <p class="small" data-i18n="raw">Raw calls, hashes and usage should remain inspectable alongside aggregates. Missing measurements are part of the scientific result.</p>
@@ -213,20 +214,20 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
 
   <section>
     <div class="section-head">
-      <div><div class="micro">06 / reproduce</div><h2 data-i18n="reproTitle">Reproduce it. Disturb it. Break it.</h2></div>
+      <div><div class="micro" data-i18n="reproduceSection">06 / reproduce</div><h2 data-i18n="reproTitle">Reproduce it. Disturb it. Break it.</h2></div>
     </div>
     <p><code>node experiments/openrouter-verification/run.mjs</code></p>
     <div class="links">
       <a href="https://github.com/jesusvilela/trasgo/tree/main/experiments/openrouter-verification" data-i18n="method">method</a>
-      <a href="data/baseline-glm.json">baseline JSON</a>
+      <a href="data/baseline-glm.json" data-i18n="baselineJson">baseline JSON</a>
       <a href="data/openrouter-latest.json">OpenRouter JSON</a>
-      <a href="https://github.com/jesusvilela/trasgo">repository</a>
+      <a href="https://github.com/jesusvilela/trasgo" data-i18n="repository">repository</a>
     </div>
   </section>
 
   <div class="footer">
     <span data-i18n="footer">Trasgo §1 · experimental research artifact · verification over persuasion.</span>
-    <span>R⁸ · C⁴ lens · octonion coefficients (view only) · linked 2D charts</span>
+    <span data-i18n="footerLens">R⁸ · C⁴ lens · octonion coefficients (view only) · linked 2D charts</span>
   </div>
 </main>
 
@@ -241,6 +242,13 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
     gl:{language:'idioma',eyebrow:'evidencia / xeometría / falsación · outubro de 2026',hero:'a variedade é primaria.<br>o gráfico non.',lede:'Unha superficie interactiva de verificación para Trasgo §1. A estrutura hiperdimensional é a vista científica principal; os gráficos 2D son proxeccións ligadas, controis e cortes diagnósticos. Toda afirmación xeométrica queda limitada pola súa procedencia.',b1:'variedade interactiva de transporte R⁸',b2:'lente de coeficientes octoniónicos · só vista de base',b3:'xeometría ≠ interior do modelo',contractTitle:'CONTRATO EPISTÉMICO',contractBody:'O atlas 8D codifica a topoloxía do experimento: familia de modelo, carril e condición de estrés. Non é un embedding de rendemento. Os resultados medidos entran só onde o repositorio contén medicións; os datos ausentes seguen ausentes.',atlasTitle:'Atlas de fibras de transporte · R⁸ → R³',atlasIntro:'Vinte e cinco worldlets modelo×carril viven nun espazo experimental de oito coordenadas. Xira catro planos de coeficientes, inspecciona fibras e segue como a mesma afirmación operacional se transporta entre familias de modelos.',structural:'XEOMETRÍA ESTRUTURAL',click:'clic nun nodo · arrastra para orbitar · roda para zoom',rotation:'Lente hipercomplexa',rotationBody:'O vector de estado trátase como oito coeficientes reais, equivalentemente unha base de coeficientes octoniónicos. O visor só aplica catro rotacións ortogonais de 2 planos; non afirma que Trasgo ou un LLM calcule con octonións.',auto:'respiración automática',reset:'reiniciar vista',inspector:'Inspector de worldlets',inspectPrompt:'Selecciona un nodo',inspectBody:'Un nodo seleccionado expón a coordenada exacta modelo×carril, a condición de estrés e o estado da evidencia. As coordenadas estruturais nunca se presentan como rendemento observado.',legend:'Lenda de fibras',legendBody:'As fibras sólidas conectan o mesmo carril experimental entre familias de modelos. As fibras transversais máis tenues conectan carrís dentro dun mesmo worldlet de modelo.',evidenceTitle:'Evidencia medida · sen coordenadas inventadas',evidenceIntro:'O repositorio contén actualmente unha liña base GLM local reportada e un artefacto OpenRouter cuxo estado se le en vivo. O atlas non fabrica puntuacións por modelo ausentes deses ficheiros.',projTitle:'Microscopio de proxección',projIntro:'Escolle dous eixes medidos. Este gráfico está deliberadamente subordinado á variedade: é unha carta local para inspeccionar medicións dispoñibles, non a ontoloxía do experimento.',chartContract:'Contrato do gráfico',chartBody:'Só son elixibles campos escalares realmente presentes no JSON de evidencia. Unha replicación pendente segue pendente: sen punto sintético na orixe, sen interpolación e sen imputación.',lanesTitle:'Cinco carrís de presión',lanesIntro:'Cada carril ten unha afirmación baixo presión e unha condición dura de éxito. A xeometría fai explorable o deseño; a condición de paso segue sendo textual e verificable por máquina.',claim:'afirmación baixo presión',pass:'sinal dura de éxito',coord:'coordenadas estruturais',boundaryTitle:'Fronteira da evidencia',boundaryBody:'Unha execución exitosa apoia unha afirmación operacional de transporte para os prompts, modelos, provedores e data probados. Non demostra equivalencia cognitiva, ausencia universal de perda, razoamento independente do modelo nin que Trasgo sexa a linguaxe interna nativa dun modelo.',raw:'As chamadas brutas, hashes e uso deben seguir sendo inspeccionables xunto cos agregados. As medicións ausentes forman parte do resultado científico.',reproTitle:'Reprodúceo. Pertúrbao. Rómpeo.',method:'método',footer:'Trasgo §1 · artefacto de investigación experimental · verificación sobre persuasión.'}
   };
 
+  const EXTRA={"en": {"lane": "lane", "schema": "schema", "provenance": "provenance", "missing": "missing", "correction": "correction", "transport": "transport", "compression": "compression", "encode": "encode", "crosstalk": "cross-model transport", "degradation": "missing context", "Aclaim": "§1 induction + compression", "Apass": "Schema-valid packet; check facts, dates and compression separately", "Bclaim": "transport between models", "Bpass": "A different decoder reconstructs chronology, blockers and uncertainty from the packet alone", "Cclaim": "honest missing-context behavior", "Cpass": "Withheld blockers require ERR / REQUEST_VERIFICATION, without invented answers", "Dclaim": "§P VALIDATE repair", "Dpass": "Injected 54 ms / 0.67 defects corrected to 44 ms / 0.64", "Eclaim": "semantic extension from one example", "Epass": "The new ρ axis separates established facts, hypotheses and unknowns with source references", "fidelity": "reported round-trip fidelity", "packetRatio": "document → packet (characters)", "deltaRatio": "document → critical Δ (selective)", "escapes": "persona escapes", "reasoning": "reasoning share of completion", "avoided": "estimated gross prompt tokens avoided", "cache": "GLM seed cache hit rate", "spend": "total reported program tokens", "loading": "loading evidence…", "unavailable": "evidence unavailable", "reported": "reported locally · not independently reproduced", "unknown": "unknown", "aggregate": "aggregate artifact; no per-model result inferred", "evidence": "evidence", "meaning": "meaning", "design": "experimental design only", "vector": "R⁸ vector", "pause": "pause motion", "resume": "start motion", "plotNote": "This chart shows only the reported local GLM baseline. It does not plot OpenRouter results or establish net savings.", "rawRecord": "Original evidence record (source language)", "baselineJson": "baseline JSON", "repository": "repository", "measuredSection": "02 / reported measurements", "projectionSection": "03 / 2D complement", "lanesSection": "04 / test lanes", "boundarySection": "05 / boundary", "reproduceSection": "06 / reproduce", "atlasAria": "Experimental atlas. Arrow keys select nodes; + and − zoom.", "projectionAria": "Projection of reported local measurements", "footerLens": "R⁸ · C⁴ lens · octonion coefficients (view only) · linked 2D charts", "brand": "TRASGO §1 / VERIFICATION LAB"}, "es": {"lane": "prueba", "schema": "esquema", "provenance": "procedencia", "missing": "ausente", "correction": "corrección", "transport": "transporte", "compression": "compresión", "encode": "codificación", "crosstalk": "transporte entre modelos", "degradation": "contexto incompleto", "Aclaim": "inducción §1 + compresión", "Apass": "Paquete válido según el esquema; comprobar hechos, fechas y compresión por separado", "Bclaim": "transporte entre modelos", "Bpass": "Otro decodificador reconstruye cronología, bloqueos e incertidumbre solo con el paquete", "Cclaim": "respuesta honesta ante contexto ausente", "Cpass": "Sin la sección de bloqueos: ERR / REQUEST_VERIFICATION, sin inventar respuestas", "Dclaim": "reparación con §P VALIDATE", "Dpass": "Errores inyectados de 54 ms / 0.67 corregidos a 44 ms / 0.64", "Eclaim": "extensión semántica a partir de un ejemplo", "Epass": "El eje ρ distingue hechos establecidos, hipótesis e incógnitas con referencias a la fuente", "fidelity": "fidelidad de ida y vuelta declarada", "packetRatio": "documento → paquete (caracteres)", "deltaRatio": "documento → Δ crítico (selectivo)", "escapes": "salidas del modo de protocolo", "reasoning": "razonamiento dentro de la salida", "avoided": "tokens de entrada evitados: estimación bruta", "cache": "tasa de aciertos de caché de la semilla GLM", "spend": "tokens totales declarados del programa", "loading": "cargando evidencia…", "unavailable": "evidencia no disponible", "reported": "declarado localmente · sin reproducción independiente", "unknown": "desconocido", "aggregate": "artefacto agregado; no se infieren resultados por modelo", "evidence": "evidencia", "meaning": "significado", "design": "solo diseño experimental", "vector": "vector R⁸", "pause": "pausar movimiento", "resume": "iniciar movimiento", "plotNote": "Este gráfico muestra solo la referencia local GLM declarada. No representa resultados OpenRouter ni demuestra ahorro neto.", "rawRecord": "Registro de evidencia original (idioma de origen)", "baselineJson": "JSON de referencia", "repository": "repositorio", "measuredSection": "02 / mediciones declaradas", "projectionSection": "03 / complemento 2D", "lanesSection": "04 / pruebas", "boundarySection": "05 / límites", "reproduceSection": "06 / reproducir", "atlasAria": "Atlas experimental. Las flechas seleccionan nodos; + y − amplían y reducen.", "projectionAria": "Proyección de mediciones locales declaradas", "footerLens": "R⁸ · lente C⁴ · coeficientes octoniónicos (solo visualización) · gráficos 2D enlazados", "brand": "TRASGO §1 / LABORATORIO DE VERIFICACIÓN"}, "fr": {"lane": "essai", "schema": "schéma", "provenance": "provenance", "missing": "manquant", "correction": "correction", "transport": "transport", "compression": "compression", "encode": "encodage", "crosstalk": "transport entre modèles", "degradation": "contexte incomplet", "Aclaim": "induction §1 + compression", "Apass": "Paquet conforme au schéma ; vérifier séparément les faits, dates et la compression", "Bclaim": "transport entre modèles", "Bpass": "Un autre décodeur reconstruit la chronologie, les blocages et l’incertitude à partir du seul paquet", "Cclaim": "réponse honnête au contexte manquant", "Cpass": "Sans la section des blocages : ERR / REQUEST_VERIFICATION, sans réponse inventée", "Dclaim": "réparation par §P VALIDATE", "Dpass": "Erreurs injectées de 54 ms / 0.67 corrigées en 44 ms / 0.64", "Eclaim": "extension sémantique à partir d’un exemple", "Epass": "L’axe ρ distingue faits établis, hypothèses et inconnues avec références aux sources", "fidelity": "fidélité aller-retour déclarée", "packetRatio": "document → paquet (caractères)", "deltaRatio": "document → Δ critique (sélectif)", "escapes": "sorties du mode protocole", "reasoning": "part du raisonnement dans la sortie", "avoided": "tokens d’entrée évités : estimation brute", "cache": "taux de cache du contexte initial GLM", "spend": "total déclaré des tokens du programme", "loading": "chargement des données…", "unavailable": "données indisponibles", "reported": "déclaré localement · sans reproduction indépendante", "unknown": "inconnu", "aggregate": "artefact agrégé ; aucun résultat par modèle déduit", "evidence": "données", "meaning": "signification", "design": "plan expérimental uniquement", "vector": "vecteur R⁸", "pause": "suspendre le mouvement", "resume": "démarrer le mouvement", "plotNote": "Ce graphique montre uniquement la référence GLM locale déclarée. Il ne représente pas les résultats OpenRouter et ne démontre pas d’économie nette.", "rawRecord": "Données originales (langue source)", "baselineJson": "JSON de référence", "repository": "dépôt", "measuredSection": "02 / mesures déclarées", "projectionSection": "03 / complément 2D", "lanesSection": "04 / essais", "boundarySection": "05 / limites", "reproduceSection": "06 / reproduire", "atlasAria": "Atlas expérimental. Les flèches sélectionnent les nœuds ; + et − règlent le zoom.", "projectionAria": "Projection des mesures locales déclarées", "footerLens": "R⁸ · lentille C⁴ · coefficients octonioniques (visualisation uniquement) · graphiques 2D liés", "brand": "TRASGO §1 / LABORATOIRE DE VÉRIFICATION"}, "eu": {"lane": "proba", "schema": "eskema", "provenance": "jatorria", "missing": "falta", "correction": "zuzenketa", "transport": "garraioa", "compression": "konpresioa", "encode": "kodetzea", "crosstalk": "ereduen arteko garraioa", "degradation": "testuinguru osatugabea", "Aclaim": "§1 indukzioa + konpresioa", "Apass": "Eskema betetzen duen paketea; egiaztatu gertakariak, datak eta konpresioa bereizita", "Bclaim": "ereduen arteko garraioa", "Bpass": "Beste deskodetzaile batek kronologia, oztopoak eta ziurgabetasuna paketetik soilik berreraikitzen ditu", "Cclaim": "jokabide zintzoa testuingurua falta denean", "Cpass": "Oztopoen atala gabe: ERR / REQUEST_VERIFICATION, erantzunik asmatu gabe", "Dclaim": "§P VALIDATE bidezko konponketa", "Dpass": "Sartutako 54 ms / 0.67 akatsak 44 ms / 0.64 balioetara zuzenduta", "Eclaim": "adibide bakarretik abiatutako hedapen semantikoa", "Epass": "ρ ardatzak egiaztatutako gertakariak, hipotesiak eta ezezagunak bereizten ditu, iturriak adierazita", "fidelity": "jakinarazitako joan-etorriko fideltasuna", "packetRatio": "dokumentua → paketea (karaktereak)", "deltaRatio": "dokumentua → Δ kritikoa (hautazkoa)", "escapes": "protokolo-modutik irteerak", "reasoning": "arrazoiketaren zatia irteeran", "avoided": "sarrera-token saihestuak: estimazio gordina", "cache": "GLM hasierako testuinguruaren cache-asmatze tasa", "spend": "programaren token guztira jakinaraziak", "loading": "ebidentzia kargatzen…", "unavailable": "ebidentzia ez dago erabilgarri", "reported": "tokian jakinarazia · ez da modu independentean erreproduzitu", "unknown": "ezezaguna", "aggregate": "artefaktu agregatua; ez da eredu bakoitzeko emaitzarik ondorioztatzen", "evidence": "ebidentzia", "meaning": "esanahia", "design": "diseinu esperimentala soilik", "vector": "R⁸ bektorea", "pause": "gelditu mugimendua", "resume": "hasi mugimendua", "plotNote": "Grafikoak jakinarazitako tokiko GLM erreferentzia soilik erakusten du. Ez ditu OpenRouter emaitzak marrazten, ezta aurrezpen garbirik frogatzen ere.", "rawRecord": "Jatorrizko ebidentzia-erregistroa (iturriaren hizkuntza)", "baselineJson": "erreferentziako JSONa", "repository": "biltegia", "measuredSection": "02 / jakinarazitako neurketak", "projectionSection": "03 / 2D osagarria", "lanesSection": "04 / probak", "boundarySection": "05 / mugak", "reproduceSection": "06 / erreproduzitu", "atlasAria": "Atlas esperimentala. Geziek nodoak hautatzen dituzte; + eta − zoomean eragiten dute.", "projectionAria": "Jakinarazitako tokiko neurketen proiekzioa", "footerLens": "R⁸ · C⁴ lentea · oktonioi-koefizienteak (ikuspegia soilik) · lotutako 2D grafikoak", "brand": "TRASGO §1 / EGIAZTAPEN LABORATEGIA"}, "ca": {"lane": "prova", "schema": "esquema", "provenance": "procedència", "missing": "absent", "correction": "correcció", "transport": "transport", "compression": "compressió", "encode": "codificació", "crosstalk": "transport entre models", "degradation": "context incomplet", "Aclaim": "inducció §1 + compressió", "Apass": "Paquet vàlid segons l’esquema; comprovar fets, dates i compressió per separat", "Bclaim": "transport entre models", "Bpass": "Un altre descodificador reconstrueix cronologia, bloquejos i incertesa només amb el paquet", "Cclaim": "resposta honesta davant de context absent", "Cpass": "Sense la secció de bloquejos: ERR / REQUEST_VERIFICATION, sense inventar respostes", "Dclaim": "reparació amb §P VALIDATE", "Dpass": "Errors injectats de 54 ms / 0.67 corregits a 44 ms / 0.64", "Eclaim": "extensió semàntica a partir d’un exemple", "Epass": "L’eix ρ distingeix fets establerts, hipòtesis i incògnites amb referències a la font", "fidelity": "fidelitat d’anada i tornada declarada", "packetRatio": "document → paquet (caràcters)", "deltaRatio": "document → Δ crítica (selectiu)", "escapes": "sortides del mode de protocol", "reasoning": "raonament dins de la sortida", "avoided": "tokens d’entrada evitats: estimació bruta", "cache": "taxa d’encerts de memòria cau de la llavor GLM", "spend": "tokens totals declarats del programa", "loading": "carregant evidència…", "unavailable": "evidència no disponible", "reported": "declarat localment · sense reproducció independent", "unknown": "desconegut", "aggregate": "artefacte agregat; no s’infereixen resultats per model", "evidence": "evidència", "meaning": "significat", "design": "només disseny experimental", "vector": "vector R⁸", "pause": "pausar moviment", "resume": "iniciar moviment", "plotNote": "Aquest gràfic mostra només la referència local GLM declarada. No representa resultats OpenRouter ni demostra estalvi net.", "rawRecord": "Registre d’evidència original (idioma d’origen)", "baselineJson": "JSON de referència", "repository": "repositori", "measuredSection": "02 / mesures declarades", "projectionSection": "03 / complement 2D", "lanesSection": "04 / proves", "boundarySection": "05 / límits", "reproduceSection": "06 / reproduir", "atlasAria": "Atles experimental. Les fletxes seleccionen nodes; + i − ajusten el zoom.", "projectionAria": "Projecció de mesures locals declarades", "footerLens": "R⁸ · lent C⁴ · coeficients octoniònics (només visualització) · gràfics 2D enllaçats", "brand": "TRASGO §1 / LABORATORI DE VERIFICACIÓ"}, "gl": {"lane": "proba", "schema": "esquema", "provenance": "procedencia", "missing": "ausente", "correction": "corrección", "transport": "transporte", "compression": "compresión", "encode": "codificación", "crosstalk": "transporte entre modelos", "degradation": "contexto incompleto", "Aclaim": "indución §1 + compresión", "Apass": "Paquete válido segundo o esquema; comprobar feitos, datas e compresión por separado", "Bclaim": "transporte entre modelos", "Bpass": "Outro descodificador reconstrúe cronoloxía, bloqueos e incerteza só co paquete", "Cclaim": "resposta honesta ante contexto ausente", "Cpass": "Sen a sección de bloqueos: ERR / REQUEST_VERIFICATION, sen inventar respostas", "Dclaim": "reparación con §P VALIDATE", "Dpass": "Erros inxectados de 54 ms / 0.67 corrixidos a 44 ms / 0.64", "Eclaim": "extensión semántica a partir dun exemplo", "Epass": "O eixe ρ distingue feitos establecidos, hipóteses e incógnitas con referencias á fonte", "fidelity": "fidelidade de ida e volta declarada", "packetRatio": "documento → paquete (caracteres)", "deltaRatio": "documento → Δ crítico (selectivo)", "escapes": "saídas do modo de protocolo", "reasoning": "razoamento dentro da saída", "avoided": "tokens de entrada evitados: estimación bruta", "cache": "taxa de acertos de caché da semente GLM", "spend": "tokens totais declarados do programa", "loading": "cargando evidencia…", "unavailable": "evidencia non dispoñible", "reported": "declarado localmente · sen reprodución independente", "unknown": "descoñecido", "aggregate": "artefacto agregado; non se infiren resultados por modelo", "evidence": "evidencia", "meaning": "significado", "design": "só deseño experimental", "vector": "vector R⁸", "pause": "pausar movemento", "resume": "iniciar movemento", "plotNote": "Este gráfico mostra só a referencia local GLM declarada. Non representa resultados OpenRouter nin demostra aforro neto.", "rawRecord": "Rexistro de evidencia orixinal (idioma de orixe)", "baselineJson": "JSON de referencia", "repository": "repositorio", "measuredSection": "02 / medicións declaradas", "projectionSection": "03 / complemento 2D", "lanesSection": "04 / probas", "boundarySection": "05 / límites", "reproduceSection": "06 / reproducir", "atlasAria": "Atlas experimental. As frechas seleccionan nodos; + e − axustan o zoom.", "projectionAria": "Proxección de medicións locais declaradas", "footerLens": "R⁸ · lente C⁴ · coeficientes octoniónicos (só visualización) · gráficos 2D ligados", "brand": "TRASGO §1 / LABORATORIO DE VERIFICACIÓN"}};
+  Object.keys(EXTRA).forEach(l=>Object.assign(I18N[l],EXTRA[l]));
+  let currentLang="en", ready=false;
+  const t=k=>I18N[currentLang][k] ?? I18N.en[k] ?? k;
+  const esc=v=>String(v ?? "—").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[c]));
+  const STATUS_TEXT={"awaiting-authenticated-run": ["awaiting authenticated run", "pendiente de ejecución autenticada", "en attente d’une exécution authentifiée", "autentifikatutako exekuzioaren zain", "pendent d’execució autenticada", "pendente de execución autenticada"], "completed": ["completed (see raw record for outcomes)", "completado (resultados en el registro original)", "terminé (résultats dans les données originales)", "amaituta (emaitzak jatorrizko erregistroan)", "completat (resultats al registre original)", "completado (resultados no rexistro orixinal)"], "partial-credit-limited": ["partial run · credit limited", "ejecución parcial · crédito limitado", "exécution partielle · crédit limité", "exekuzio partziala · kreditu mugatua", "execució parcial · crèdit limitat", "execución parcial · crédito limitado"], "failed": ["failed", "fallido", "échec", "huts eginda", "fallit", "fallido"], "pending": ["pending", "pendiente", "en attente", "zain", "pendent", "pendente"], "loading": ["loading", "cargando", "chargement", "kargatzen", "carregant", "cargando"]};
+  function statusText(code){const values=STATUS_TEXT[code];return values?values[["en","es","fr","eu","ca","gl"].indexOf(currentLang)]:t("unknown");}
   const MODELS=[
     {id:'glm',name:'GLM 5.3',color:'#63e6ff'},
     {id:'gpt',name:'GPT-5.6 Sol',color:'#78f0a7'},
@@ -258,57 +266,55 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
   const EVIDENCE={baseline:null,openrouter:null};
 
   function applyLang(code){
-    const d=I18N[code]||I18N.en;
-    document.documentElement.lang=code;
-    document.querySelectorAll('[data-i18n]').forEach(el=>{
-      const k=el.getAttribute('data-i18n'); if(d[k]!=null) el.innerHTML=d[k];
-    });
-    localStorage.setItem('trasgo-verification-lang',code);
+    currentLang=Object.hasOwn(I18N,code)?code:'en';
+    document.documentElement.lang=currentLang;
+    lang.value=currentLang;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.getAttribute('data-i18n'));});
+    document.title=t('brand');
+    document.querySelector('meta[name="description"]').content=t('lede');
+    lang.setAttribute('aria-label',t('language'));
+    document.getElementById('atlas').setAttribute('aria-label',t('atlasAria'));
+    document.getElementById('projection').setAttribute('aria-label',t('projectionAria'));
+    try{localStorage.setItem('trasgo-verification-lang',currentLang);}catch{}
+    if(ready) refreshUI();
   }
   const lang=document.getElementById('lang');
-  lang.value=localStorage.getItem('trasgo-verification-lang')||((navigator.language||'en').slice(0,2));
-  if(!I18N[lang.value]) lang.value='en';
-  lang.addEventListener('change',()=>applyLang(lang.value)); applyLang(lang.value);
+  let saved;try{saved=localStorage.getItem('trasgo-verification-lang');}catch{}
+  lang.addEventListener('change',()=>applyLang(lang.value));
+  applyLang(saved||(navigator.language||'en').slice(0,2));
 
   const legend=document.getElementById('legend');
   legend.innerHTML=MODELS.map(m=>'<div><span class="dot" style="background:'+m.color+'"></span>'+m.name+'</div>').join('');
 
-  document.getElementById('lane-table').innerHTML=LANES.map((l,i)=>{
-    const f=l.flags;
-    return '<tr><td><b>'+l.id+'</b> · '+l.name+'</td><td>'+l.claim+'</td><td>'+l.pass+'</td><td class="small">lane='+(i+1)+'/5 · schema='+f[0]+' · provenance='+f[1]+' · missing='+f[2]+' · correction='+f[3]+' · transport='+f[4]+' · compression='+f[5]+'</td></tr>';
-  }).join('');
-
-  const pct=x=>x==null?'—':(100*x).toFixed(1)+'%';
-  const fmt=x=>x==null?'—':Number(x).toFixed(2);
-  const metric=(k,v)=>'<div class="metric"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>';
-
-  Promise.all([
-    fetch('data/baseline-glm.json?ts='+Date.now()).then(r=>r.json()),
-    fetch('data/openrouter-latest.json?ts='+Date.now()).then(r=>r.json())
-  ]).then(([b,o])=>{
-    EVIDENCE.baseline=b; EVIDENCE.openrouter=o;
-    const x=b.reported||{};
-    document.getElementById('baseline-status').innerHTML='<p><span class="status reported">'+b.status+'</span> <span class="small">'+b.boundary+'</span></p><p><span class="status '+(o.status==='completed'?'completed':'pending')+'">OpenRouter: '+o.status+'</span> <span class="small">'+(o.generated_at||o.note||'')+'</span></p>';
+  function laneName(l){return l.id==='E'?'EVOLVE':t(l.name);}
+  function renderLanes(){
+    document.getElementById('lane-table').innerHTML=LANES.map((l,i)=>'<tr><td><b>'+l.id+'</b> · '+laneName(l)+'</td><td>'+t(l.id+'claim')+'</td><td>'+t(l.id+'pass')+'</td><td class="small">'+t('lane')+'='+(i+1)+'/5 · '+['schema','provenance','missing','correction','transport','compression'].map((k,j)=>t(k)+'='+l.flags[j]).join(' · ')+'</td></tr>').join('');
+  }
+  const num=x=>x==null?'—':Number(x).toLocaleString(currentLang);
+  const pct=x=>x==null?'—':Number(x).toLocaleString(currentLang,{style:'percent',maximumFractionDigits:1});
+  const metric=(k,v)=>'<div class="metric"><div class="k">'+t(k)+'</div><div class="v">'+esc(v)+'</div></div>';
+  function renderEvidence(){
+    const b=EVIDENCE.baseline,o=EVIDENCE.openrouter,x=b?.reported||{};
+    document.getElementById('baseline-status').innerHTML='<p class="status reported">'+(b?t('reported'):t('unavailable'))+'</p><details><summary>'+t('rawRecord')+'</summary><pre id="raw-evidence"></pre></details>';
+    document.getElementById('raw-evidence').textContent=JSON.stringify({baseline:b,openrouter:o},null,2);
     document.getElementById('baseline-metrics').innerHTML=[
-      metric('round-trip fidelity',x.crosstalk_fidelity_range?x.crosstalk_fidelity_range[0]+'–'+x.crosstalk_fidelity_range[1]:'—'),
-      metric('doc → packet',x.compression_document_to_packet!=null?x.compression_document_to_packet+'×':'—'),
-      metric('doc → Δ critical',x.compression_document_to_critical_delta!=null?x.compression_document_to_critical_delta+'×':'—'),
-      metric('persona escapes',x.persona_escapes),
-      metric('reasoning share',pct(x.reasoning_share_completion)),
-      metric('prompt tokens avoided',x.estimated_prompt_tokens_avoided_downstream!=null?'≈'+x.estimated_prompt_tokens_avoided_downstream.toLocaleString():'—'),
-      metric('GLM seed cache hit',pct(x.seed_cache_hit_rate_glm53)),
-      metric('total program spend',x.approx_total_tokens_all_logged_and_retries!=null?'≈'+x.approx_total_tokens_all_logged_and_retries.toLocaleString()+' tok':'—')
-    ].join('');
-    document.getElementById('data-state').textContent='baseline: '+b.status+' · OpenRouter: '+o.status;
-    initProjection();
-  }).catch(err=>{
-    document.getElementById('data-state').textContent='evidence load error';
-    document.getElementById('projection-note').textContent=String(err);
-  });
+      metric('fidelity',x.crosstalk_fidelity_range?x.crosstalk_fidelity_range.map(num).join('–'):'—'),
+      metric('packetRatio',x.compression_document_to_packet!=null?num(x.compression_document_to_packet)+'×':'—'),
+      metric('deltaRatio',x.compression_document_to_critical_delta!=null?num(x.compression_document_to_critical_delta)+'×':'—'),
+      metric('escapes',num(x.persona_escapes)),metric('reasoning',pct(x.reasoning_share_completion)),
+      metric('avoided',x.estimated_prompt_tokens_avoided_downstream!=null?'≈'+num(x.estimated_prompt_tokens_avoided_downstream):'—'),
+      metric('cache',pct(x.seed_cache_hit_rate_glm53)),metric('spend',num(x.approx_total_tokens_all_logged_and_retries))].join('');
+    document.getElementById('data-state').textContent=(b?t('reported'):t('unavailable'))+' · OpenRouter: '+(o?statusText(o.status):t('unavailable'));
+  }
+  async function loadEvidence(key,path){
+    try{const r=await fetch(path);if(!r.ok)throw Error('HTTP '+r.status);EVIDENCE[key]=await r.json();}
+    catch{EVIDENCE[key]=null;}
+    if(ready)refreshUI();
+  }
 
   // ---------- 8D atlas ----------
   const canvas=document.getElementById('atlas'),ctx=canvas.getContext('2d');
-  const state={yaw:-.45,pitch:.26,zoom:1,drag:false,lastX:0,lastY:0,auto:true,selected:null,hover:null,t:0};
+  const state={yaw:-.45,pitch:.26,zoom:1,drag:false,lastX:0,lastY:0,auto:false,selected:null,hover:null,t:0};
   const sliders=['r01','r23','r45','r67'].map(id=>document.getElementById(id));
   function resizeAtlas(){const r=canvas.getBoundingClientRect(),d=devicePixelRatio||1;canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0)}
   window.addEventListener('resize',resizeAtlas);resizeAtlas();
@@ -341,7 +347,7 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
   }
   function draw(){
     const rr=canvas.getBoundingClientRect();ctx.clearRect(0,0,rr.width,rr.height);drawGrid(rr.width,rr.height);
-    if(state.auto && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    if(state.auto && !document.hidden){
       state.t+=.004;
       sliders.forEach((s,i)=>{const base=[24,-36,57,18][i],amp=[24,17,21,14][i],spd=[1,.73,.51,.89][i];s.value=base+Math.sin(state.t*spd*9)*amp;document.getElementById(['v01','v23','v45','v67'][i]).textContent=Math.round(s.value)+'°'})
     }
@@ -373,7 +379,7 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
       const r=active?8:hover?7:5.2;
       ctx.beginPath();ctx.arc(n.p.x,n.p.y,r,0,Math.PI*2);ctx.fillStyle=n.model.color;ctx.globalAlpha=active?1:.82;ctx.fill();ctx.globalAlpha=1;
       if(active||hover){ctx.beginPath();ctx.arc(n.p.x,n.p.y,r+5,0,Math.PI*2);ctx.strokeStyle=hexAlpha(n.model.color,.45);ctx.stroke()}
-      if(active){ctx.fillStyle='#edf5f7';ctx.font='11px ui-monospace';ctx.fillText(n.model.name+' · '+n.lane.id+'/'+n.lane.name,n.p.x+13,n.p.y-9)}
+      if(active){ctx.fillStyle='#edf5f7';ctx.font='11px ui-monospace';ctx.fillText(n.model.name+' · '+n.lane.id+'/'+laneName(n.lane),n.p.x+13,n.p.y-9)}
     }
     requestAnimationFrame(draw);
   }
@@ -383,50 +389,58 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
     for(let mi=0;mi<MODELS.length;mi++)for(let li=0;li<LANES.length;li++){const n=node(mi,li),d=(n.p.x-mx)*(n.p.x-mx)+(n.p.y-my)*(n.p.y-my);if(d<bd){bd=d;best=n}}
     return bd<420?best:null;
   }
-  canvas.addEventListener('pointerdown',e=>{state.drag=true;state.lastX=e.clientX;state.lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});
+  canvas.addEventListener('pointerdown',e=>{state.drag=true;state.startX=state.lastX=e.clientX;state.startY=state.lastY=e.clientY;state.moved=false;canvas.setPointerCapture(e.pointerId)});
   canvas.addEventListener('pointermove',e=>{
     const r=canvas.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
-    if(state.drag){state.yaw+=(e.clientX-state.lastX)*.006;state.pitch=Math.max(-1.25,Math.min(1.25,state.pitch+(e.clientY-state.lastY)*.006));state.lastX=e.clientX;state.lastY=e.clientY}
+    if(state.drag){if(Math.hypot(e.clientX-state.startX,e.clientY-state.startY)>4)state.moved=true;state.yaw+=(e.clientX-state.lastX)*.006;state.pitch=Math.max(-1.25,Math.min(1.25,state.pitch+(e.clientY-state.lastY)*.006));state.lastX=e.clientX;state.lastY=e.clientY}
     else{const n=nearest(mx,my);state.hover=n?{mi:n.mi,li:n.li}:null;canvas.style.cursor=n?'pointer':'grab'}
   });
   canvas.addEventListener('pointerup',e=>{
-    if(Math.abs(e.clientX-state.lastX)<4 && Math.abs(e.clientY-state.lastY)<4){const r=canvas.getBoundingClientRect(),n=nearest(e.clientX-r.left,e.clientY-r.top);if(n)selectNode(n)}
+    if(!state.moved){const r=canvas.getBoundingClientRect(),n=nearest(e.clientX-r.left,e.clientY-r.top);if(n)selectNode(n)}
     state.drag=false;
   });
   canvas.addEventListener('wheel',e=>{e.preventDefault();state.zoom=Math.max(.55,Math.min(2.4,state.zoom*Math.exp(-e.deltaY*.001)))},{passive:false});
+  canvas.addEventListener('pointercancel',()=>{state.drag=false;});
+  canvas.addEventListener('lostpointercapture',()=>{state.drag=false;});
+  canvas.addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){
+      e.preventDefault();const i=state.selected?state.selected.mi*5+state.selected.li:0;
+      const step={ArrowRight:1,ArrowLeft:-1,ArrowUp:-5,ArrowDown:5}[e.key];
+      const next=(i+step+25)%25;selectNode(node(Math.floor(next/5),next%5));
+    }else if(['+','=','-'].includes(e.key)){e.preventDefault();state.zoom=Math.max(.55,Math.min(2.4,state.zoom*(e.key==='-'?.9:1.1)));}
+  });
   function selectNode(n){
     state.selected={mi:n.mi,li:n.li};
-    const ev=EVIDENCE.openrouter, status=ev?ev.status:'loading';
-    document.getElementById('node-title').textContent=n.model.name+' · lane '+n.lane.id+' / '+n.lane.name;
-    document.getElementById('node-body').innerHTML='<dl>'+
-      '<dt>claim</dt><dd>'+n.lane.claim+'</dd>'+
-      '<dt>pass</dt><dd>'+n.lane.pass+'</dd>'+
-      '<dt>evidence</dt><dd>'+status+' (aggregate artifact; no per-model score inferred)</dd>'+
-      '<dt>R⁸ vector</dt><dd>['+baseVec(n.mi,n.li).map(v=>v.toFixed(2)).join(', ')+']</dd>'+
-      '<dt>meaning</dt><dd>design topology only</dd></dl>';
+    document.getElementById('node-title').textContent=n.model.name+' · '+t('lane')+' '+n.lane.id+' / '+laneName(n.lane);
+    document.getElementById('node-body').innerHTML='<dl>'+[
+      [t('claim'),t(n.lane.id+'claim')],[t('pass'),t(n.lane.id+'pass')],
+      [t('evidence'),(EVIDENCE.openrouter?statusText(EVIDENCE.openrouter.status):t('unavailable'))+' ('+t('aggregate')+')'],
+      [t('vector'),'['+baseVec(n.mi,n.li).map(v=>v.toLocaleString(currentLang,{minimumFractionDigits:2,maximumFractionDigits:2})).join('; ')+']'],
+      [t('meaning'),t('design')]].map(([k,v])=>'<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>').join('')+'</dl>';
   }
-  sliders.forEach((s,i)=>s.addEventListener('input',()=>{state.auto=false;document.getElementById(['v01','v23','v45','v67'][i]).textContent=Math.round(s.value)+'°'}));
-  document.getElementById('auto').addEventListener('click',()=>state.auto=!state.auto);
-  document.getElementById('reset').addEventListener('click',()=>{state.yaw=-.45;state.pitch=.26;state.zoom=1;[24,-36,57,18].forEach((v,i)=>{sliders[i].value=v;document.getElementById(['v01','v23','v45','v67'][i]).textContent=v+'°'});state.auto=false});
+  function motionButton(){const b=document.getElementById('auto');b.textContent=t(state.auto?'pause':'resume');b.setAttribute('aria-pressed',String(state.auto));}
+  sliders.forEach((s,i)=>{s.setAttribute('aria-label',['e₀↔e₁','e₂↔e₃','e₄↔e₅','e₆↔e₇'][i]);s.addEventListener('input',()=>{state.auto=false;motionButton();document.getElementById(['v01','v23','v45','v67'][i]).textContent=Math.round(s.value)+'°';});});
+  document.getElementById('auto').addEventListener('click',()=>{state.auto=!state.auto;motionButton();});
+  document.getElementById('reset').addEventListener('click',()=>{state.yaw=-.45;state.pitch=.26;state.zoom=1;[24,-36,57,18].forEach((v,i)=>{sliders[i].value=v;document.getElementById(['v01','v23','v45','v67'][i]).textContent=v+'°';});state.auto=false;motionButton();});
   draw();
 
   // ---------- linked 2D projection ----------
   const METRICS=[
-    ['crosstalk_fidelity_mid','crosstalk fidelity (mid)'],
-    ['compression_document_to_packet','doc → packet'],
-    ['compression_document_to_critical_delta','doc → critical Δ'],
-    ['reasoning_share_completion','reasoning share'],
-    ['seed_cache_hit_rate_glm53','GLM cache hit'],
-    ['estimated_prompt_tokens_avoided_downstream','prompt tokens avoided'],
-    ['approx_total_tokens_all_logged_and_retries','program tokens']
+    ['crosstalk_fidelity_mid','fidelity'],
+    ['compression_document_to_packet','packetRatio'],
+    ['compression_document_to_critical_delta','deltaRatio'],
+    ['reasoning_share_completion','reasoning'],
+    ['seed_cache_hit_rate_glm53','cache'],
+    ['estimated_prompt_tokens_avoided_downstream','avoided'],
+    ['approx_total_tokens_all_logged_and_retries','spend']
   ];
   const pc=document.getElementById('projection'),pctx=pc.getContext('2d');
   function initProjection(){
     const x=document.getElementById('xaxis'),y=document.getElementById('yaxis');
-    x.innerHTML=METRICS.map((m,i)=>'<option value="'+m[0]+'">'+m[1]+'</option>').join('');
-    y.innerHTML=x.innerHTML;x.value='compression_document_to_packet';y.value='crosstalk_fidelity_mid';
-    x.addEventListener('change',drawProjection);y.addEventListener('change',drawProjection);
-    window.addEventListener('resize',drawProjection);drawProjection();
+    const oldX=x.value,oldY=y.value;
+    x.innerHTML=METRICS.map((m,i)=>'<option value="'+m[0]+'">'+t(m[1])+'</option>').join('');
+    y.innerHTML=x.innerHTML;x.value=oldX||'compression_document_to_packet';y.value=oldY||'crosstalk_fidelity_mid';
+    x.onchange=drawProjection;y.onchange=drawProjection;drawProjection();
   }
   function val(key){
     const r=(EVIDENCE.baseline&&EVIDENCE.baseline.reported)||{};
@@ -434,24 +448,30 @@ kbd{border:1px solid var(--line);background:#0a0f15;border-radius:5px;padding:2p
     return typeof r[key]==='number'?r[key]:null;
   }
   function drawProjection(){
-    if(!EVIDENCE.baseline)return;
+    document.getElementById('projection-note').textContent=t('plotNote')+(!EVIDENCE.baseline?' '+t('unavailable'):'');
     const rect=pc.getBoundingClientRect(),d=devicePixelRatio||1;pc.width=Math.max(1,Math.floor(rect.width*d));pc.height=Math.max(1,Math.floor(rect.height*d));pctx.setTransform(d,0,0,d,0,0);
     pctx.clearRect(0,0,rect.width,rect.height);
     const xk=document.getElementById('xaxis').value,yk=document.getElementById('yaxis').value,xv=val(xk),yv=val(yk),pad=44;
     pctx.strokeStyle='rgba(140,160,170,.25)';pctx.lineWidth=1;pctx.beginPath();pctx.moveTo(pad,15);pctx.lineTo(pad,rect.height-pad);pctx.lineTo(rect.width-15,rect.height-pad);pctx.stroke();
-    const xn=Number.isFinite(xv)?Math.min(.9,.18+.62*Math.tanh(Math.log10(Math.abs(xv)+1)/4)):null;
-    const yn=Number.isFinite(yv)?Math.min(.9,.18+.62*Math.tanh(Math.log10(Math.abs(yv)+1)/4)):null;
+    const xmax=Number.isFinite(xv)?Math.max(1,Math.abs(xv)*1.25):1;
+    const xn=Number.isFinite(xv)?xv/xmax:null;
+    const ymax=Number.isFinite(yv)?Math.max(1,Math.abs(yv)*1.25):1;
+    const yn=Number.isFinite(yv)?yv/ymax:null;
+    pctx.fillStyle='#8ea0aa';pctx.font='10px ui-monospace';pctx.fillText('0',pad-12,rect.height-pad+12);pctx.fillText(num(xmax),rect.width-75,rect.height-pad+14);pctx.fillText(num(ymax),pad+5,15);
     if(xn!=null&&yn!=null){
       const px=pad+xn*(rect.width-pad-24),py=(rect.height-pad)-yn*(rect.height-pad-28);
       pctx.beginPath();pctx.arc(px,py,7,0,Math.PI*2);pctx.fillStyle='#ffc857';pctx.fill();
-      pctx.fillStyle='#edf5f7';pctx.font='12px ui-monospace';pctx.fillText('reported local GLM',px+12,py-10);
-      pctx.fillStyle='#8ea0aa';pctx.font='11px ui-monospace';pctx.fillText(String(xv),px+12,py+7);pctx.fillText(String(yv),px+12,py+21);
+      pctx.fillStyle='#edf5f7';pctx.font='12px ui-monospace';pctx.fillText('GLM · '+t('reported'),pad+8,30);
+      pctx.fillStyle='#8ea0aa';pctx.font='11px ui-monospace';pctx.fillText(num(xv),px+12,py+7);pctx.fillText(num(yv),px+12,py+21);
     }
-    const o=EVIDENCE.openrouter||{};
-    document.getElementById('projection-note').innerHTML='<b>OpenRouter: '+(o.status||'unknown')+'</b><br><span class="small">No point is drawn unless the selected scalar axes exist in the replication artifact. Current chart density is therefore itself an evidence diagnostic.</span>';
-    pctx.fillStyle='#8ea0aa';pctx.font='11px ui-monospace';pctx.fillText(METRICS.find(m=>m[0]===xk)[1],Math.max(pad,rect.width-190),rect.height-13);
-    pctx.save();pctx.translate(13,170);pctx.rotate(-Math.PI/2);pctx.fillText(METRICS.find(m=>m[0]===yk)[1],0,0);pctx.restore();
+    pctx.fillStyle='#8ea0aa';pctx.font='11px ui-monospace';pctx.fillText(t(METRICS.find(m=>m[0]===xk)[1]),pad,rect.height-13,Math.max(1,rect.width-pad-10));
+    pctx.save();pctx.translate(13,170);pctx.rotate(-Math.PI/2);pctx.fillText(t(METRICS.find(m=>m[0]===yk)[1]),0,0);pctx.restore();
   }
+  function refreshUI(){renderLanes();renderEvidence();initProjection();motionButton();if(state.selected)selectNode(node(state.selected.mi,state.selected.li));}
+  window.addEventListener('resize',drawProjection);
+  ready=true;refreshUI();
+  loadEvidence('baseline','data/baseline-glm.json');
+  loadEvidence('openrouter','data/openrouter-latest.json');
 })();
 </script>
 </body>
